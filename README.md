@@ -4,9 +4,9 @@
 
 OpenBuildRoom is a free, open-source macOS desktop app for local software projects. It puts the product vision, [GitHub Spec Kit](https://github.com/github/spec-kit) work, services, tests, data, CLI and MCP tools, and recorded activity beside the code. A product owner can keep the direction visible while developers and coding agents work in the same repository.
 
-![OpenBuildRoom showing the running Hello Workspace service and a passed test run](assets/screenshots/overview.png)
+[![OpenBuildRoom overview showing the running Hello Workspace service and a passed test run](assets/screenshots/overview-focused.png)](assets/screenshots/overview-readable.png)
 
-The screenshot shows the **real included example** after starting its service and running its tests. Performance measurements and live GitHub/Linear issue sync are not implemented yet; the app labels those gaps.
+The focused screenshot shows the **real included example** after starting its service and running its tests. Click it for the full window. Performance measurements and live GitHub/Linear issue sync are not implemented yet; the app labels those gaps.
 
 ## Try it in five minutes
 
