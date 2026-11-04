@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-// Render the selected workspace mark at macOS app-icon resolution.
+// Render the selected Open Room mark into the macOS icon tile at 1024 px.
 let size = 1024
 guard let bitmap = NSBitmapImageRep(
     bitmapDataPlanes: nil,
@@ -29,37 +29,45 @@ func color(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> NSColor {
     NSColor(srgbRed: red / 255, green: green / 255, blue: blue / 255, alpha: 1)
 }
 
-let background = NSBezierPath(roundedRect: NSRect(x: 32, y: 32, width: 960, height: 960), xRadius: 240, yRadius: 240)
-color(234, 240, 237).setFill()
+let background = NSBezierPath(roundedRect: NSRect(x: 32, y: 32, width: 960, height: 960), xRadius: 220, yRadius: 220)
+color(233, 243, 240).setFill()
 background.fill()
 
-let frame = NSBezierPath(roundedRect: NSRect(x: 176, y: 208, width: 672, height: 608), xRadius: 112, yRadius: 112)
-frame.lineWidth = 56
-color(32, 52, 59).setStroke()
-frame.stroke()
-
-let dividers = NSBezierPath()
-dividers.lineWidth = 56
-dividers.move(to: NSPoint(x: 176, y: 656))
-dividers.line(to: NSPoint(x: 848, y: 656))
-dividers.move(to: NSPoint(x: 384, y: 656))
-dividers.line(to: NSPoint(x: 384, y: 208))
-dividers.stroke()
-
-color(116, 165, 153).setFill()
-for x in [272.0, 368.0] {
-    NSBezierPath(ovalIn: NSRect(x: x - 27.2, y: 736 - 27.2, width: 54.4, height: 54.4)).fill()
+// The SVG identity uses a 100 × 100 view box with its origin at the top left.
+func point(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
+    NSPoint(x: 112 + x * 8, y: CGFloat(size) - 112 - y * 8)
 }
 
-let check = NSBezierPath()
-check.lineWidth = 56
-check.lineJoinStyle = .round
-check.lineCapStyle = .round
-check.move(to: NSPoint(x: 528, y: 416))
-check.line(to: NSPoint(x: 608, y: 352))
-check.line(to: NSPoint(x: 752, y: 528))
-color(76, 139, 124).setStroke()
-check.stroke()
+let frame = NSBezierPath()
+frame.move(to: point(25, 8))
+frame.line(to: point(75, 8))
+frame.curve(to: point(92, 25), controlPoint1: point(84.4, 8), controlPoint2: point(92, 15.6))
+frame.line(to: point(92, 46))
+frame.line(to: point(74, 46))
+frame.line(to: point(74, 26))
+frame.line(to: point(26, 26))
+frame.line(to: point(26, 74))
+frame.line(to: point(58, 74))
+frame.line(to: point(58, 92))
+frame.line(to: point(25, 92))
+frame.curve(to: point(8, 75), controlPoint1: point(15.6, 92), controlPoint2: point(8, 84.4))
+frame.line(to: point(8, 25))
+frame.curve(to: point(25, 8), controlPoint1: point(8, 15.6), controlPoint2: point(15.6, 8))
+frame.close()
+color(32, 61, 75).setFill()
+frame.fill()
+
+let corner = NSBezierPath()
+corner.move(to: point(73, 57))
+corner.line(to: point(92, 57))
+corner.line(to: point(92, 76))
+corner.curve(to: point(76, 92), controlPoint1: point(92, 84.8), controlPoint2: point(84.8, 92))
+corner.line(to: point(64, 92))
+corner.line(to: point(64, 74))
+corner.line(to: point(73, 74))
+corner.close()
+color(131, 182, 172).setFill()
+corner.fill()
 
 context.flushGraphics()
 NSGraphicsContext.restoreGraphicsState()
@@ -67,6 +75,8 @@ guard let png = bitmap.representation(using: .png, properties: [:]) else {
     fatalError("Could not encode icon PNG")
 }
 let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent().deletingLastPathComponent()
-let target = root.appendingPathComponent("desktop/assets/icon.png")
-try png.write(to: target)
-print("Rendered \(target.path)")
+for relativePath in ["desktop/assets/icon.png", "build/icon.png"] {
+    let target = root.appendingPathComponent(relativePath)
+    try png.write(to: target)
+    print("Rendered \(target.path)")
+}
