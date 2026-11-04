@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('productView', {
   loadProject: () => ipcRenderer.invoke('project:load'),
   chooseProject: () => ipcRenderer.invoke('project:choose'),
+  openExampleProject: () => ipcRenderer.invoke('project:example'),
   prepareOnboarding: () => ipcRenderer.invoke('onboarding:prepare'),
   currentOnboarding: () => ipcRenderer.invoke('onboarding:current'),
   reviewCurrentOnboarding: () => ipcRenderer.invoke('onboarding:review-current'),

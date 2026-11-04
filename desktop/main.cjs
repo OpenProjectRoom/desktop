@@ -210,6 +210,19 @@ function registerIpc() {
   ipcMain.handle('mcp:read-resource', (event, id, uri) => { assertSender(event); return mcpExplorer.readResource(String(id), String(uri)); });
   ipcMain.handle('mcp:get-prompt', (event, id, name, args) => { assertSender(event); return mcpExplorer.getPrompt(String(id), String(name), args); });
   ipcMain.handle('project:load', event => { assertSender(event); return loadInitial(); });
+  ipcMain.handle('project:example', event => {
+    assertSender(event);
+    const source = path.join(app.getAppPath(), 'examples', 'hello-workspace');
+    const root = path.join(app.getPath('documents'), 'OpenBuildRoom Examples', 'hello-workspace');
+    if (!fs.existsSync(path.join(source, 'productview.yaml'))) throw new Error('The example workspace is missing from this build.');
+    if (!fs.existsSync(root)) {
+      fs.mkdirSync(path.dirname(root), { recursive: true });
+      fs.cpSync(source, root, { recursive: true, force: false });
+    }
+    if (!fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('The example destination already exists without productview.yaml. Move it before trying again.');
+    const registered = addWorkspace(app.getPath('userData'), root);
+    return readSelected(registered);
+  });
   ipcMain.handle('project:choose', async event => {
     assertSender(event);
     const choice = await dialog.showOpenDialog(windowRef, { title: 'Open an OpenBuildRoom workspace', properties: ['openDirectory'] });

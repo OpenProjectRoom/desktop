@@ -171,6 +171,16 @@
           "postgres",
           "web"
         ]
+      },
+      {
+        "id": "working-example",
+        "title": "Working first-run example",
+        "summary": "Let new users open a real local service, test suite, storage folder and Spec Kit feature from the desktop app.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "tests"
+        ]
       }
     ],
     "documentation": [

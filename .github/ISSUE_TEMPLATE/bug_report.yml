@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible OpenBuildRoom Desktop problem.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: Please remove credentials and private project data from logs, screenshots, and YAML before sharing them.
+  - type: input
+    id: version
+    attributes:
+      label: Desktop version and macOS version
+      placeholder: OpenBuildRoom 0.9.44, macOS 15.x
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include the workspace view and exact actions.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+    validations:
+      required: true

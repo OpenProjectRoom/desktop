@@ -91,6 +91,11 @@ product:
       summary: Inspect PostgreSQL, MySQL/MariaDB, SQLite and local file structures with small on-demand read-only previews.
       status: done
       relatedComponents: [postgres, web]
+    - id: working-example
+      title: Working first-run example
+      summary: Let new users open a real local service, test suite, storage folder and Spec Kit feature from the desktop app.
+      status: done
+      relatedComponents: [web, tests]
   documentation:
     - id: getting-started
       title: Getting started

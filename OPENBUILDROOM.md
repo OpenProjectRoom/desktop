@@ -1,4 +1,4 @@
-# OpenBuildRoom · repository contract (prototype 0.9.43)
+# OpenBuildRoom · repository contract (prototype 0.9.44)
 
 OpenBuildRoom is an installable desktop workspace for a software repository. It reads `productview.yaml` from the selected project folder and renders a connected map of specifications, services, tests, data sources, storage, issue sources and external systems. The YAML belongs in the project repository so other developers see the same product model.
 
@@ -220,6 +220,8 @@ The exportable agent skill is `agent/openbuildroom/SKILL.md`. **Settings → Age
 The server uses a local stdio connection and the MCP 2025-11-25 handshake. If a newer client probes a newer protocol first, it can fall back to this supported revision. The MCP command shown in Agent Access uses the installed Electron binary in Node mode and points to the current workspace. The prototype does not provide network-hosted MCP access.
 
 ## Desktop build
+
+The first-run **Try working example** action copies `examples/hello-workspace` to `~/Documents/OpenBuildRoom Examples/hello-workspace` and opens it. The copied project is independent of the installed app and remains editable. It includes a real Node.js service, two route tests, local JSON storage and standard Spec Kit artifacts. Node.js 20+ is required to run its service and tests. The existing Blackbox Agent B packaged demo remains clearly labeled as a simulation.
 
 Run `npm ci` and `npm start` for development. On Apple Silicon macOS, `npm run package:mac:app` builds the desktop app in `outputs/openbuildroom-desktop` relative to this workspace. `npm run package:mac` also makes a DMG when disk-image creation is available. The preview is unsigned and not notarized. The existing `productview.yaml` filename and MCP tool names remain stable while the public app name changes to OpenBuildRoom Desktop.
 

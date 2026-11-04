@@ -1,5 +1,7 @@
 # Getting started
 
+For a first real run, choose **Try working example** from the Overview or Workspaces menu. OpenBuildRoom copies it into `~/Documents/OpenBuildRoom Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
+
 Open this repository in the OpenBuildRoom desktop app. OpenBuildRoom reads `productview.yaml` and opens the Overview.
 
 The left navigation follows the product workflow:

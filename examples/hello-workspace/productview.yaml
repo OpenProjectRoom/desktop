@@ -1,0 +1,71 @@
+schemaVersion: 1
+project:
+  id: hello-workspace
+  name: Hello Workspace
+  description: A real, small project for trying OpenBuildRoom.
+  version: 1.0.0
+product:
+  vision: docs/product/vision.md
+  docsRoot: docs/product
+  roadmap:
+    - id: first-release
+      title: First working release
+      summary: View notes, check health, and verify both endpoints.
+      status: done
+      relatedComponents: [notes-service, notes-storage, endpoint-tests]
+  documentation:
+    - id: getting-started
+      title: Getting started
+      path: docs/product/getting-started.md
+workspace:
+  startPage: overview
+  additionalViews: []
+  layout: freeform
+  chat:
+    enabled: true
+    context: [specs, components, tests, files]
+components:
+  - id: notes-service
+    kind: service
+    name: Notes web service
+    position: { x: 34, y: 110 }
+    runtime:
+      command: [node, app/server.mjs]
+      cwd: .
+      port: 43179
+      url: http://127.0.0.1:43179
+      health: http://127.0.0.1:43179/health
+      startup: manual
+  - id: notes-storage
+    kind: storage
+    name: Notes JSON storage
+    position: { x: 67, y: 110 }
+    data:
+      path: data
+  - id: endpoint-tests
+    kind: testSuite
+    name: Node endpoint tests
+    position: { x: 35, y: 340 }
+    tests:
+      command: [node, --test, tests/server.test.mjs]
+      cwd: .
+      categories: [integration]
+      cases:
+        - id: endpoint-routes
+          name: Health and notes routes
+          command: [node, --test, tests/server.test.mjs]
+connections:
+  - { from: notes-service, to: notes-storage, label: reads }
+  - { from: endpoint-tests, to: notes-service, label: checks }
+views:
+  specifications:
+    roots: [specs]
+    links:
+      - spec: specs/001-notes/spec.md
+        requirements: [FR-001, FR-002]
+        components: [notes-service, notes-storage]
+        tests: [endpoint-tests]
+  files:
+    roots: [app, data, tests, specs, docs]
+  timeline:
+    enabled: true

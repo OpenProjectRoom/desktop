@@ -1,0 +1,4 @@
+[
+  {"id": 1, "title": "First working release", "done": true},
+  {"id": 2, "title": "Review the next product idea", "done": false}
+]

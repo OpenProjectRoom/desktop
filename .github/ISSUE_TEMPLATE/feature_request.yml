@@ -1,0 +1,17 @@
+name: Feature request
+description: Explain the workflow you want to improve.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What becomes difficult today?
+      description: Describe the project and the moment you lose visibility or control.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: What would a useful result look like?
+    validations:
+      required: true
