@@ -254,3 +254,36 @@ body.cursor-shell:not(.sidebar-expanded)[data-theme="dark"] .sidebar #nav .nav-s
 .docs-browser-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:520px;padding:32px;text-align:center;color:var(--muted)}
 .docs-browser-empty strong{color:var(--ink);font-size:16px;font-weight:620}
 .docs-browser-empty p{max-width:360px;margin:8px 0 18px;font-size:12px;line-height:1.5}
+
+/* Requirements: Spec Kit summaries and evidence use the same dark surfaces as the reader. */
+body[data-theme="dark"] .spec-kit-summary,
+body[data-theme="dark"] .spec-kit-detail{background:#222c37;border-color:#364455;color:#e4edf5}
+body[data-theme="dark"] .spec-kit-heading span,
+body[data-theme="dark"] .spec-kit-detail-head span,
+body[data-theme="dark"] .spec-kit-generic span,
+body[data-theme="dark"] .spec-kit-feature small,
+body[data-theme="dark"] .spec-kit-empty,
+body[data-theme="dark"] .spec-kit-trace small,
+body[data-theme="dark"] .spec-kit-trace p,
+body[data-theme="dark"] .spec-kit-evidence-note,
+body[data-theme="dark"] .spec-kit-link small{color:#a7b8c8}
+body[data-theme="dark"] .spec-kit-feature{background:#2b3845;border-color:#415266;color:#e2ebf3}
+body[data-theme="dark"] .spec-kit-feature:hover,
+body[data-theme="dark"] .spec-kit-feature.active{background:#3a5065;border-color:#68849b;color:#f2f7fb}
+body[data-theme="dark"] .spec-kit-stats span{background:#2c3946;border-color:#405365;color:#c1d1df}
+body[data-theme="dark"] .spec-kit-artifacts button{background:#2e4051;color:#c5d7e7}
+body[data-theme="dark"] .spec-kit-artifacts button:hover,
+body[data-theme="dark"] .spec-kit-artifacts button.active{background:#415c73;color:#f1f7fc}
+body[data-theme="dark"] .spec-kit-trace>div{border-color:#405163}
+body[data-theme="dark"] .spec-kit-checks div{background:#2c3a47;color:#c2d2df}
+body[data-theme="dark"] .spec-kit-checks .warning{background:#493b29;color:#f1cc92}
+body[data-theme="dark"] .spec-kit-checks .error{background:#4a3033;color:#f0a5a7}
+body[data-theme="dark"] .spec-kit-clear{color:#8ed5b1}
+body[data-theme="dark"] .spec-kit-link{border-color:#3b4b5b;color:#c9d7e4}
+body[data-theme="dark"] .spec-reader-content .product-markdown{color:#b9c8d6}
+body[data-theme="dark"] .spec-reader-content .product-markdown h2,
+body[data-theme="dark"] .spec-reader-content .product-markdown h3,
+body[data-theme="dark"] .spec-reader-content .product-markdown h4{color:#e7eff6}
+body[data-theme="dark"] .spec-reader-content .product-markdown p{color:#b9c8d6}
+body[data-theme="dark"] .spec-reader-content .product-markdown code{background:#344657;color:#d9e9f6}
+body[data-theme="dark"] .spec-reader-content .product-markdown .product-bullet:before{color:#9cb9d1}

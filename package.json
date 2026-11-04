@@ -1,6 +1,6 @@
 {
   "name": "openbuildroom-desktop",
-  "version": "0.9.45",
+  "version": "0.9.46",
   "private": true,
   "description": "Desktop workspace for product specifications, services, tests and project topology",
   "main": "desktop/main.cjs",
