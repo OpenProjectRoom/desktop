@@ -1,0 +1,30 @@
+{
+  "root": "docs/product",
+  "missing": false,
+  "entries": [
+    {
+      "path": "docs/product",
+      "type": "directory",
+      "depth": 0,
+      "previewable": false
+    },
+    {
+      "path": "docs/product/architecture.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
+    },
+    {
+      "path": "docs/product/command-tools.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
+    },
+    {
+      "path": "docs/product/getting-started.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
+    }
+  ]
+}

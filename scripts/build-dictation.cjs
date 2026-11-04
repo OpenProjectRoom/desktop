@@ -1,0 +1,12 @@
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { spawnSync } = require('node:child_process');
+if (process.platform !== 'darwin') process.exit(0);
+const root = path.resolve(__dirname, '..');
+const output = path.join(root, 'desktop/bin/product-view-dictation');
+fs.mkdirSync(path.dirname(output), { recursive: true });
+const cache = path.join(os.tmpdir(), 'product-view-swift-module-cache');
+fs.mkdirSync(cache, { recursive: true });
+const result = spawnSync('/usr/bin/swiftc', ['-module-cache-path', cache, path.join(root, 'desktop/dictation.swift'), '-o', output], { stdio: 'inherit', env: { ...process.env, CLANG_MODULE_CACHE_PATH: cache, SWIFT_MODULE_CACHE_PATH: cache } });
+if (result.status !== 0) process.exit(result.status || 1);

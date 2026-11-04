@@ -1,0 +1,31 @@
+/* Optional full-width navigation. The compact rail stays the default. */
+.topbar-start{display:flex;align-items:center;gap:13px;min-width:0}
+.topbar-start .breadcrumb{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-toggle{width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid #dfe5eb;border-radius:9px;background:#fff;color:#60758b}
+.sidebar-toggle svg{width:18px;height:18px}
+.sidebar-toggle:hover,.sidebar-toggle[aria-expanded="true"]{background:#eaf0f6;border-color:#cbd8e5;color:#405b78}
+.sidebar-toggle:focus-visible{outline:2px solid #6485a5;outline-offset:2px}
+.sidebar-close{display:none;border:0;background:transparent;color:#60758b;width:28px;height:28px;border-radius:7px;place-items:center;margin-left:auto}
+.sidebar-close:hover{background:#eaf0f6;color:#405b78}
+.sidebar-close:focus-visible{outline:2px solid #6485a5;outline-offset:2px}
+.sidebar-close svg{width:18px;height:18px}
+body.sidebar-expanded .sidebar{width:264px;align-items:stretch;overflow-y:auto;overflow-x:hidden;box-shadow:5px 0 18px #283d560a}
+body.sidebar-expanded .brand{height:65px;padding:0 20px;justify-content:flex-start;white-space:nowrap}
+body.sidebar-expanded .brand>span{display:inline!important}
+body.sidebar-expanded .project-picker{display:flex!important;width:calc(100% - 26px);height:auto;min-height:59px;margin:6px 13px 21px;padding:10px;justify-content:flex-start}
+body.sidebar-expanded .project-picker>div:not(.project-avatar){display:block!important;min-width:0;flex:1}
+body.sidebar-expanded .project-picker strong,body.sidebar-expanded .project-picker small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.sidebar-expanded .project-picker>.chev{display:block!important;width:15px;height:15px;flex:none}
+body.sidebar-expanded .nav-label{display:block!important;padding:10px 23px 7px}
+body.sidebar-expanded .nav{padding:0 12px}
+body.sidebar-expanded .nav button{width:100%;height:42px;padding:0 12px;justify-content:flex-start;gap:12px;white-space:nowrap}
+body.sidebar-expanded .nav button span,body.sidebar-expanded .sidebar-bottom button span{display:inline!important}
+body.sidebar-expanded .nav button .count{margin-left:auto}
+body.sidebar-expanded .sidebar-bottom{padding:12px}
+body.sidebar-expanded .sidebar-bottom button{justify-content:flex-start;padding:9px 11px;gap:11px}
+body.sidebar-expanded .sidebar-bottom:after{display:none}
+body.sidebar-expanded .main{margin-left:264px;margin-right:350px;width:calc(100% - 614px)}
+body.sidebar-expanded.dashboard-page .main{margin-left:264px;margin-right:0;width:calc(100% - 264px)}
+.desktop-app.sidebar-expanded .brand{height:83px;padding:20px 20px 0}
+@media(max-width:1250px){body.sidebar-expanded .main{margin-right:0;width:calc(100% - 264px)}}
+@media(max-width:700px){body.sidebar-expanded .sidebar{width:264px;box-shadow:10px 0 34px #243a5533}body.sidebar-expanded .sidebar-close{display:grid}body.sidebar-expanded .main,body.sidebar-expanded.dashboard-page .main{margin-left:59px;width:calc(100% - 59px)}.topbar-start{gap:9px}}

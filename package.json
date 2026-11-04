@@ -1,0 +1,62 @@
+{
+  "name": "openbuildroom-desktop",
+  "version": "0.9.43",
+  "private": true,
+  "description": "Desktop workspace for product specifications, services, tests and project topology",
+  "main": "desktop/main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test scripts/spec-kit.test.cjs scripts/environment.test.cjs scripts/agent-chat.test.cjs scripts/mcp-explorer.test.cjs scripts/mcp-management.test.cjs scripts/test-explorer.test.cjs scripts/data-viewer.test.cjs scripts/chat-markdown.test.cjs scripts/cli-explorer.test.cjs scripts/component-management.test.cjs",
+    "validate:config": "node scripts/validate-config.cjs productview.yaml",
+    "build:demo": "node scripts/build-demo.cjs",
+    "package:mac": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dmg --arm64 --config.electronDist=node_modules/electron/dist",
+    "package:mac:app": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dir --arm64 --config.electronDist=node_modules/electron/dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/client": "^2.4.0",
+    "ajv": "8.20.0",
+    "mysql2": "^3.24.6",
+    "pg": "^8.23.1",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "electron": "45.2.2",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.openbuildroom.desktop",
+    "productName": "OpenBuildRoom Desktop",
+    "directories": {
+      "output": "../../outputs/openbuildroom-desktop"
+    },
+    "files": [
+      "dist/**",
+      "desktop/**",
+      "mcp/**",
+      "agent/**",
+      "scripts/**",
+      "schemas/**",
+      "productview.yaml",
+      "OPENBUILDROOM.md",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "desktop/bin/product-view-dictation",
+        "to": "dictation/product-view-dictation"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "icon": "desktop/assets/icon.png",
+      "identity": null,
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "OpenBuildRoom records speech only while you dictate into Product Chat.",
+        "NSSpeechRecognitionUsageDescription": "OpenBuildRoom transcribes speech on this Mac for Product Chat."
+      }
+    },
+    "dmg": {
+      "title": "OpenBuildRoom Desktop Preview"
+    }
+  }
+}

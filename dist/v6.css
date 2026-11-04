@@ -1,0 +1,62 @@
+/* OpenBuildRoom 0.6.1: neutral surfaces and a restrained slate-blue accent. */
+:root{
+  --ink:#252d38;--muted:#6f7b89;--line:#e2e6eb;--paper:#f7f8fa;
+  --white:#fff;--nav:#f2f4f6;--purple:#536b86;--blue:#536b86;
+  --green:#16835e;--shadow:0 4px 22px rgba(37,49,67,.035);
+  --pv-accent:#536b86;--pv-accent-strong:#405b78;--pv-accent-soft:#eaf0f6;
+  --pv-border:#e2e7ed;--pv-subtle:#f3f5f7;--pv-muted:#738092;
+}
+body{background:var(--paper);color:var(--ink)}
+.sidebar{background:#f2f4f6;color:#687584;border-right-color:#e0e5eb}
+.brand{color:#26303d}.brand-mark{background:#425b76;box-shadow:0 3px 10px #31486122}.brand span[style]{color:#7188a1!important}
+.project-picker{border-color:#e0e5eb;color:#283442;box-shadow:0 2px 8px #2438540a}
+.project-avatar{background:#e7edf3;color:#4c6480}
+.nav button{color:#687584}.nav button:hover{background:#e8edf3;color:#334a65}.nav button.active{background:#e3eaf2;color:#344e6c}.nav button.active svg{color:#496987}
+.nav .count{background:#e0e7ee;color:#637891}.sidebar-bottom{border-top-color:#e0e5eb}.sidebar-bottom button{color:#687584}.sidebar-bottom button:hover{background:#e8edf3;color:#334a65}.sidebar-bottom:after{color:#9ba5b1}
+.topbar{background:#fdfdfe;border-bottom-color:#e3e8ed}.top-actions .branch,.topbar .desktop-chip{background:#f3f5f7;border-color:#e3e8ed;color:#6c7a8b}.topbar .chat-toggle{border-color:#dfe5eb;color:#576b83}
+.user-avatar{background:#e8edf4;color:#506783}.breadcrumb strong{color:#344154}
+.btn,.mini-btn,.search{border-color:#dce3eb}.btn:hover,.mini-btn:hover{background:#f1f5f9;border-color:#afc0d2;color:#405d7d}
+.btn.primary,.workspace-head-actions .btn.primary{background:var(--pv-accent-strong);border-color:var(--pv-accent-strong);color:#fff;box-shadow:0 3px 10px #2c425d20}.btn.primary:hover,.workspace-head-actions .btn.primary:hover{background:#344f6c;border-color:#344f6c}
+.card,.map-frame,.data-node{border-color:var(--pv-border);box-shadow:var(--shadow)}
+.card-head .link,.spec-card button{color:#486583}.dashboard-stat:hover{border-color:#b5c4d3;box-shadow:0 5px 22px #30486711}
+.service-icon,.spec-symbol,.dashboard-empty-symbol{background:#eaf0f6;color:#526d89}.service-icon.blue{background:#edf1f7;color:#607996}.service-icon.green{background:#e8f5ed;color:#16835e}
+.metric-tabs button.active{background:#e9eff6;color:#405f7e}.metric-tabs button{color:#8591a0}
+.tag{background:#eaf0f6;color:#55718e}.tag.blue{background:#ecf1f7;color:#5b7896}.tag.orange{background:#fff0de;color:#a96e22}
+.spec-card{background:linear-gradient(115deg,#fff 50%,#f5f7fa)}
+.chart #dashboard-fill stop:first-child{stop-color:#b7c6d7}
+.map-canvas{background-color:#fafbfc;background-image:radial-gradient(#d8e0e8 .8px,transparent .8px)}
+.map-links path.emphasis{stroke:#8299b1}.map-node{border-color:#dfe6ec;box-shadow:0 6px 20px #2b3b5310}.map-node:hover{border-color:#a9bbce;box-shadow:0 9px 25px #29415e18}.map-node.selected{border-color:#7c98b4;box-shadow:0 0 0 3px #6485a525,0 10px 27px #29415e18}
+.map-node-icon,.map-node.kind-specification .map-node-icon,.map-node.kind-issues .map-node-icon{background:#eaf0f6;color:#536e89}.map-node.kind-database .map-node-icon{background:#edf1f5;color:#657d96}
+.map-node-link:hover,.map-float-controls button:hover,.map-toolbar .tool-button:hover{color:#476786;background:#edf2f7}
+.phase.active{border-color:#b9c9da;background:#f2f6fa}.phase.active .phase-bar{background:#7793af}
+.chat-panel{border-color:#dfe5eb;background:#fdfdfe;box-shadow:0 15px 45px #273b5617}
+.panel-top{border-bottom-color:#e5e9ee;background:#fdfdfe}.panel-top .panel-close:hover{background:#edf2f7;color:#49627d}
+.panel-tabs{border-color:#e4e9ee;background:#f2f5f8}.panel-tabs button{color:#758396}.panel-tabs button.active{color:#3d5876;box-shadow:0 1px 5px #2b405e15}
+.panel-empty .panel-symbol{background:#eaf0f6;color:#56728d}
+.chat-message.assistant{background:#eef2f6;color:#475c71}.chat-message.user{background:#49627f;color:#fff}
+.chat-suggestions button{border-color:#e0e6ed;color:#6c7d90}.chat-suggestions button:hover{border-color:#b6c6d7;color:#405f7e;background:#f4f7fa}
+.chat-composer{border-top-color:#e5e9ee;background:#fdfdfe}.chat-composer form{border-color:#dfe6ec;box-shadow:0 2px 8px #29415d0a}.chat-composer form:focus-within{border-color:#9db2c7;box-shadow:0 0 0 3px #6485a51b}.chat-composer-footer button{background:#486380}
+.inspector-kind{color:#58748f}.panel-foot{border-top-color:#e5e9ee;background:#fdfdfe}.panel-foot .dot{background:#8ca1b5}
+.workspace-menu{border-color:#dfe6ed;box-shadow:0 18px 50px #24395524}.workspace-menu button:hover{background:#edf2f7;color:#405f7e}
+.guide-tabs button.active,.spec-list button.active,.file-tree button:hover,.file-tree button.active,.data-tabs button.active{background:#eaf0f6;color:#425f7e}
+.table tr.clickable:hover{background:#f5f8fa}.doc .label{color:#5a7898}.doc-callout{background:#f0f4f8;border-left-color:#8ca8c4;color:#4f6782}
+.product-intro{background:#eef2f6;border-color:#dee6ee;color:#273546}.product-intro-label{color:#647d98}.product-intro p{color:#697b90}.product-intro-meta span{background:#f9fafc;border-color:#d5dfe9;color:#5d7188}
+.product-principle-card{background:linear-gradient(145deg,#f0f4f8,#fafbfd 72%)}.product-principle-kicker{color:#607b99}.product-principle-foot{border-top-color:#e0e7ee;color:#6a8098}
+.product-lane{background:#f5f7f9;border-color:#e2e8ee}.product-roadmap-card{border-color:#e1e7ed;color:#273443}.product-roadmap-card:hover{border-color:#acbfd1;background:#fdfefe}.product-roadmap-card small{background:#eaf0f6;color:#56718e}
+.product-status-dot.planned{background:#829bb6}.product-status-dot.in-progress{background:#d0a36d}.product-status-dot.done{background:#31b782}
+.product-doc-list{background:#f8fafb}.product-doc-list button:hover,.product-doc-list button.active{background:#eaf0f6;color:#425f7e}
+.product-markdown code{background:#edf2f7;color:#4e6884}.product-markdown .product-bullet:before{color:#718dab}
+.product-editor textarea:focus{border-color:#92abc4;box-shadow:0 0 0 3px #7898b825}.product-setup-icon{background:#eaf0f6;color:#587492}.modal-body input:focus{border-color:#93abc4}
+.command-summary-body small,.command-page-count{color:#8190a0}.command-summary-icon{border-color:#dce5ef;background:#edf2f7;color:#526e8c}
+.command-catalog,.command-main,.command-empty{border-color:#dfe6ed;box-shadow:0 9px 27px #263f6208}
+.command-kicker{color:#627d9a}.command-catalog-head p{color:#8b98a7}.command-search{border-color:#e1e7ed;background:#f8fafb;color:#8e9cab}.command-search input{color:#344457}
+.command-catalog-item{color:#293748}.command-catalog-item:hover{background:#f5f8fa}.command-catalog-item.active{background:#edf2f7;border-color:#dbe5ef}.command-catalog-symbol{background:#e7edf4;color:#536e8b}.command-catalog-copy small{color:#7e8d9e}.command-catalog-copy em{color:#91a0ae}.command-catalog-state{background:#b9c4d0}.command-catalog-state.running{background:#33a16f;box-shadow:0 0 0 3px #33a16f1c}
+.command-catalog-foot{border-top-color:#edf0f4;color:#96a2af}
+.command-hero{background:linear-gradient(115deg,#f1f4f8,#fafbfc 63%,#eef2f6);border-bottom-color:#e0e7ee}.command-hero-icon{border-color:#dce5ee;color:#56728f;box-shadow:0 2px 9px #2c435f0b}.command-hero-badges span{border-color:#dee6ed;color:#687b91}.command-hero-badges .live{color:#258453;border-color:#cce5d3;background:#f2faf3}.command-hero-bottom p{color:#6d7f91}.command-hero-bottom code{color:#496985;background:#e7eef5}.command-hero-actions .btn.primary{background:#405b78;border-color:#405b78}.command-hero-actions .btn.primary:hover{background:#344f6c}
+.command-tabs{border-bottom-color:#e5eaf0}.command-tabs button{color:#8593a2}.command-tabs button:hover{color:#4b6886}.command-tabs button.active{color:#405f7e;border-bottom-color:#6384a5}
+.command-lead p,.command-output-head p,.command-config-page>p{color:#78889a}.command-protocol span{color:#6f8194;background:#f0f4f8;border-color:#e1e8ef}
+.command-usage{background:#253140;color:#edf2f7}.command-usage span{color:#a6bdd5}
+.command-reference-row{border-bottom-color:#edf1f5}.command-reference-row code{color:#3f617f}.command-reference-row span{color:#7c8c9e}.command-example{border-color:#e4eaf0;background:#fafbfc}.command-example span{color:#7d8d9e}.command-example code{color:#3f617f}.command-env code{background:#eaf0f6;color:#4e708f}
+.command-live-help{border-color:#e0e7ee;background:#f9fbfc}.command-live-help p{color:#8493a3}.command-help-result{border-color:#e1e8ef}.command-help-meta{background:#f4f6f8;border-bottom-color:#e1e8ef;color:#76899e}.command-help-result pre{color:#405367}
+.command-output-status{background:#edf2f7;color:#5d7894}.command-terminal{background:#202b39;box-shadow:0 8px 24px #14233a17}.command-terminal-top{background:#2b3747;border-bottom-color:#405064;color:#a8b6c7}.command-terminal-top strong{color:#e3ebf3}.command-terminal pre{color:#cad7e5}.command-log-path{color:#96a4b3}
+.command-config-page>p code,.command-config-points code{background:#edf2f7;color:#4c6c89}.command-config-points div{border-color:#e4eaf0}.command-config-points span{color:#8997a6}.command-config-source{border-color:#e1e8ef}.command-config-source>div{border-bottom-color:#e1e8ef;background:#f8fafb;color:#637d98}.command-config-source button{color:#4a6b8b}.command-config-source pre{color:#415b76}.command-empty-icon{color:#657e9a}.command-empty p{color:#8291a1}

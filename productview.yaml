@@ -1,0 +1,199 @@
+schemaVersion: 1
+project:
+  id: blackbox-agent-b
+  name: Blackbox Agent B
+  description: A shared view of product, code and runtime.
+  version: 0.8.4
+  repository: https://github.com/bventures007/blackbox-agent-b
+
+product:
+  vision: specs/vision.md
+  docsRoot: docs/product
+  backlogRoot: backlog
+  roadmap:
+    - id: shared-product-context
+      title: Shared product context
+      summary: Keep the vision, roadmap and documentation visible beside code and tests.
+      status: in-progress
+      relatedComponents: [product-spec, web]
+    - id: product-owner-navigation
+      title: Product owner navigation
+      summary: Separate product pages, keep Project Map independent, and group data sources with services and tests.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: optional-specialist-views
+      title: Optional specialist views
+      summary: Keep Vision, Roadmap, North Star and Command-line Tools out of the default navigation, with shared YAML switches in Preferences.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: local-environment-values
+      title: Local environment values
+      summary: Show declared variable names and local availability; store values encrypted outside the repository and pass them only to explicitly started processes.
+      status: done
+      relatedComponents: [product-spec, web, api]
+    - id: local-agent-chat
+      title: Local coding agent in Product Chat
+      summary: Connect Codex CLI or Claude Code on this Mac, expose the OpenBuildRoom MCP context, and dictate into chat with on-device speech recognition.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: north-star-page
+      title: North Star progress page
+      summary: Give the manually recorded outcome metric its own page with a historical plot and all observations.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: railway-export
+      title: Railway deployment plan
+      summary: Validate production settings and export a reviewable Railway plan.
+      status: draft
+      relatedComponents: [web, api, worker, postgres]
+    - id: live-integrations
+      title: Live issue and metric adapters
+      summary: Connect real backlog and runtime signals to the workspace.
+      status: planned
+      relatedComponents: [issues, api]
+    - id: local-backlog
+      title: Repository-backed local backlog
+      summary: Capture and update product issues in Markdown files without an external tracker.
+      status: done
+      relatedComponents: [product-spec]
+    - id: command-tools-workbench
+      title: Command tools workbench
+      summary: Show a manpage for real CLI tools declared in the repository, with explicit access to executable help and output.
+      status: done
+      relatedComponents: [product-spec]
+    - id: workspace-settings
+      title: Personal settings and issue source locations
+      summary: Offer local appearance settings and repository-backed GitHub or Linear source metadata; live authorization and issue sync remain planned.
+      status: done
+      relatedComponents: [product-spec, issues]
+    - id: specification-folder-browser
+      title: Specification folder browser
+      summary: Read all files in configured specification folders and preview them in a searchable tree.
+      status: done
+      relatedComponents: [product-spec]
+    - id: spec-kit-traceability
+      title: Spec Kit feature traceability
+      summary: Detect existing Spec Kit artifacts and connect feature requirements with configured components, local runtime observations and recorded test runs.
+      status: done
+      relatedComponents: [product-spec, tests]
+    - id: mcp-explorer
+      title: MCP Explorer
+      summary: Discover project MCP servers, connect on request, and inspect their tools, resources and prompts with a human-readable interface.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: test-case-explorer
+      title: Test case explorer
+      summary: Expand test suites to inspect detected Node test files or on-demand Rust test names, run one entry, and review recorded output.
+      status: done
+      relatedComponents: [tests, web]
+    - id: data-source-explorer
+      title: Data source explorer
+      summary: Inspect PostgreSQL, MySQL/MariaDB, SQLite and local file structures with small on-demand read-only previews.
+      status: done
+      relatedComponents: [postgres, web]
+  documentation:
+    - id: getting-started
+      title: Getting started
+      path: docs/product/getting-started.md
+      summary: How to open and use this workspace.
+    - id: architecture
+      title: Architecture notes
+      path: docs/product/architecture.md
+      summary: How product decisions connect to runtime components.
+    - id: command-tools
+      title: Command tools
+      path: docs/product/command-tools.md
+      summary: How CLI tools and servers appear in OpenBuildRoom.
+
+workspace:
+  startPage: overview
+  additionalViews: [] # Optional navigation: vision, roadmap, north-star, commands.
+  layout: freeform
+  chat:
+    enabled: true
+    context: [specs, components, tests, issues]
+
+components:
+  - id: product-spec
+    kind: specification
+    name: Product Spec
+    icon: doc
+    position: { x: 5, y: 95 }
+    path: specs/vision.md
+  - id: web
+    kind: service
+    name: Web App
+    icon: cube
+    position: { x: 35, y: 70 }
+    runtime:
+      command: [npm, run, dev]
+      cwd: .
+      port: 3000
+      url: http://localhost:3000
+      health: http://localhost:3000/api/health
+      startup: manual
+  - id: api
+    kind: service
+    name: API Server
+    icon: terminal
+    position: { x: 68, y: 190 }
+    runtime:
+      command: [npm, run, api]
+      cwd: .
+      port: 4000
+      health: http://localhost:4000/health
+      startup: manual
+  - id: postgres
+    kind: database
+    name: PostgreSQL
+    icon: database
+    position: { x: 36, y: 320 }
+    data:
+      engine: postgres
+      connectionEnv: DATABASE_URL
+      viewer: external
+  - id: tests
+    kind: testSuite
+    name: Tests & Quality
+    icon: flask
+    position: { x: 5, y: 445 }
+    tests:
+      command: [npm, test]
+      cwd: .
+      categories: [unit]
+  - id: issues
+    kind: issues
+    name: Product Backlog
+    icon: list
+    position: { x: 67, y: 445 }
+    integration:
+      provider: github
+      repository: bventures007/blackbox-agent-b
+  - id: worker
+    kind: service
+    name: Worker
+    icon: activity
+    position: { x: 36, y: 570 }
+    runtime:
+      command: [npm, run, worker]
+      cwd: .
+      startup: manual
+connections:
+  - { from: product-spec, to: web, label: defines }
+  - { from: web, to: api, label: calls }
+  - { from: api, to: postgres, label: reads-writes }
+  - { from: tests, to: web, label: checks }
+  - { from: tests, to: api, label: checks }
+  - { from: issues, to: product-spec, label: informs }
+  - { from: worker, to: postgres, label: reads-writes }
+
+views:
+  specifications:
+    roots: [specs]
+  files:
+    roots: [src, tests, specs]
+  metrics:
+    source: process
+    display: [latency, cpu, memory]
+  timeline:
+    enabled: true

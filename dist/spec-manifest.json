@@ -1,0 +1,43 @@
+{
+  "roots": [
+    "specs"
+  ],
+  "entries": [
+    {
+      "path": "specs",
+      "type": "directory",
+      "depth": 0,
+      "previewable": false
+    },
+    {
+      "path": "specs/product-view",
+      "type": "directory",
+      "depth": 1,
+      "previewable": false
+    },
+    {
+      "path": "specs/product-view/plan.md",
+      "type": "file",
+      "depth": 2,
+      "previewable": true
+    },
+    {
+      "path": "specs/product-view/specification-browser.md",
+      "type": "file",
+      "depth": 2,
+      "previewable": true
+    },
+    {
+      "path": "specs/vision.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
+    }
+  ],
+  "specKit": {
+    "detected": false,
+    "constitution": null,
+    "activeFeature": null,
+    "features": []
+  }
+}

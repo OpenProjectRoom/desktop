@@ -1,0 +1,52 @@
+/* OpenBuildRoom 0.5: quiet light workspace with a floating conversation panel. */
+:root{--ink:#253332;--muted:#73807f;--line:#e2e7e4;--paper:#f7f8f7;--nav:#f3f5f3;--purple:#496a63;--blue:#607d7a;--green:#2d936f;--shadow:0 4px 22px rgba(28,45,40,.035)}
+body{background:var(--paper);color:var(--ink)}
+.sidebar{background:#f4f6f4;color:#667573;border-right:1px solid #e3e8e5}
+.brand{color:#243330}.brand-mark{background:#334d48;color:#fff;border-radius:12px;box-shadow:0 3px 10px #283c3820}
+.brand span[style]{color:#6d8980!important}
+.project-picker{background:#fff;border-color:#dfe6e1;color:#273b36;border-radius:13px;box-shadow:0 2px 8px #2a39340b}
+.project-avatar{background:#e8eeea;color:#45635b;border-radius:9px}
+.nav button{color:#667572;border-radius:12px}.nav button:hover{background:#e9eeeb;color:#29413b}.nav button.active{background:#e1e9e4;color:#2c4940}.nav button.active svg{color:#40665a}
+.nav .count{background:#dce5df;color:#557064}.sidebar-bottom{border-top-color:#e2e8e3}.sidebar-bottom button{color:#667572;border-radius:11px}.sidebar-bottom button:hover{background:#e8eeea;color:#29413b}.sidebar-bottom:after{color:#95a39d}
+.main{margin-right:350px;width:calc(100% - 422px)}
+.topbar{background:#fcfdfc;border-bottom-color:#e3e8e4}.top-actions .branch,.topbar .desktop-chip{background:#f2f5f3;border-color:#e2e8e4;color:#62736c;border-radius:9px}.topbar .chat-toggle{border-color:#dfe6e1;color:#4f625c;border-radius:10px}
+.user-avatar{background:#e5ebe7;color:#45665b}
+.content{padding-top:30px}
+.btn,.mini-btn,.search{border-color:#dfe6e2;border-radius:10px}.btn:hover,.mini-btn:hover{background:#f1f5f2;border-color:#b9cbc0;color:#3f6156}
+.btn.primary,.workspace-head-actions .btn.primary{background:#36534d;border-color:#36534d;color:#fff;box-shadow:0 3px 10px #263e3721}.btn.primary:hover,.workspace-head-actions .btn.primary:hover{background:#2a443e;border-color:#2a443e}
+.card,.map-frame,.data-node{border-color:#e1e7e3;border-radius:17px;box-shadow:var(--shadow)}
+.card-head .link,.spec-card button{color:#486e60}.dashboard-stat:hover{border-color:#b8cac0;box-shadow:0 5px 22px #304c4112}
+.service-icon,.spec-symbol,.dashboard-empty-symbol{background:#ebf1ed;color:#4e7667;border-radius:11px}.service-icon.blue{background:#edf2f1;color:#63827d}
+.metric-tabs button.active{background:#e7efea;color:#3d6557}.metric-tabs button{border-radius:7px}
+.tag{background:#e9efeb;color:#587365}.tag.blue{background:#edf2f1;color:#5b7774}
+.spec-card{background:linear-gradient(115deg,#fff 50%,#f3f7f4)}
+.chart #dashboard-fill stop:first-child{stop-color:#9bb8ab}
+.map-frame{border-radius:19px}.map-canvas{background-color:#fafcfb;background-image:radial-gradient(#d8e0da .8px,transparent .8px)}
+.map-links path.emphasis{stroke:#739687}.map-node{border-color:#dfe7e1;border-radius:15px;box-shadow:0 6px 20px #223b3010}.map-node:hover{border-color:#a7c0b0;box-shadow:0 9px 25px #294a381a}.map-node.selected{border-color:#739b82;box-shadow:0 0 0 3px #5f977b22,0 10px 27px #294a3819}
+.map-node-icon,.map-node.kind-specification .map-node-icon{background:#eaf1ec;color:#537a64}.map-node.kind-database .map-node-icon{background:#eaf1f0;color:#5c837f}.map-node.kind-issues .map-node-icon{background:#edf2ef;color:#628275}
+.map-node-link:hover,.map-float-controls button:hover,.map-toolbar .tool-button:hover{color:#486f60;background:#edf3ef}
+.phase.active{border-color:#b5cdbb;background:#f3f8f4}.phase.active .phase-bar{background:#79a387}
+.chat-panel{right:16px;top:16px;bottom:16px;width:320px;border:1px solid #dde6df;border-radius:21px;background:#fcfdfc;box-shadow:0 15px 45px #28403616;overflow:hidden}
+.panel-top{height:59px;padding:0 18px;border-bottom-color:#e5ebe6;background:#fcfdfc}.panel-top strong{font-size:13px}
+body.dashboard-page .panel-top .panel-close{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;font-size:19px}.panel-top .panel-close:hover{background:#edf2ee;color:#3f5f52}
+.panel-tabs{margin:11px 13px 0;padding:3px;gap:3px;border:1px solid #e5ebe7;border-radius:11px;background:#f3f6f4}
+.panel-tabs button{flex:1;border-radius:8px;color:#72827a}.panel-tabs button.active{background:#fff;color:#36574b;box-shadow:0 1px 5px #28403615}
+.panel-body{padding:16px}.panel-empty .panel-symbol{background:#eaf1ec;color:#537a65;border-radius:14px}
+.chat-message{border-radius:13px}.chat-message.assistant{background:#eef3ef;color:#465b52}.chat-message.user{background:#47665b;color:#fff}
+.chat-suggestions button{border-color:#dfe7e1;border-radius:8px;color:#667a70}.chat-suggestions button:hover{border-color:#aac3b2;color:#416453;background:#f4f8f5}
+.chat-composer{padding:13px;border-top-color:#e5ebe7;background:#fcfdfc}.chat-composer form{border-color:#dfe7e1;border-radius:13px;box-shadow:0 2px 8px #2946390a}.chat-composer form:focus-within{border-color:#a9c2b0;box-shadow:0 0 0 3px #7ca68a1a}.chat-composer-footer button{background:#3d5f53;border-radius:8px}
+.inspector-kind{color:#638274}.panel-foot{border-top-color:#e5ebe7;background:#fcfdfc}.panel-foot .dot{background:#82a492}
+.workspace-menu{border-color:#dfe7e1;border-radius:16px;box-shadow:0 18px 50px #243a2f25}.workspace-menu button{border-radius:9px}.workspace-menu button:hover{background:#edf3ee;color:#3d6250}
+.guide-tabs button.active,.spec-list button.active,.file-tree button:hover,.file-tree button.active,.data-tabs button.active{background:#eaf1eb;color:#3e6552}
+.table tr.clickable:hover{background:#f4f8f5}.doc .label{color:#5c7c69}.doc-callout{background:#f0f5f1;border-left-color:#8dab93;color:#526b58}
+.product-intro{background:#edf2ee;border:1px solid #dce6de;color:#263a31;border-radius:20px;box-shadow:none}
+.product-intro-label{color:#648272}.product-intro p{color:#657c6e}.product-intro-meta span{background:#f9fbf9;border-color:#d4dfd6;color:#587063;border-radius:10px}
+.product-principle-card{background:linear-gradient(145deg,#f0f5f1,#fafcfb 72%)}.product-principle-kicker{color:#698574}.product-principle-foot{border-top-color:#dfe9e0;color:#688272}
+.product-lane{background:#f4f7f5;border-color:#e1e9e3;border-radius:15px}.product-roadmap-card{border-color:#e0e8e1;border-radius:11px}.product-roadmap-card:hover{border-color:#adc4b3;background:#fcfefc}.product-roadmap-card small{background:#e9f1ea;color:#5c7d66;border-radius:6px}
+.product-status-dot.planned{background:#8da99a}.product-status-dot.in-progress{background:#d0a36d}
+.product-doc-list{background:#f8faf8}.product-doc-list button{border-radius:10px}.product-doc-list button:hover,.product-doc-list button.active{background:#eaf1eb;color:#41634f}
+.product-markdown code{background:#edf2ee;color:#4e705c}.product-markdown .product-bullet:before{color:#6e967b}
+.product-editor textarea:focus{border-color:#95b29d;box-shadow:0 0 0 3px #95b29d26}.product-setup-icon{background:#e8f0e9;color:#54755d}
+.modal{border-radius:19px}.modal-body input:focus{border-color:#8ba995}
+@media(max-width:1250px){.main{margin-right:0;width:calc(100% - 72px)}.chat-panel{box-shadow:0 18px 50px #233d3029}}
+@media(max-width:700px){.main{margin-left:59px;width:calc(100% - 59px)}.chat-panel{right:12px;top:12px;bottom:12px;width:min(320px,calc(100vw - 83px))}.product-intro{border-radius:17px}}
