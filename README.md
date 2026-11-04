@@ -10,7 +10,7 @@ The screenshot shows the **real included example** after starting its service an
 
 ## Try it in five minutes
 
-1. Download the [latest Apple Silicon Mac release](https://github.com/OpenBuildRoom/desktop/releases/latest), unzip it, and move **OpenBuildRoom Desktop.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
+1. Download the [Apple Silicon Mac preview (v0.9.44)](https://github.com/OpenBuildRoom/desktop/releases/download/v0.9.44/OpenBuildRoom-Desktop-0.9.44-arm64-mac.zip), unzip it, and move **OpenBuildRoom Desktop.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
 2. Have [Node.js 20+](https://nodejs.org/) installed for the working example's service and tests. The desktop app itself does not require Node.js.
 3. Open the app and click **Try working example**. It copies a small project to `~/Documents/OpenBuildRoom Examples/hello-workspace` and opens it without starting anything.
 4. Start **Notes web service** in Services and open its local URL. Run **Node endpoint tests** in Tests. Inspect `notes.json` in Data Sources, then open the linked feature in Requirements.
