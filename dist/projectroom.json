@@ -45,7 +45,7 @@
       {
         "id": "local-environment-values",
         "title": "Local environment values",
-        "summary": "Show declared variable names and local availability; store values encrypted outside the repository and pass them only to explicitly started processes.",
+        "summary": "Show declared variable names and local availability; read and edit the ignored project .env and pass values only to explicitly started processes.",
         "status": "done",
         "relatedComponents": [
           "product-spec",

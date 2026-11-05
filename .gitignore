@@ -5,3 +5,4 @@ desktop/bin/
 work/
 .productview/
 .openai/
+/.env

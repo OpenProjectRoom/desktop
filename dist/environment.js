@@ -1,4 +1,4 @@
-/* Private local values for names declared in the shared project configuration. */
+/* Project .env values for names declared in the shared configuration. */
 (() => {
   let loadedRoot = null;
   let snapshot = null;
@@ -19,6 +19,7 @@
       for (const name of item.environment || []) add(name, item.name);
       add(item.authEnv, item.name);
     }
+    for (const item of projectConfig.workspace?.apiSources || []) add(item.authEnv, item.name);
     for (const item of projectConfig.components || []) {
       for (const name of item.runtime?.environment || []) add(name, item.name);
       for (const name of item.tests?.environment || []) add(name, item.name);
@@ -48,26 +49,26 @@
     if (pv && projectRoot && !snapshot && !loading && !error) queueMicrotask(load);
     const variables = pv && projectRoot ? snapshot?.variables || [] : demoVariables();
     const canEdit = Boolean(pv && projectRoot && snapshot?.storageAvailable);
-    const status = item => item.status === 'stored' ? '<span class="env-local-state stored">Stored on this Mac</span>' : item.status === 'inherited' ? '<span class="env-local-state inherited">Inherited from app launch</span>' : '<span class="env-local-state missing">Not set</span>';
+    const status = item => item.status === 'stored' ? '<span class="env-local-state stored">Set in .env</span>' : item.status === 'inherited' ? '<span class="env-local-state inherited">Inherited from app launch</span>' : '<span class="env-local-state missing">Not set</span>';
     const rows = variables.map(item => `<div class="environment-row"><div class="environment-variable"><strong><code>${escapeHtml(item.name)}</code></strong><span>${escapeHtml(item.description || item.sources.join(', '))}</span><small>Used by ${escapeHtml(item.sources.join(', '))}</small></div>${status(item)}<div class="environment-actions"><button type="button" class="btn small" data-env="edit:${escapeHtml(item.name)}" ${canEdit ? '' : 'disabled'}>${item.status === 'stored' ? 'Change' : 'Set value'}</button>${item.status === 'stored' && canEdit ? `<button type="button" class="btn small" data-env="remove:${escapeHtml(item.name)}">Remove</button>` : ''}</div></div>`).join('');
-    return `<div class="environment-shell">${pageHead('Environment', 'Set private values for this project on this Mac. Variable names come from project configuration.')}
-      <section class="card environment-intro"><div class="environment-intro-icon">${icon('settings')}</div><div><strong>Names are shared. Values stay local.</strong><p>Project Room stores values outside the repository in encrypted app storage. Values are never added to YAML, the agent guide, Product Chat or the MCP server. They are passed only to local commands you start from this desktop app.</p></div></section>
+    return `<div class="environment-shell">${pageHead('Environment', 'Read and edit this project’s .env file. Variable names come from project configuration.')}
+      <section class="card environment-intro"><div class="environment-intro-icon">${icon('settings')}</div><div><strong>One .env file for your local project.</strong><p>Project Room reads and updates the existing .env in the workspace root. It keeps the file out of Git and never adds values to project YAML, Product Chat or its MCP server. Local commands you start here receive the variables they need.</p></div></section>
       <section class="card environment-list"><div class="card-head"><div><h2>Project variables</h2><p>${variables.length} declared · ${variables.filter(item => item.status !== 'missing').length} available locally</p></div><button type="button" class="btn small" data-env="refresh" ${pv && projectRoot ? '' : 'disabled'}>Refresh</button></div>
       ${loading && !snapshot ? '<div class="environment-message">Checking local values…</div>' : error ? `<div class="environment-message">${escapeHtml(error)}</div>` : rows || '<div class="environment-message">No variable names are declared yet. Add names under <code>workspace.environment</code>, an MCP server, a service or test <code>environment</code> list, a CLI <code>environment</code> list, or <code>data.connectionEnv</code> in .projectroom/project.yaml.</div>'}</section>
-      ${pv && projectRoot && snapshot && !snapshot.storageAvailable ? '<p class="environment-note">Secure storage is unavailable on this computer, so values cannot be saved here.</p>' : ''}
+      ${pv && projectRoot && snapshot?.envTracked ? '<p class="environment-note">This .env is tracked by Git. Remove it from the index before editing local values here.</p>' : ''}
       ${!projectRoot ? '<p class="environment-note">Open a local workspace to set values. This web preview never accepts secrets.</p>' : ''}
-      <p class="environment-note">The app does not import .env files or publish values to coding agents. If a project command prints a secret, Project Room masks known values in its output, but you should still review logs before sharing them.</p>
+      <p class="environment-note">Values stay in the local .env file. Project Room does not include them in agent prompts or its MCP responses. Coding agents with direct filesystem access may read .env independently. Review logs before sharing them.</p>
     </div>`;
   };
   function openEdit(name) {
     const item = snapshot?.variables.find(variable => variable.name === name);
     if (!item || !snapshot.storageAvailable) return;
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal environment-modal" role="dialog" aria-modal="true" aria-label="Set ${escapeHtml(name)}"><div class="modal-head"><h2>${item.status === 'stored' ? 'Change' : 'Set'} ${escapeHtml(name)}</h2><button type="button" class="icon-btn" data-env="close" aria-label="Close">×</button></div><form id="environmentForm"><div class="modal-body"><p>This value is saved only in encrypted local app storage.</p><label for="environmentValue">Value</label><div class="environment-input-row"><input id="environmentValue" type="password" autocomplete="off" spellcheck="false" required maxlength="32000" placeholder="Enter a private value"><button type="button" class="btn small" id="environmentReveal" data-env="reveal:${escapeHtml(name)}" ${item.status === 'stored' ? '' : 'disabled'}>Show current</button></div><small>The current value is never prefilled. Use Show current only when you need to inspect it.</small></div><div class="modal-actions"><button type="button" class="btn" data-env="close">Cancel</button><button type="submit" class="btn primary">Save locally</button></div></form></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal environment-modal" role="dialog" aria-modal="true" aria-label="Set ${escapeHtml(name)}"><div class="modal-head"><h2>${item.status === 'stored' ? 'Change' : 'Set'} ${escapeHtml(name)}</h2><button type="button" class="icon-btn" data-env="close" aria-label="Close">×</button></div><form id="environmentForm"><div class="modal-body"><p>This value is saved in the project’s .env file, which Project Room keeps out of Git.</p><label for="environmentValue">Value</label><div class="environment-input-row"><input id="environmentValue" type="password" autocomplete="off" spellcheck="false" required maxlength="32000" placeholder="Enter a private value"><button type="button" class="btn small" id="environmentReveal" data-env="reveal:${escapeHtml(name)}" ${item.status === 'stored' ? '' : 'disabled'}>Show current</button></div><small>The current value is never prefilled. Use Show current only when you need to inspect it.</small></div><div class="modal-actions"><button type="button" class="btn" data-env="close">Cancel</button><button type="submit" class="btn primary">Save to .env</button></div></form></div></div>`;
     document.getElementById('environmentValue').focus();
   }
   function openRemove(name) {
     if (!snapshot?.variables.some(item => item.name === name && item.status === 'stored')) return;
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal environment-modal" role="dialog" aria-modal="true" aria-label="Remove ${escapeHtml(name)}"><div class="modal-head"><h2>Remove local value</h2><button type="button" class="icon-btn" data-env="close" aria-label="Close">×</button></div><div class="modal-body"><p>Remove the saved value for <code>${escapeHtml(name)}</code> from this Mac? The variable name stays in .projectroom/project.yaml.</p></div><div class="modal-actions"><button type="button" class="btn" data-env="close">Cancel</button><button type="button" class="btn primary" data-env="delete:${escapeHtml(name)}">Remove value</button></div></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal environment-modal" role="dialog" aria-modal="true" aria-label="Remove ${escapeHtml(name)}"><div class="modal-head"><h2>Remove local value</h2><button type="button" class="icon-btn" data-env="close" aria-label="Close">×</button></div><div class="modal-body"><p>Remove <code>${escapeHtml(name)}</code> from this project’s .env? The variable name stays in .projectroom/project.yaml.</p></div><div class="modal-actions"><button type="button" class="btn" data-env="close">Cancel</button><button type="button" class="btn primary" data-env="delete:${escapeHtml(name)}">Remove value</button></div></div></div>`;
   }
   document.addEventListener('click', async event => {
     const target = event.target.closest('[data-env]');
@@ -88,7 +89,7 @@
         target.textContent = 'Hide';
       } catch (cause) { toast(cause.message); }
     } else if (action === 'delete') {
-      try { snapshot = await pv.deleteEnvironment(name); modalRoot.innerHTML = ''; render(); toast('Local value removed.'); }
+      try { snapshot = await pv.deleteEnvironment(name); modalRoot.innerHTML = ''; render(); toast('Value removed from .env.'); }
       catch (cause) { toast(cause.message); }
     }
   });
@@ -104,7 +105,7 @@
       input.value = '';
       modalRoot.innerHTML = '';
       render();
-      toast('Value saved locally.');
+      toast('Value saved to .env.');
     } catch (cause) { toast(cause.message); }
   });
 })();
