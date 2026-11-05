@@ -21,6 +21,7 @@ const { declarations, listEnvironment, readEnvironment, saveEnvironment, deleteE
 const { inspectFolder, exportContract, agentPrompt, reviewConfig } = require('./onboarding.cjs');
 const { McpExplorer, referencedNames } = require('./mcp-explorer.cjs');
 const { addMcpServer, linkMcpServer, removeMcpServer } = require('./mcp-management.cjs');
+const { listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('./api-explorer.cjs');
 const { listCases, discoverCargo } = require('./test-explorer.cjs');
 const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
@@ -214,6 +215,17 @@ function registerIpc() {
   ipcMain.handle('mcp:call-tool', (event, id, name, args) => { assertSender(event); return mcpExplorer.callTool(String(id), String(name), args); });
   ipcMain.handle('mcp:read-resource', (event, id, uri) => { assertSender(event); return mcpExplorer.readResource(String(id), String(uri)); });
   ipcMain.handle('mcp:get-prompt', (event, id, name, args) => { assertSender(event); return mcpExplorer.getPrompt(String(id), String(name), args); });
+  ipcMain.handle('api:list', event => { assertSender(event); return listApiSources(selectedRoot, selectedConfig); });
+  ipcMain.handle('api:add', (event, input) => { assertSender(event); const added = addApiSource(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'api.registered', { api: added.id, spec: input.spec || null }); return { ...updated, addedId: `yaml:${added.id}` }; });
+  ipcMain.handle('api:remove', (event, id) => { assertSender(event); const key = String(id); if (!key.startsWith('yaml:')) throw new Error('Only YAML API sources can be removed.'); const removed = removeApiSource(requireProject(), key.slice(5)); const updated = updatedProject(removed); appendEvent(selectedRoot, 'api.removed', { api: key.slice(5) }); return updated; });
+  ipcMain.handle('api:request', async (event, input) => {
+    assertSender(event); requireProject();
+    try {
+      const result = await sendApiRequest(selectedRoot, selectedConfig, input, name => readEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, name) || process.env[name] || null);
+      appendEvent(selectedRoot, 'api.requested', { api: input.sourceId, method: result.method, path: result.path, status: result.status, durationMs: result.durationMs });
+      return result;
+    } catch (error) { throw new Error(String(error?.message || error).slice(0, 500)); }
+  });
   ipcMain.handle('project:load', event => { assertSender(event); return loadInitial(); });
   ipcMain.handle('project:example', event => {
     assertSender(event);

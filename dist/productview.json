@@ -164,6 +164,17 @@
         ]
       },
       {
+        "id": "api-explorer",
+        "title": "API Explorer",
+        "summary": "Discover OpenAPI files, register HTTP APIs and send explicit local requests with response inspection.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web",
+          "api"
+        ]
+      },
+      {
         "id": "test-case-explorer",
         "title": "Test case explorer",
         "summary": "Expand test suites to inspect detected Node test files or on-demand Rust test names, run one entry, and review recorded output.",

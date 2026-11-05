@@ -2,7 +2,7 @@
 
 **Your control room for the software your agent builds.** See the plan. Run the app. Check the tests. Know what is happening as your product grows.
 
-OpenBuildRoom is a free, open-source macOS desktop app for local software projects. It puts the product vision, [GitHub Spec Kit](https://github.com/github/spec-kit) work, services, tests, data, CLI and MCP tools, and recorded activity beside the code. A product owner can keep the direction visible while developers and coding agents work in the same repository.
+OpenBuildRoom is a free, open-source macOS desktop app for local software projects. It puts the product vision, [GitHub Spec Kit](https://github.com/github/spec-kit) work, services, tests, data, API, CLI and MCP explorers, and recorded activity beside the code. A product owner can keep the direction visible while developers and coding agents work in the same repository.
 
 [![OpenBuildRoom overview showing the running Hello Workspace service and a passed test run](assets/screenshots/overview-focused.png)](assets/screenshots/overview-readable.png)
 
@@ -10,16 +10,16 @@ The focused screenshot shows the **real included example** after starting its se
 
 ## Try it in five minutes
 
-1. Download the [Apple Silicon Mac preview (v0.9.49)](https://github.com/OpenBuildRoom/desktop/releases/download/v0.9.49/OpenBuildRoom-Desktop-0.9.49-arm64-mac.zip), unzip it, and move **OpenBuildRoom Desktop.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
+1. Download the [Apple Silicon Mac preview (v0.9.50)](https://github.com/OpenBuildRoom/desktop/releases/download/v0.9.50/OpenBuildRoom-Desktop-0.9.50-arm64-mac.zip), unzip it, and move **OpenBuildRoom Desktop.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
 2. Have [Node.js 20+](https://nodejs.org/) installed for the working example's service and tests. The desktop app itself does not require Node.js.
 3. Open the app and click **Try working example**. It copies a small project to `~/Documents/OpenBuildRoom Examples/hello-workspace` and opens it without starting anything.
-4. Start **Notes web service** in Services and open its local URL. Run **Node endpoint tests** in Tests. Inspect `notes.json` in Data Sources, then open the linked feature in Requirements.
+4. Start **Notes web service** in Services and open its local URL. Try `GET /health` and `GET /api/notes` in **API Explorer**. Run **Node endpoint tests** in Tests, inspect `notes.json` in Data Sources, then open the linked feature in Requirements.
 
 The example is [here in the repository](examples/hello-workspace). It has a real Node service, local JSON storage, tests, a constitution, and standard Spec Kit `specs/001-notes/` artifacts. No account, database server, secret, or cloud deployment is needed.
 
 | Product intent | Running software | Evidence |
 | --- | --- | --- |
-| Vision, roadmap, documentation, Spec Kit requirements and tasks | Project Map, manual service controls, CLI and MCP explorers, data viewers | Test results, process output, activity history, local environment variable status |
+| Vision, roadmap, documentation, Spec Kit requirements and tasks | Project Map, manual service controls, API, CLI and MCP explorers, data viewers | Test results, HTTP responses, process output, activity history, local environment variable status |
 
 <details><summary>See the real example views</summary>
 
@@ -33,7 +33,7 @@ The example is [here in the repository](examples/hello-workspace). It has a real
 
 Open a project folder in the desktop app. If `productview.yaml` does not exist yet, the onboarding flow inspects local project files and prepares a prompt for your installed Codex CLI or Claude Code. The agent reads the [repository contract](OPENBUILDROOM.md), [agent skill](agent/openbuildroom/SKILL.md), and [YAML schema](schemas/productview.schema.json), then records **verified** commands and components in `productview.yaml` at the repository root.
 
-Keep product specifications in Spec Kit's normal `.specify/` and `specs/` files. OpenBuildRoom reads them and adds optional traceability links in YAML; it does not create a second specification tree. Services, tests, data sources, and MCP servers run or connect only after a manual action. Local environment **values** stay outside the repository; YAML stores their names.
+Keep product specifications in Spec Kit's normal `.specify/` and `specs/` files. OpenBuildRoom reads them and adds optional traceability links in YAML; it does not create a second specification tree. Services, tests, data sources, MCP servers, and API requests run or connect only after a manual action. Local environment **values** stay outside the repository; YAML stores their names.
 
 The packaged Blackbox Agent B workspace is an **interactive simulation**. Choose **Try working example** or open your own configured repository for real local actions. See the [getting started guide](docs/product/getting-started.md) and [architecture notes](docs/product/architecture.md) for the current behavior and boundaries.
 

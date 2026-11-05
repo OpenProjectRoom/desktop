@@ -1,0 +1,19 @@
+openapi: 3.0.3
+info:
+  title: Hello Workspace API
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:43179
+paths:
+  /health:
+    get:
+      summary: Check whether the local service is running
+      responses:
+        '200':
+          description: Service is healthy
+  /api/notes:
+    get:
+      summary: Read the notes from local JSON storage
+      responses:
+        '200':
+          description: Notes list

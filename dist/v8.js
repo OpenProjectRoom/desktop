@@ -146,6 +146,7 @@
     ${navButton('runtime', 'play', 'Services', '<span class="count" id="runningCount">0</span>')}
     ${navButton('commands', 'terminal', 'CLI Explorer')}
     ${navButton('mcp', 'cube', 'MCP Explorer')}
+    ${navButton('api', 'activity', 'API Explorer')}
     ${navButton('tests', 'flask', 'Tests')}
     ${navButton('data', 'database', 'Data Sources')}
     ${navButton('environment', 'settings', 'Environment')}

@@ -20,6 +20,11 @@ product:
 workspace:
   startPage: overview
   additionalViews: []
+  apiSources:
+    - id: hello-workspace-api
+      name: Hello Workspace API
+      baseUrl: http://127.0.0.1:43179
+      spec: docs/openapi.yaml
   layout: freeform
   chat:
     enabled: true

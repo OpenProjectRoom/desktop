@@ -16,4 +16,10 @@ The local backlog is repository-backed: each issue is a Markdown file in `produc
 
 ## MCP Explorer
 
+## API Explorer
+
+Project-local OpenAPI 3.x files are scanned read-only and listed beside HTTP APIs declared in `workspace.apiSources`. The file remains the source of truth for endpoint paths and summaries; the repository YAML stores only its relative path, a clean base URL and optional Bearer environment variable name. An API can be registered without a spec and tested with a manually entered relative path. The main process performs a request only after the user clicks Send, checks that the target stays on the selected origin, blocks redirects, applies a timeout and bounds the response preview. It resolves Bearer values from the local encrypted environment store and records only request metadata in Activity. Request headers, query values, body and response content are not persisted. The included Hello Workspace has a matching OpenAPI document for its real health and notes endpoints.
+
+## MCP Explorer
+
 The desktop main process uses the official MCP client SDK to connect to explicitly selected project servers over stdio, Streamable HTTP or legacy SSE. It keeps one client session per connected server, so several can remain connected while the user switches between them. Read-only discovery scans project-local MCP configuration and shared `workspace.mcpServers`; it does not launch anything. Add, link and remove actions update the YAML array atomically after schema validation; linked entries record the discovered source ID. The renderer gets safe server metadata, capabilities, schemas and user-requested results over IPC. Connect, disconnect and invocation metadata goes to `.productview/events.jsonl`; arguments and responses remain in memory. YAML declares only variable names; encrypted values are resolved in the main process when the user connects. The built-in OpenBuildRoom MCP server is the default example. OAuth login is outside this prototype.

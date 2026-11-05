@@ -25,6 +25,17 @@ function parseConfig(raw) {
     if ((item.transport === 'stdio' || (!item.transport && !item.url)) && !item.command) throw new Error(`MCP server ${item.id} needs a command.`);
     if ((item.transport === 'http' || item.transport === 'sse' || (!item.transport && item.url)) && !item.url) throw new Error(`MCP server ${item.id} needs a URL.`);
   }
+  const apiIds = new Set();
+  for (const item of config.workspace?.apiSources || []) {
+    if (apiIds.has(item.id)) throw new Error(`Duplicate API source ID: ${item.id}`);
+    apiIds.add(item.id);
+    let url;
+    try { url = new URL(item.baseUrl); } catch { throw new Error(`API source ${item.id} needs a valid base URL.`); }
+    if (url.username || url.password || url.search || url.hash ||
+      (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) {
+      throw new Error(`API source ${item.id} must use HTTPS or local HTTP, with no credentials or query in the base URL.`);
+    }
+  }
   for (const component of config.components) {
     if (ids.has(component.id)) throw new Error(`Duplicate component ID: ${component.id}`);
     ids.add(component.id);

@@ -105,6 +105,22 @@ The example is a fragment of the optional `product` block; a complete product bl
 
 ## MCP access
 
+## HTTP API Explorer
+
+Register verified HTTP APIs under `workspace.apiSources` when the project exposes them. Each item needs a stable `id`, `name`, and clean `baseUrl` (HTTPS or local HTTP). An optional `spec` points to an existing project-relative OpenAPI 3.x document, ideally under a Spec Kit feature's `contracts/` directory. The explorer discovers matching OpenAPI files without sending requests and shows their operations. A user can also enter a path manually when no spec exists. Use `authEnv` only for a Bearer token variable name such as `ORDERS_API_TOKEN`; the value belongs in local Environment, outside YAML and prompts. The user explicitly clicks **Send** to make a request. Do not claim that discovery proves the API is running, and do not send requests during onboarding. The explorer shows status, timing and response body; it is not an OAuth client or a full Postman collection importer.
+
+```yaml
+workspace:
+  apiSources:
+    - id: orders-api
+      name: Orders API
+      baseUrl: http://127.0.0.1:4000
+      spec: specs/001-orders/contracts/openapi.yaml
+      authEnv: ORDERS_API_TOKEN
+```
+
+## MCP access
+
 **MCP Explorer** in Run & Verify discovers project MCP servers from `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `mcp.json` and `workspace.mcpServers` without launching them. During onboarding, inspect these files. The user can add several independent YAML registrations or link a discovered project server through the explorer. A linked entry uses `linkedFrom: .mcp.json:server-name` (or another discovered source ID) to record provenance; do not add another YAML copy of the same discovered source. An entry needs stable `id` and `name` plus `command` with optional `args`/`cwd` for `transport: stdio`, or `url` for `transport: http` or `sse`. Use `environment: [NAME]` for local command variables and `authEnv: NAME` for a remote Bearer token. Names appear in Environment; values stay in encrypted local app storage. Do not put tokens in URLs, arguments, YAML or prompts. The user connects explicitly; multiple servers can remain connected while the user inspects their tools, resources, templates and prompts. Removing a YAML registration does not delete its source config or executable. OAuth login is not yet supported.
 
 The local read-only MCP server exposes `get_product_view`, `get_product_context`, `get_spec_kit`, `list_components`, `read_project_file`, and `get_product_history`. `get_spec_kit` returns detected feature artifacts, link mappings, and recorded OpenBuildRoom test evidence; this separate MCP process cannot observe the desktop app's current process state. `get_product_context` includes the vision text, North Star definition and manual measurements, roadmap entries, local backlog issues and Markdown documentation discovered under `product.docsRoot`. The desktop app's **Settings → Agent Access** tab shows the exact launch configuration for the current workspace. Each MCP connection and tool call appears in Activity. Use ordinary repository editing tools to change files; the MCP endpoint does not write project code or run commands.
