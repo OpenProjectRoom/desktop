@@ -28,7 +28,7 @@ product:
       relatedComponents: [product-spec, web]
     - id: evidence-based-onboarding
       title: Evidence-based onboarding progress
-      summary: Detect configured workspace capabilities from YAML and repository files, and keep hands-on verification as a separate local confirmation.
+      summary: Detect configured workspace capabilities from YAML and repository files, keep hands-on verification separate, and offer the agent prompt without making it a setup requirement.
       status: done
       relatedComponents: [product-spec, web]
     - id: optional-specialist-views

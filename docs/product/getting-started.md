@@ -4,7 +4,7 @@ For a first real run, choose **Try working example** from the Overview or Worksp
 
 Open this repository in the Project Room desktop app. Project Room reads `.projectroom/project.yaml` and opens the Overview.
 
-Onboarding distinguishes setup found in the repository from hands-on verification. Green **Configured** states come from the project YAML, Spec Kit and documentation files, or an installed Project Room agent skill. The optional **Mark as verified** buttons stay on this Mac per workspace; use them after actually opening the map, running a service or test, or inspecting a data source. **Refresh analysis** rescans the repository after an agent changes the files.
+Onboarding distinguishes setup found in the repository from hands-on verification. Green **Configured** states come from the project YAML, Spec Kit and documentation files. The optional **Mark as verified** buttons stay on this Mac per workspace; use them after actually opening the map, running a service or test, or inspecting a data source. The expandable coding-agent help provides the Project Room prompt without adding a setup requirement. **Refresh analysis** rescans the repository after an agent changes the files.
 
 The left navigation follows the product workflow:
 

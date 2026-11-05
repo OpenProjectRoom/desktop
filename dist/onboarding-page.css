@@ -9,6 +9,12 @@
 .onboarding-progress-explanation{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .onboarding-progress-explanation strong{font-size:10px;color:#5d806f}
 .onboarding-progress-explanation small{max-width:600px;line-height:1.5}
+.onboarding-agent-help{padding:12px 19px;margin:-7px 0 19px}
+.onboarding-agent-help>summary{cursor:pointer;font-size:11px;font-weight:650;color:var(--ink)}
+.onboarding-agent-help p{font-size:11px;line-height:1.5;color:var(--muted);margin:10px 0}
+.onboarding-agent-help details{margin-top:10px}
+.onboarding-agent-help details summary{cursor:pointer;font-size:10px;color:var(--muted)}
+.onboarding-agent-help textarea{display:block;width:100%;min-height:140px;margin-top:8px;padding:10px;resize:vertical;border:1px solid #dae4eb;border-radius:6px;background:#fff;color:#4a5b6d;font:10px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
 .onboarding-steps{display:grid;gap:11px}
 .onboarding-step{display:flex;gap:14px;padding:17px 19px}
 .onboarding-step-number{display:grid;place-items:center;flex:none;width:27px;height:27px;border:1px solid #dbe4ea;border-radius:50%;font-size:11px;font-weight:650;color:#75889a;background:#f5f8fa}
@@ -44,6 +50,8 @@ body[data-theme="dark"] .onboarding-step.ready .onboarding-step-number{backgroun
 body[data-theme="dark"] .onboarding-progress-explanation strong,body[data-theme="dark"] .onboarding-step.ready .onboarding-step-title>span{color:#9fd3b3}
 body[data-theme="dark"] .onboarding-step-detail strong{color:#d2e0ea}
 body[data-theme="dark"] .onboarding-step-detail textarea{background:#1e2933;color:#d6e3ed;border-color:#445668}
+body[data-theme="dark"] .onboarding-agent-help>summary{color:#e5edf4}
+body[data-theme="dark"] .onboarding-agent-help textarea{background:#1e2933;color:#d6e3ed;border-color:#445668}
 body[data-theme="dark"] .onboarding-verify{background:#263d34;border-color:#456e58;color:#b8dfc8}
 body[data-theme="dark"] .onboarding-verify:hover,body[data-theme="dark"] .onboarding-verify.is-verified{background:#315541;border-color:#65a77a;color:#e0f4e5}
 body[data-theme="dark"] .onboarding-verify:disabled{background:#293744;border-color:#3b4c5b;color:#8192a0}

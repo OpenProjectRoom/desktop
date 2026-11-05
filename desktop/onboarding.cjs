@@ -56,7 +56,6 @@ function inspectFolder(root) {
     mcpServers: discoverMcpServers(canonical, config).map(item => publicCandidate(item)),
     cliTools: discoverCliTools(canonical, config).map(item => ({ name: item.name, path: item.path, source: item.source, linked: !!item.linkedId })),
     apiSpecs: discoverSpecs(canonical).map(item => ({ name: item.name, path: item.spec, endpoints: item.operations.length })),
-    agentGuides: ['.agents/skills/project-room/SKILL.md', '.claude/skills/project-room/SKILL.md'].filter(has),
     instructions: ['AGENTS.md', 'CLAUDE.md'].filter(has),
     entryFiles: top.filter(entry => entry.isFile() && /^(readme|makefile|justfile|cargo\.toml|pyproject\.toml|go\.mod|blackbox)$/i.test(entry.name)).map(entry => entry.name).slice(0, 12)
   };
