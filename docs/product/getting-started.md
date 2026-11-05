@@ -4,6 +4,8 @@ For a first real run, choose **Try working example** from the Overview or Worksp
 
 Open this repository in the Project Room desktop app. Project Room reads `.projectroom/project.yaml` and opens the Overview.
 
+Onboarding distinguishes setup found in the repository from hands-on verification. Green **Configured** states come from the project YAML, Spec Kit and documentation files, or an installed Project Room agent skill. The optional **Mark as verified** buttons stay on this Mac per workspace; use them after actually opening the map, running a service or test, or inspecting a data source. **Refresh analysis** rescans the repository after an agent changes the files.
+
 The left navigation follows the product workflow:
 
 The expanded sidebar shows counts for product content and each Run & Verify collection. These are configured entries (or discovered repository files for Requirements and Documentation), not a count of running services or passed tests. Environment counts variable names without showing their values.
