@@ -4,7 +4,7 @@
 
 Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens the **same local repository** and gives you one window to run the app, check tests, inspect data, and follow the product plan. It is a free, open-source macOS desktop app for people building software with coding agents and the teammates who need to understand that software later.
 
-[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Watch the 52-second walkthrough](assets/demo/project-room-walkthrough.mp4) · [Explore the website tour](https://openprojectroom.com/#live-tour) · [Read the agent guide](agent/project-room/SKILL.md)
+[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Watch the 52-second walkthrough](#see-the-workflow-in-52-seconds) · [Explore the website tour](https://openprojectroom.com/#live-tour) · [Read the agent guide](agent/project-room/SKILL.md)
 
 [![Project Room Overview in a real Order Desk project: running services, test result, backlog, build details, and local CPU history](assets/screenshots/order-desk-overview.png)](assets/screenshots/order-desk-overview.png)
 
@@ -12,9 +12,9 @@ Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens th
 
 ## See the workflow in 52 seconds
 
-[![Watch the Project Room walkthrough](assets/demo/project-room-walkthrough-poster.png)](assets/demo/project-room-walkthrough.mp4)
+https://github.com/user-attachments/assets/30ce2404-241a-4be4-b93e-d768e6e78b8b
 
-[Play or download the MP4](assets/demo/project-room-walkthrough.mp4). The green outline follows the app element discussed in each scene. This silent walkthrough uses captured screens from **Order Desk**, a separate sample application built to exercise Project Room's Spec Kit, service, API, PostgreSQL, CLI, MCP, and test views. The film animates those captures; the website's [interactive tour](https://openprojectroom.com/#live-tour) is a labeled simulation. Neither is a recording of unattended agent actions.
+[Download the MP4](assets/demo/project-room-walkthrough.mp4). The green outline follows the app element discussed in each scene. This silent walkthrough uses captured screens from **Order Desk**, a separate sample application built to exercise Project Room's Spec Kit, service, API, PostgreSQL, CLI, MCP, and test views. The film animates those captures; the website's [interactive tour](https://openprojectroom.com/#live-tour) is a labeled simulation. Neither is a recording of unattended agent actions.
 
 ## One repository, two ways to work
 
