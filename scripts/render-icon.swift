@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-// Render the selected Open Room mark into the macOS icon tile at 1024 px.
+// Render the Project Room mark from desktop/assets/rail.svg at 1024 px.
 let size = 1024
 guard let bitmap = NSBitmapImageRep(
     bitmapDataPlanes: nil,
@@ -14,60 +14,41 @@ guard let bitmap = NSBitmapImageRep(
     colorSpaceName: .deviceRGB,
     bytesPerRow: 0,
     bitsPerPixel: 0
-) else {
+), let context = NSGraphicsContext(bitmapImageRep: bitmap) else {
     fatalError("Could not create icon bitmap")
 }
-guard let context = NSGraphicsContext(bitmapImageRep: bitmap) else {
-    fatalError("Could not create icon graphics context")
-}
-NSGraphicsContext.saveGraphicsState()
-NSGraphicsContext.current = context
-context.imageInterpolation = .high
-context.shouldAntialias = true
 
 func color(_ red: CGFloat, _ green: CGFloat, _ blue: CGFloat) -> NSColor {
     NSColor(srgbRed: red / 255, green: green / 255, blue: blue / 255, alpha: 1)
 }
 
-let background = NSBezierPath(roundedRect: NSRect(x: 32, y: 32, width: 960, height: 960), xRadius: 220, yRadius: 220)
-color(233, 243, 240).setFill()
-background.fill()
+NSGraphicsContext.saveGraphicsState()
+NSGraphicsContext.current = context
+context.imageInterpolation = .high
+context.shouldAntialias = true
 
-// The SVG identity uses a 100 × 100 view box with its origin at the top left.
-func point(_ x: CGFloat, _ y: CGFloat) -> NSPoint {
-    NSPoint(x: 112 + x * 8, y: CGFloat(size) - 112 - y * 8)
+color(233, 243, 240).setFill()
+NSBezierPath(roundedRect: NSRect(x: 30, y: 30, width: 964, height: 964), xRadius: 220, yRadius: 220).fill()
+color(23, 59, 75).setFill()
+NSBezierPath(roundedRect: NSRect(x: 168, y: 168, width: 688, height: 688), xRadius: 160, yRadius: 160).fill()
+
+let pale = color(233, 243, 240)
+pale.setStroke()
+for y in [614.0, 408.0] {
+    let line = NSBezierPath()
+    line.lineWidth = 62
+    line.lineCapStyle = .round
+    line.move(to: NSPoint(x: 307, y: y))
+    line.line(to: NSPoint(x: 718, y: y))
+    line.stroke()
 }
 
-let frame = NSBezierPath()
-frame.move(to: point(25, 8))
-frame.line(to: point(75, 8))
-frame.curve(to: point(92, 25), controlPoint1: point(84.4, 8), controlPoint2: point(92, 15.6))
-frame.line(to: point(92, 46))
-frame.line(to: point(74, 46))
-frame.line(to: point(74, 26))
-frame.line(to: point(26, 26))
-frame.line(to: point(26, 74))
-frame.line(to: point(58, 74))
-frame.line(to: point(58, 92))
-frame.line(to: point(25, 92))
-frame.curve(to: point(8, 75), controlPoint1: point(15.6, 92), controlPoint2: point(8, 84.4))
-frame.line(to: point(8, 25))
-frame.curve(to: point(25, 8), controlPoint1: point(8, 15.6), controlPoint2: point(15.6, 8))
-frame.close()
-color(32, 61, 75).setFill()
-frame.fill()
-
-let corner = NSBezierPath()
-corner.move(to: point(73, 57))
-corner.line(to: point(92, 57))
-corner.line(to: point(92, 76))
-corner.curve(to: point(76, 92), controlPoint1: point(92, 84.8), controlPoint2: point(84.8, 92))
-corner.line(to: point(64, 92))
-corner.line(to: point(64, 74))
-corner.line(to: point(73, 74))
-corner.close()
-color(131, 182, 172).setFill()
-corner.fill()
+for (x, y) in [(450.0, 614.0), (605.0, 408.0)] {
+    pale.setFill()
+    NSBezierPath(ovalIn: NSRect(x: x - 94, y: y - 94, width: 188, height: 188)).fill()
+    color(23, 59, 75).setFill()
+    NSBezierPath(ovalIn: NSRect(x: x - 32, y: y - 32, width: 64, height: 64)).fill()
+}
 
 context.flushGraphics()
 NSGraphicsContext.restoreGraphicsState()
