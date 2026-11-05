@@ -51,15 +51,32 @@
     }
     return args;
   }
-  function formatResult(output) {
-    const blocks = output.content || output.contents;
-    if (Array.isArray(blocks) && blocks.length) return blocks.map(block => {
-      if (typeof block.text === 'string') {
-        try { return JSON.stringify(JSON.parse(block.text), null, 2); } catch { return block.text; }
-      }
-      return `[${block.type || 'content'}${block.mimeType ? ' · ' + block.mimeType : ''}]`;
-    }).join('\n\n').slice(0, 200000);
-    return JSON.stringify(output, null, 2).slice(0, 200000);
+  function promptFields(item) {
+    if (!item.arguments?.length) return '<p class="mcp-no-input">No prompt arguments required.</p>';
+    return `<div class="mcp-fields">${item.arguments.map(argument => `<div><label for="mcpPrompt-${safe(argument.name)}">${safe(argument.name)}${argument.required ? ' *' : ''}</label><input id="mcpPrompt-${safe(argument.name)}" data-mcp-prompt="${safe(argument.name)}" value="${safe(fieldValues[`prompt:${argument.name}`] || '')}"${argument.required ? ' required' : ''}>${argument.description ? `<small>${safe(argument.description)}</small>` : ''}</div>`).join('')}</div>`;
+  }
+  function promptArguments(item) {
+    const args = {};
+    for (const argument of item.arguments || []) {
+      const value = fieldValues[`prompt:${argument.name}`] || '';
+      if (!value && argument.required) throw new Error(`${argument.name} is required.`);
+      if (value) args[argument.name] = value;
+    }
+    return args;
+  }
+  function templateFields(item) {
+    const names = [...new Set([...String(item.uriTemplate || '').matchAll(/\{([A-Za-z][A-Za-z0-9_]*)\}/g)].map(match => match[1]))];
+    return names.length ? `<div class="mcp-fields">${names.map(name => `<div><label for="mcpTemplate-${safe(name)}">${safe(name)} *</label><input id="mcpTemplate-${safe(name)}" data-mcp-template="${safe(name)}" value="${safe(fieldValues[`template:${name}`] || '')}" required></div>`).join('')}</div>` : '';
+  }
+  function templateUri(item) {
+    let uri = draft;
+    if (uri === item.uriTemplate) uri = uri.replace(/\{([A-Za-z][A-Za-z0-9_]*)\}/g, (_match, name) => {
+      const value = fieldValues[`template:${name}`];
+      if (!value) throw new Error(`${name} is required for this resource URI.`);
+      return encodeURIComponent(value);
+    });
+    if (/\{[^}]+\}/.test(uri)) throw new Error('Fill the remaining URI template variables or enter a complete resource URI.');
+    return uri;
   }
 
   async function reload() {
@@ -99,9 +116,10 @@
     let action = '';
     if (selectedKind === 'tools') action = `${simpleSchema(item) ? fieldForm(item) : Object.keys(item.inputSchema?.properties || {}).length ? fieldForm(item) : '<p class="mcp-no-input">No arguments required.</p>'}<div class="mcp-action-row">${button('Run tool', 'run-tool', true, busy)}<small>Runs only when you click. Review the inputs first.</small></div>`;
     if (selectedKind === 'resources') action = `<div class="mcp-action-row">${button('Read resource', 'read-resource', true, busy)}</div>`;
-    if (selectedKind === 'templates') action = `<label for="mcpUri">Resource URI</label><input id="mcpUri" value="${safe(draft)}" placeholder="Fill in the template variables" aria-label="Resource URI"><div class="mcp-action-row">${button('Read URI', 'read-template', true, busy)}</div>`;
-    if (selectedKind === 'prompts') action = `<label for="mcpArgs">Prompt arguments (JSON object)</label><textarea id="mcpArgs" spellcheck="false" aria-label="Prompt arguments">${safe(draft)}</textarea><div class="mcp-action-row">${button('Get prompt', 'get-prompt', true, busy)}</div>`;
-    return `<div class="mcp-inspect-head"><span class="mcp-kicker">${safe(selectedKind.slice(0, -1).toUpperCase())}</span><h2>${safe(item.name || item.uri || item.uriTemplate)}</h2><p>${safe(item.description || item.title || 'No description supplied by this server.')}</p></div>${item.inputSchema ? `<details class="mcp-schema"><summary>Input schema</summary><pre>${safe(JSON.stringify(item.inputSchema, null, 2))}</pre></details>` : ''}${action}${result ? `<div class="mcp-result"><div><strong>${result.error ? 'Error' : 'Result'}</strong>${button('Clear', 'clear')}</div><pre>${safe(result.text)}</pre></div>` : ''}`;
+    if (selectedKind === 'templates') action = `${templateFields(item)}<label for="mcpUri">Resource URI <small>editable; advanced URI templates can be filled here</small></label><input id="mcpUri" value="${safe(draft)}" placeholder="Fill in the template variables" aria-label="Resource URI"><div class="mcp-action-row">${button('Read URI', 'read-template', true, busy)}</div>`;
+    if (selectedKind === 'prompts') action = `${promptFields(item)}<div class="mcp-action-row">${button('Get prompt', 'get-prompt', true, busy)}</div>`;
+    const metadata = { ...(item.outputSchema ? { outputSchema: item.outputSchema } : {}), ...(item.annotations ? { annotations: item.annotations } : {}), ...(item.icons ? { icons: item.icons } : {}) };
+    return `<div class="mcp-inspect-head"><span class="mcp-kicker">${safe(selectedKind.slice(0, -1).toUpperCase())}</span><h2>${safe(item.name || item.uri || item.uriTemplate)}</h2><p>${safe(item.description || item.title || 'No description supplied by this server.')}</p></div>${item.inputSchema ? `<details class="mcp-schema"><summary>Input schema</summary><pre>${safe(JSON.stringify(item.inputSchema, null, 2))}</pre></details>` : ''}${Object.keys(metadata).length ? `<details class="mcp-schema"><summary>Output and metadata</summary><pre>${safe(JSON.stringify(metadata, null, 2))}</pre></details>` : ''}${action}${result ? `<div class="mcp-result"><div><strong>${result.error ? 'Error' : 'Result'}</strong>${button('Clear', 'clear')}</div>${result.html}</div>` : ''}`;
   }
   function page() {
     const item = selected();
@@ -160,6 +178,8 @@
     if (state.page !== 'mcp') return;
     if (['mcpArgs', 'mcpUri'].includes(event.target.id)) draft = event.target.value;
     if (event.target.dataset?.mcpField) fieldValues[event.target.dataset.mcpField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
+    if (event.target.dataset?.mcpPrompt) fieldValues[`prompt:${event.target.dataset.mcpPrompt}`] = event.target.value;
+    if (event.target.dataset?.mcpTemplate) fieldValues[`template:${event.target.dataset.mcpTemplate}`] = event.target.value;
   });
   document.addEventListener('click', async event => {
     if (state.page !== 'mcp') return;
@@ -186,11 +206,11 @@
       if (['run-tool', 'read-resource', 'read-template', 'get-prompt'].includes(action)) {
         let output;
         if (action === 'run-tool' || action === 'get-prompt') {
-          const args = action === 'run-tool' ? toolArguments(activeItem()) : JSON.parse(draft || '{}');
+          const args = action === 'run-tool' ? toolArguments(activeItem()) : promptArguments(activeItem());
           if (!args || typeof args !== 'object' || Array.isArray(args)) throw new Error('Arguments must be a JSON object.');
           output = action === 'run-tool' ? await pv.callMcpTool(selectedId, selectedName, args) : await pv.getMcpPrompt(selectedId, selectedName, args);
-        } else output = await pv.readMcpResource(selectedId, action === 'read-template' ? draft : selectedName);
-        result = { error: !!output.isError, text: formatResult(output) };
+        } else output = await pv.readMcpResource(selectedId, action === 'read-template' ? templateUri(activeItem()) : selectedName);
+        result = { error: !!output.isError, html: mcpResultMarkup(output, safe) };
       }
     } catch (error) { message = error.message; }
     finally { busy = false; render(); }

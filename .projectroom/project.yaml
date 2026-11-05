@@ -78,7 +78,7 @@ product:
       relatedComponents: [product-spec]
     - id: command-tools-workbench
       title: Command tools workbench
-      summary: Show a manpage for real CLI tools declared in the repository, with explicit access to executable help and output.
+      summary: Show a manpage for real CLI tools declared in the repository, with explicit help, parsed common flags and subcommands, and output.
       status: done
       relatedComponents: [product-spec]
     - id: workspace-settings
@@ -98,12 +98,12 @@ product:
       relatedComponents: [product-spec, tests]
     - id: mcp-explorer
       title: MCP Explorer
-      summary: Discover project MCP servers, connect on request, and inspect their tools, resources and prompts with a human-readable interface.
+      summary: Discover project MCP servers, connect on request, inspect tools, resources and prompts, and render structured and media results.
       status: done
       relatedComponents: [product-spec, web]
     - id: api-explorer
       title: API Explorer
-      summary: Discover OpenAPI files, register HTTP APIs and send explicit local requests with response inspection.
+      summary: Discover OpenAPI files, show parameters and request/response schemas, register HTTP APIs and send explicit local requests.
       status: done
       relatedComponents: [product-spec, web, api]
     - id: test-case-explorer

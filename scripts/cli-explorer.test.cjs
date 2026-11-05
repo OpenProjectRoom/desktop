@@ -5,6 +5,13 @@ const os = require('node:os');
 const path = require('node:path');
 const { discoverCliTools, inspectCliHelp, linkCliTool } = require('../desktop/cli-explorer.cjs');
 const { runCliTrial } = require('../desktop/command-tools.cjs');
+const { commandParsedHelp } = require('../dist/cli-help.js');
+
+test('recognizes paired flags, value options and subcommands in common help output', () => {
+  const help = commandParsedHelp('Usage: desk <COMMAND> [OPTIONS]\n\nCommands:\n  serve    Start the server\n  status   Show status\n\nOptions:\n  -h, --help          Print help\n      --format <TYPE>  Output format\n  -v, --verbose       Verbose output');
+  assert.deepEqual(help.commands.map(item => item.name), ['serve', 'status']);
+  assert.deepEqual(help.rows.map(row => row[1]), ['-h, --help', '--format <TYPE>', '-v, --verbose']);
+});
 const { loadConfig } = require('./config.cjs');
 
 test('CLI discovery is read-only; linking writes a help-only tool to project YAML', async () => {

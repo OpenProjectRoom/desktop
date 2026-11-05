@@ -24,6 +24,40 @@ function cleanSpec(root, relative) {
   if (!file.startsWith(base + path.sep) || !fs.statSync(file).isFile() || fs.statSync(file).size > 2_000_000) throw new Error('OpenAPI file must be a regular project file below 2 MB.');
   return file;
 }
+function localReference(document, value, depth = 0) {
+  if (!value || typeof value !== 'object' || !value.$ref || depth > 8) return value;
+  if (!value.$ref.startsWith('#/')) return value;
+  const target = value.$ref.slice(2).split('/').map(part => part.replace(/~1/g, '/').replace(/~0/g, '~'))
+    .reduce((node, part) => node && typeof node === 'object' ? node[part] : undefined, document);
+  if (!target || typeof target !== 'object') return value;
+  return { ...localReference(document, target, depth + 1), ...Object.fromEntries(Object.entries(value).filter(([key]) => key !== '$ref')) };
+}
+function schemaDetails(document, value, depth = 0) {
+  if (!value || typeof value !== 'object') return null;
+  const schema = localReference(document, value);
+  if (schema.$ref) return { type: 'reference', ref: schema.$ref };
+  const result = { type: schema.type || (schema.properties ? 'object' : schema.items ? 'array' : ''),
+    format: schema.format || '', description: String(schema.description || '').slice(0, 300) };
+  for (const key of ['default', 'example', 'const', 'enum']) if (schema[key] !== undefined) result[key] = schema[key];
+  if (depth < 2 && schema.properties && typeof schema.properties === 'object') {
+    result.required = Array.isArray(schema.required) ? schema.required : [];
+    result.properties = Object.fromEntries(Object.entries(schema.properties).slice(0, 50)
+      .map(([key, child]) => [key, schemaDetails(document, child, depth + 1)]));
+  }
+  if (depth < 2 && schema.items) result.items = schemaDetails(document, schema.items, depth + 1);
+  if (depth < 2) for (const key of ['oneOf', 'anyOf', 'allOf']) {
+    if (Array.isArray(schema[key])) result[key] = schema[key].slice(0, 12).map(part => schemaDetails(document, part, depth + 1));
+  }
+  return result;
+}
+function mediaDetails(document, content) {
+  return Object.entries(content || {}).slice(0, 12).map(([type, raw]) => {
+    const media = localReference(document, raw);
+    const firstExample = Object.values(media?.examples || {})[0];
+    return { type, schema: schemaDetails(document, media?.schema),
+      example: media?.example ?? localReference(document, firstExample)?.value ?? undefined };
+  });
+}
 function readSpec(root, relative) {
   const file = cleanSpec(root, relative);
   if (!file) return null;
@@ -31,12 +65,31 @@ function readSpec(root, relative) {
   const spec = /\.json$/i.test(file) ? JSON.parse(raw) : YAML.parse(raw, { uniqueKeys: true });
   if (!spec || typeof spec !== 'object' || !/^3\./.test(String(spec.openapi || ''))) throw new Error('Only OpenAPI 3.x documents are supported.');
   const operations = [];
-  for (const [route, pathItem] of Object.entries(spec.paths || {})) {
+  for (const [route, rawPathItem] of Object.entries(spec.paths || {})) {
+    const pathItem = localReference(spec, rawPathItem);
     if (!route.startsWith('/') || !pathItem || typeof pathItem !== 'object') continue;
     for (const method of METHODS) {
-      const operation = pathItem[method.toLowerCase()];
+      const operation = localReference(spec, pathItem[method.toLowerCase()]);
       if (!operation || typeof operation !== 'object') continue;
-      operations.push({ method, path: route, summary: String(operation.summary || operation.operationId || ''), description: String(operation.description || '').slice(0, 500), tags: Array.isArray(operation.tags) ? operation.tags.filter(tag => typeof tag === 'string').slice(0, 4) : [] });
+      const rawParameters = [...(Array.isArray(pathItem.parameters) ? pathItem.parameters : []), ...(Array.isArray(operation.parameters) ? operation.parameters : [])];
+      const parameters = [...new Map(rawParameters.map(raw => {
+        const parameter = localReference(spec, raw);
+        return [`${parameter?.in}:${parameter?.name}`, parameter];
+      })).values()].filter(parameter => parameter?.name && parameter?.in).map(parameter => ({
+        name: parameter.name, in: parameter.in, required: parameter.in === 'path' || !!parameter.required,
+        description: String(parameter.description || '').slice(0, 300),
+        style: parameter.style || '', explode: parameter.explode,
+        schema: schemaDetails(spec, parameter.schema), example: parameter.example ?? parameter.schema?.example
+      }));
+      const body = localReference(spec, operation.requestBody);
+      const security = operation.security ?? spec.security ?? [];
+      operations.push({ method, path: route, summary: String(operation.summary || operation.operationId || ''),
+        description: String(operation.description || '').slice(0, 500), deprecated: !!operation.deprecated,
+        tags: Array.isArray(operation.tags) ? operation.tags.filter(tag => typeof tag === 'string').slice(0, 4) : [],
+        parameters, requestBody: body ? { required: !!body.required, description: String(body.description || '').slice(0, 300), content: mediaDetails(spec, body.content) } : null,
+        responses: Object.entries(operation.responses || {}).slice(0, 30).map(([status, raw]) => { const response = localReference(spec, raw); return { status, description: String(response?.description || '').slice(0, 300), content: mediaDetails(spec, response?.content) }; }),
+        security: Array.isArray(security) ? security.map(requirement => Object.entries(requirement).map(([name, scopes]) => ({ name, scopes,
+          scheme: localReference(spec, spec.components?.securitySchemes?.[name])?.type || '' }))) : [] });
       if (operations.length >= 300) break;
     }
     if (operations.length >= 300) break;

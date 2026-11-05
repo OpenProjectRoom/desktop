@@ -28,15 +28,16 @@
       'Each line is one argument. Project Room runs this exact command locally without a shell when you click Test command. The trial stops after 10 seconds and does not change .projectroom/project.yaml.';
     const help = candidate ? commandCandidateHelp[id] : commandHelp[id];
     const commands = candidate ? [] : (item.cli?.commands || []).filter(entry => !command.includes(entry.name));
+    const discoveredCommands = candidate ? commandParsedHelp(help?.output).commands : commands;
     const options = candidate ? commandParsedHelp(help?.output).rows.map(row => ({ flag: row[1], description: row[2] })) : item.cli?.options || [];
-    const reference = commands.length || options.length ? `<div class="cli-explore-reference"><div><strong>${candidate ? 'Found in actual help' : 'Documented in YAML'}</strong><small>Click an item to add it to the arguments above.</small></div>${commands.length ? `<div class="cli-explore-chips"><span>COMMANDS</span>${commands.map(entry => `<button type="button" data-cli-explore="insert" data-cli-token="${safe(entry.name)}" title="${safe(entry.description)}"><code>${safe(entry.name)}</code><small>${safe(entry.description)}</small></button>`).join('')}</div>` : ''}${options.length ? `<div class="cli-explore-chips"><span>OPTIONS</span>${options.map(entry => `<button type="button" data-cli-explore="insert" data-cli-token="${safe(entry.flag.split(/[ =<]/)[0])}" title="${safe(entry.description)}"><code>${safe(entry.flag)}</code><small>${safe(entry.description)}</small></button>`).join('')}</div>` : ''}</div>` : '';
+    const reference = discoveredCommands.length || options.length ? `<div class="cli-explore-reference"><div><strong>${candidate ? 'Found in actual help' : 'Documented in YAML'}</strong><small>Click an item to add it to the arguments above.</small></div>${discoveredCommands.length ? `<div class="cli-explore-chips"><span>COMMANDS</span>${discoveredCommands.map(entry => `<button type="button" data-cli-explore="insert" data-cli-token="${safe(entry.name)}" title="${safe(entry.description)}"><code>${safe(entry.name)}</code><small>${safe(entry.description)}</small></button>`).join('')}</div>` : ''}${options.length ? `<div class="cli-explore-chips"><span>OPTIONS</span>${options.map(entry => `<button type="button" data-cli-explore="insert" data-cli-token="${safe(entry.flag.match(/--[\w-]+/)?.[0] || entry.flag.match(/-[A-Za-z]/)?.[0] || '')}" title="${safe(entry.description)}"><code>${safe(entry.flag)}</code><small>${safe(entry.description)}</small></button>`).join('')}</div>` : ''}</div>` : '';
     return `<div class="cli-explore-body"><div class="cli-explore-intro"><span class="mcp-kicker">INTERACTIVE TESTER</span><h3>Try this command</h3><p>${safe(note)}</p></div>${reference}<div class="cli-explore-command"><span>COMMAND PREVIEW</span><code id="cliTrialPreview">${safe(shown([...command, ...extra]))}</code></div><label for="cliTrialArgs">Additional arguments <small>one per line · optional</small></label><textarea id="cliTrialArgs" spellcheck="false" placeholder="--format\njson" ${helpOnly ? 'disabled' : ''}>${safe(currentArgs)}</textarea><div class="mcp-action-row"><button type="button" class="btn primary" data-cli-explore="run" ${!commandLive() || trialBusy[id] || helpOnly ? 'disabled' : ''}>${trialBusy[id] ? 'Running…' : 'Test command'}</button><small>${commandLive() ? 'Runs only after your click · 10-second limit' : 'Open a local workspace in the desktop app to run commands.'}</small></div>${help ? `<div class="cli-explore-help"><strong>Help available</strong><span>Open the ${candidate ? 'Help' : 'Manual'} tab to compare real output with the documented command.</span></div>` : ''}${result ? `<div class="mcp-result cli-trial-result"><div><strong>${result.timedOut ? 'Stopped after 10 seconds' : `Exit code ${result.exitCode ?? 'unknown'}`}</strong><button type="button" class="btn small" data-cli-explore="clear">Clear</button></div><pre>${safe(result.output || '(No output returned)')}</pre></div>` : '<div class="cli-explore-placeholder">No test run yet. You can inspect the manual or actual help before running a command.</div>'}</div>`;
   }
 
   function candidateHelp(item) {
     const help = commandCandidateHelp[item.id];
     const parsed = commandParsedHelp(help?.output);
-    return `<div class="cli-explore-body"><div class="cli-explore-intro"><span class="mcp-kicker">ACTUAL EXECUTABLE OUTPUT</span><h3>Help</h3><p>Help is read from the local program only when you click Read help. It may still have side effects.</p></div>${help ? `<div class="cli-help-summary"><span>Exit ${safe(help.exitCode)}${help.timedOut ? ' · timed out' : ''}</span>${parsed.usage ? `<code>${safe(parsed.usage)}</code>` : ''}</div>${parsed.rows.length ? `<div class="cli-help-options"><strong>Detected options</strong>${parsed.rows.map(row => `<div><code>${safe(row[1])}</code><span>${safe(row[2])}</span></div>`).join('')}</div>` : ''}<details open class="cli-help-full"><summary>Full help output</summary><pre>${safe(help.output || '(No output returned)')}</pre></details>` : '<div class="cli-explore-placeholder">No help requested yet. Choose a help argument above and click Read help.</div>'}</div>`;
+    return `<div class="cli-explore-body"><div class="cli-explore-intro"><span class="mcp-kicker">ACTUAL EXECUTABLE OUTPUT</span><h3>Help</h3><p>Help is read from the local program only when you click Read help. It may still have side effects.</p></div>${help ? `<div class="cli-help-summary"><span>Exit ${safe(help.exitCode)}${help.timedOut ? ' · timed out' : ''}</span>${parsed.usage ? `<code>${safe(parsed.usage)}</code>` : ''}</div>${parsed.commands.length ? `<div class="cli-help-options"><strong>Detected subcommands</strong>${parsed.commands.map(entry => `<div><code>${safe(entry.name)}</code><span>${safe(entry.description)}</span></div>`).join('')}</div>` : ''}${parsed.arguments.length ? `<div class="cli-help-options"><strong>Positional arguments</strong>${parsed.arguments.map(entry => `<div><code>${safe(entry.name)}</code><span>${safe(entry.description)}</span></div>`).join('')}</div>` : ''}${parsed.rows.length ? `<div class="cli-help-options"><strong>Detected options</strong>${parsed.rows.map(row => `<div><code>${safe(row[1])}</code><span>${safe(row[2])}</span></div>`).join('')}</div>` : ''}<details open class="cli-help-full"><summary>Full help output</summary><pre>${safe(help.output || '(No output returned)')}</pre></details>` : '<div class="cli-explore-placeholder">No help requested yet. Choose a help argument above and click Read help.</div>'}</div>`;
   }
 
   function candidateSource(item) {
@@ -79,12 +80,6 @@
   document.addEventListener('input', event => {
     if (event.target.id !== 'cliTrialArgs') return;
     const id = toolId(); if (!id) return;
-    if (button.dataset.cliExplore === 'insert') {
-      const token = button.dataset.cliToken;
-      if (!token) return;
-      trialArgs[id] = [trialArgs[id]?.trim(), token].filter(Boolean).join('\n');
-      render(); document.getElementById('cliTrialArgs')?.focus(); return;
-    }
     trialArgs[id] = event.target.value;
     const base = selectedCandidate()?.id === id ? selectedCandidate().command : commandSelected()?.runtime?.command;
     const preview = document.getElementById('cliTrialPreview');
@@ -93,6 +88,12 @@
   document.addEventListener('click', async event => {
     const button = event.target.closest('[data-cli-explore]'); if (!button || state.page !== 'commands') return;
     const id = toolId(); if (!id) return;
+    if (button.dataset.cliExplore === 'insert') {
+      const token = button.dataset.cliToken;
+      if (!token) return;
+      trialArgs[id] = [trialArgs[id]?.trim(), token].filter(Boolean).join('\n');
+      render(); document.getElementById('cliTrialArgs')?.focus(); return;
+    }
     if (button.dataset.cliExplore === 'clear') { delete trialResults[id]; render(); return; }
     if (button.dataset.cliExplore !== 'run' || !commandLive() || trialBusy[id]) return;
     const args = parts(trialArgs[id]);

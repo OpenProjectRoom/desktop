@@ -74,12 +74,6 @@ async function commandDiscover(force = false) {
     else if (root !== projectRoot && state.page === 'commands') { commandCandidatesRoot = null; queueMicrotask(() => commandDiscover()); }
   }
 }
-function commandParsedHelp(output) {
-  const lines = String(output || '').split(/\r?\n/);
-  const usage = lines.find(line => /^\s*(usage|synopsis):\s*\S/i.test(line))?.trim() || '';
-  const rows = lines.map(line => /^\s{0,8}(-{1,2}[\w-]+(?:[=\s][\w<>\[\]|.,-]+)?)\s{2,}(.+)$/.exec(line)).filter(Boolean).slice(0, 30);
-  return { usage, rows };
-}
 function commandCandidatePage(item) {
   const helpArg = commandHelpArgs[item.id] || '--help';
   const help = commandCandidateHelp[item.id];

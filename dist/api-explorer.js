@@ -13,6 +13,52 @@
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const selected = () => sources.find(item => item.id === selectedId);
   const button = (label, action, primary = false, disabled = false) => `<button type="button" class="btn${primary ? ' primary' : ''}" data-api="${action}"${disabled ? ' disabled' : ''}>${label}</button>`;
+  function schemaExample(schema, depth = 0) {
+    if (!schema || depth > 3) return null;
+    if (schema.example !== undefined) return schema.example;
+    if (schema.default !== undefined) return schema.default;
+    if (schema.const !== undefined) return schema.const;
+    if (schema.enum?.length) return schema.enum[0];
+    if (schema.allOf?.length) return Object.assign({}, ...schema.allOf.map(part => schemaExample(part, depth + 1)).filter(part => part && typeof part === 'object' && !Array.isArray(part)));
+    if (schema.oneOf?.length || schema.anyOf?.length) return schemaExample((schema.oneOf || schema.anyOf)[0], depth + 1);
+    if (schema.type === 'object') return Object.fromEntries(Object.entries(schema.properties || {}).map(([name, child]) => [name, schemaExample(child, depth + 1)]));
+    if (schema.type === 'array') return [schemaExample(schema.items, depth + 1)];
+    if (schema.type === 'boolean') return false;
+    if (['integer', 'number'].includes(schema.type)) return 0;
+    return '';
+  }
+  function chosenMedia(operation) {
+    const media = operation?.requestBody?.content || [];
+    return media.find(entry => entry.type === 'application/json') || media.find(entry => entry.type.endsWith('+json')) || media[0];
+  }
+  function exampleBody(media) {
+    if (!media) return '';
+    const example = media.example ?? schemaExample(media.schema);
+    if (example === undefined || example === null) return '';
+    if (media.type === 'multipart/form-data') return '';
+    if (media.type === 'application/x-www-form-urlencoded' && example && typeof example === 'object' && !Array.isArray(example)) return new URLSearchParams(Object.entries(example).map(([key, value]) => [key, String(value ?? '')])).toString();
+    return typeof example === 'string' && !/json/i.test(media.type) ? example : JSON.stringify(example, null, 2);
+  }
+  function paramFields(operation, draft) {
+    if (!operation?.parameters?.length) return '';
+    return `<div class="api-param-section"><strong>Parameters from OpenAPI</strong><div class="api-param-grid">${operation.parameters.map(parameter => {
+      const key = `${parameter.in}:${parameter.name}`;
+      const schema = parameter.schema || {};
+      const current = draft.params?.[key] ?? parameter.example ?? schema.default ?? '';
+      const title = `${parameter.name} · ${parameter.in}${parameter.required ? ' *' : ''}`;
+      const choices = schema.enum || (schema.type === 'boolean' ? [true, false] : null);
+      const disabled = parameter.in === 'cookie' ? ' disabled title="Cookie authentication is not configured in this request composer"' : '';
+      const control = choices ? `<select data-api-param="${safe(key)}"${disabled}><option value="">Select…</option>${choices.map(choice => `<option value="${safe(choice)}"${String(current) === String(choice) ? ' selected' : ''}>${safe(choice)}</option>`).join('')}</select>` :
+        `<input data-api-param="${safe(key)}" value="${safe(current)}" placeholder="${safe(schema.type || 'value')}"${parameter.required && !disabled ? ' required' : ''}${disabled}>`;
+      return `<label>${safe(title)}${control}<small>${safe(parameter.description || [schema.type, schema.format].filter(Boolean).join(' · '))}</small></label>`;
+    }).join('')}</div>${operation.parameters.some(parameter => parameter.in === 'cookie') ? '<small>Cookie parameters are documented here; set authentication outside the request composer.</small>' : ''}</div>`;
+  }
+  function operationDetails(operation) {
+    if (!operation) return '';
+    const body = operation.requestBody;
+    const security = operation.security.flat().map(entry => `${entry.name}${entry.scheme ? ` (${entry.scheme})` : ''}`).join(', ');
+    return `<div class="api-operation-details"><strong>${safe(operation.summary || `${operation.method} ${operation.path}`)}</strong>${operation.deprecated ? '<span class="api-deprecated">Deprecated</span>' : ''}${operation.description ? `<p>${safe(operation.description)}</p>` : ''}${security ? `<p>Security declared: ${safe(security)}. Project Room currently connects Bearer tokens only.</p>` : ''}${body ? `<details><summary>Request schema${body.required ? ' · required' : ''}</summary><pre>${safe(JSON.stringify(body.content.map(media => ({ mediaType: media.type, schema: media.schema })), null, 2))}</pre></details>` : ''}${operation.responses.length ? `<details><summary>Documented responses · ${operation.responses.map(response => safe(response.status)).join(', ')}</summary><pre>${safe(JSON.stringify(operation.responses, null, 2))}</pre></details>` : ''}</div>`;
+  }
 
   async function reload() {
     if (!pv || !projectRoot) { sources = []; render(); return; }
@@ -42,18 +88,25 @@
     const item = selected();
     if (!item) return '<div class="api-welcome"><h2>Explore a project API</h2><p>Register an API base URL or discover a local OpenAPI 3.x file. Requests run only when you click Send.</p></div>';
     const op = item.operations?.[selectedOperation];
-    const draft = requestDraft || { method: op?.method || 'GET', path: op?.path || '/', headers: '{}', body: '' };
+    const media = chosenMedia(op);
+    const draft = requestDraft || { method: op?.method || 'GET', path: op?.path || '/', headers: '{}', body: exampleBody(media), contentType: media?.type || '', params: {} };
     return `<div class="api-main-head"><div><span class="api-kicker">${item.linked ? 'REGISTERED API' : 'DISCOVERED OPENAPI FILE'}</span><h2>${safe(item.name)}</h2><p>${safe(item.description || item.specTitle || item.source)}</p><code>${safe(item.baseUrl || item.source)}</code>${item.specVersion ? `<small>OpenAPI document version ${safe(item.specVersion)}</small>` : ''}</div><div class="api-head-actions">${item.linked ? button('Remove from YAML', 'remove') : button('Add to project YAML', 'link', true)}</div></div>
       ${item.error ? `<p class="api-alert">${safe(item.error)}</p>` : ''}
       <div class="api-explorer-body"><div class="api-operations"><div class="api-pane-title"><strong>Endpoints</strong><span>${item.operations?.length || 0}</span></div>${operationList(item)}</div>
       <div class="api-request"><div class="api-pane-title"><strong>Request</strong><span>Runs only when you click</span></div>
-      ${item.linked ? `<form id="apiRequestForm"><div class="api-request-line"><select name="method" aria-label="HTTP method">${['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS'].map(method => `<option${draft.method === method ? ' selected' : ''}>${method}</option>`).join('')}</select><input name="path" aria-label="Request path" required value="${safe(draft.path)}" placeholder="/users/123"><button class="btn primary" type="submit"${busy || !pv || !projectRoot ? ' disabled' : ''}>${busy ? 'Sending…' : 'Send'}</button></div><p class="api-request-hint">${safe(item.baseUrl)} · ${item.authEnv ? `Bearer token from local ${safe(item.authEnv)}` : 'No auth configured'}. Replace path placeholders before sending.</p><div class="api-editor-grid"><label>Headers <small>JSON object; no credentials</small><textarea name="headers" spellcheck="false" placeholder='{"Accept":"application/json"}'>${safe(draft.headers)}</textarea></label><label>Body <small>optional; JSON by default</small><textarea name="body" spellcheck="false" placeholder='{"name":"Example"}'>${safe(draft.body)}</textarea></label></div></form>` : `<div class="api-link-hint">Review the file, then register a base URL in the project YAML to send requests.</div>`}
+      ${item.linked ? `<form id="apiRequestForm"><div class="api-request-line"><select name="method" aria-label="HTTP method">${['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS'].map(method => `<option${draft.method === method ? ' selected' : ''}>${method}</option>`).join('')}</select><input name="path" aria-label="Request path" required value="${safe(draft.path)}" placeholder="/users/123"><button class="btn primary" type="submit"${busy || !pv || !projectRoot ? ' disabled' : ''}>${busy ? 'Sending…' : 'Send'}</button></div><p class="api-request-hint">${safe(item.baseUrl)} · ${item.authEnv ? `Bearer token from local ${safe(item.authEnv)}` : 'No auth configured'}. Requests run only when you click Send.</p>${operationDetails(op)}${paramFields(op, draft)}${op?.requestBody?.content?.length ? `<label class="api-media-label">Request content type<select name="contentType" id="apiContentType">${op.requestBody.content.map(entry => `<option value="${safe(entry.type)}"${draft.contentType === entry.type ? ' selected' : ''}>${safe(entry.type)}</option>`).join('')}</select></label>` : ''}<div class="api-editor-grid"><label>Headers <small>JSON object; no credentials</small><textarea name="headers" spellcheck="false" placeholder='{"Accept":"application/json"}'>${safe(draft.headers)}</textarea></label><label>Body <small>${op?.requestBody?.description ? safe(op.requestBody.description) : 'optional; OpenAPI example when available'}</small><textarea name="body" spellcheck="false" placeholder='{"name":"Example"}'>${safe(draft.body)}</textarea></label></div></form>` : `${operationDetails(op)}${paramFields(op, draft)}<div class="api-link-hint">Review the file, then register a base URL in the project YAML to send requests.</div>`}
       ${result ? `<div class="api-response"><div class="api-response-head"><strong>Response</strong><span class="${result.status >= 400 ? 'api-failed' : 'api-success'}">${safe(result.status)} ${safe(result.statusText)}</span><small>${safe(result.durationMs)} ms · ${safe(result.contentType || 'unknown type')}${result.truncated ? ' · preview truncated' : ''}</small></div><pre>${safe(formattedBody(result))}</pre></div>` : '<div class="api-response-empty">Response status, timing and body appear here after a request.</div>'}</div></div>`;
   }
   function formattedBody(value) {
     if (!value.body) return '(empty response)';
     if (/json/i.test(value.contentType)) try { return JSON.stringify(JSON.parse(value.body), null, 2); } catch { /* Show malformed JSON as received. */ }
     return value.body;
+  }
+  function captureDraft(form) {
+    const data = new FormData(form);
+    const params = Object.fromEntries([...form.querySelectorAll('[data-api-param]')].map(field => [field.dataset.apiParam, field.value]));
+    return { method: String(data.get('method') || 'GET'), path: String(data.get('path') || '/'), headers: String(data.get('headers') || '{}'),
+      body: String(data.get('body') || ''), contentType: String(data.get('contentType') || ''), params };
   }
 
   function page() {
@@ -112,14 +165,22 @@
   document.addEventListener('submit', async event => {
     if (event.target.id !== 'apiRequestForm') return;
     event.preventDefault();
-    const form = event.target; const data = new FormData(form);
-    requestDraft = { method: String(data.get('method') || 'GET'), path: String(data.get('path') || '/'), headers: String(data.get('headers') || '{}'), body: String(data.get('body') || '') };
+    const form = event.target;
+    requestDraft = captureDraft(form);
     try {
-      const headers = JSON.parse(String(data.get('headers') || '{}'));
-      if (!headers || typeof headers !== 'object' || Array.isArray(headers)) throw new Error('Headers must be a JSON object.');
+      const request = apiRequestFromDraft(selected()?.operations?.[selectedOperation], requestDraft);
       busy = true; error = ''; form.querySelector('[type=submit]').disabled = true;
-      result = await pv.sendApiRequest({ sourceId: selectedId.slice(5), method: data.get('method'), path: data.get('path'), headers, body: data.get('body') });
+      result = await pv.sendApiRequest({ sourceId: selectedId.slice(5), ...request });
     } catch (cause) { error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); result = null; }
     finally { busy = false; render(); }
+  });
+  document.addEventListener('change', event => {
+    if (event.target.id !== 'apiContentType') return;
+    const form = event.target.closest('form');
+    const operation = selected()?.operations?.[selectedOperation];
+    if (!form || !operation) return;
+    requestDraft = captureDraft(form);
+    requestDraft.body = exampleBody(operation.requestBody?.content?.find(entry => entry.type === requestDraft.contentType));
+    render();
   });
 })();

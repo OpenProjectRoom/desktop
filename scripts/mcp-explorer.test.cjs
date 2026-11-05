@@ -4,6 +4,21 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { McpExplorer, discoverMcpServers, publicCandidate, referencedNames } = require('../desktop/mcp-explorer.cjs');
+const { mcpResultMarkup } = require('../dist/mcp-result.js');
+
+test('renders structured MCP results and safe media without executing server markup', () => {
+  const escape = value => String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const html = mcpResultMarkup({ structuredContent: { message: '<script>alert(1)</script>' }, content: [
+    { type: 'text', text: '{"ok":true}' },
+    { type: 'image', mimeType: 'image/png', data: 'aGVsbG8=' },
+    { type: 'image', mimeType: 'image/svg+xml', data: 'PHN2Zz4=' }
+  ] }, escape);
+  assert.match(html, /Structured result/);
+  assert.match(html, /&lt;script&gt;/);
+  assert.doesNotMatch(html, /<script>|data:image\/svg\+xml/);
+  assert.match(html, /data:image\/png;base64,aGVsbG8=/);
+  assert.match(html, /&quot;ok&quot;: true/);
+});
 
 test('MCP discovery stays read-only and the built-in server can be inspected and called', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-mcp-'));

@@ -4,7 +4,23 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { loadConfig } = require('./config.cjs');
-const { discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('../desktop/api-explorer.cjs');
+const { readSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('../desktop/api-explorer.cjs');
+const { apiRequestFromDraft } = require('../dist/api-request.js');
+
+test('OpenAPI parameter fields produce a concrete request while unsupported uploads stay blocked', () => {
+  const operation = { parameters: [
+    { name: 'id', in: 'path', required: true },
+    { name: 'include', in: 'query', schema: { type: 'array' } },
+    { name: 'X-Trace', in: 'header' },
+    { name: 'session', in: 'cookie' }
+  ] };
+  const draft = { method: 'POST', path: '/orders/{id}', headers: '{}', body: '{"paid":true}', contentType: 'application/json',
+    params: { 'path:id': 'A 1', 'query:include': 'items,history', 'header:X-Trace': 'test', 'cookie:session': 'ignored' } };
+  assert.deepEqual(apiRequestFromDraft(operation, draft), { method: 'POST', path: '/orders/A%201?include=items&include=history',
+    headers: { 'X-Trace': 'test', 'Content-Type': 'application/json' }, body: '{"paid":true}' });
+  assert.throws(() => apiRequestFromDraft(operation, { ...draft, params: {} }), /id is required/);
+  assert.throws(() => apiRequestFromDraft(operation, { ...draft, contentType: 'multipart/form-data' }), /not supported/);
+});
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'openbuildroom-api-'));
@@ -28,6 +44,31 @@ test('discovers real OpenAPI operations and manages multiple YAML sources', t =>
   const after = removeApiSource(root, first.id);
   assert.deepEqual(after.config.workspace.apiSources.map(item => item.id), [second.id]);
   assert.equal(discoverSpecs(root).length, 1);
+});
+
+test('keeps common OpenAPI request and response details, including local references', t => {
+  const root = fixture(t);
+  const file = 'specs/001-orders/contracts/openapi.json';
+  fs.writeFileSync(path.join(root, file), JSON.stringify({
+    openapi: '3.1.0', info: { title: 'Orders API', version: '2' },
+    security: [{ bearerAuth: [] }],
+    components: {
+      parameters: { orderId: { name: 'id', in: 'path', required: true, schema: { type: 'string' } } },
+      schemas: { Order: { type: 'object', required: ['id'], properties: { id: { type: 'string' }, paid: { type: 'boolean' } } } },
+      securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } }
+    },
+    paths: { '/orders/{id}': { parameters: [{ $ref: '#/components/parameters/orderId' }],
+      post: { summary: 'Update order', parameters: [{ name: 'dryRun', in: 'query', schema: { type: 'boolean' } }],
+        requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Order' }, example: { id: 'A-1', paid: true } } } },
+        responses: { '200': { description: 'Updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/Order' } } } } }
+      } } }
+  }));
+  const operation = readSpec(root, file).operations[0];
+  assert.deepEqual(operation.parameters.map(item => `${item.in}:${item.name}`), ['path:id', 'query:dryRun']);
+  assert.equal(operation.requestBody.content[0].schema.properties.paid.type, 'boolean');
+  assert.deepEqual(operation.requestBody.content[0].example, { id: 'A-1', paid: true });
+  assert.equal(operation.responses[0].content[0].schema.properties.id.type, 'string');
+  assert.equal(operation.security[0][0].scheme, 'http');
 });
 
 test('rejects credentials in YAML URLs and files outside the repository', t => {
