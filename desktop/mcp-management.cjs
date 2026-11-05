@@ -88,7 +88,14 @@ function addMcpServer(root, input) {
     item.environment = names(input.environment);
   } else {
     item.url = remoteUrl(input.url);
-    if (input.authEnv?.trim()) {
+    if (input.authType === 'oauth2') {
+      if (input.authEnv?.trim()) throw new Error('Choose Bearer or OAuth, not both.');
+      const clientId = String(input.clientId || '').trim();
+      if (clientId.length > 240) throw new Error('OAuth client ID is too long.');
+      const scopes = String(input.scopes || '').split(/[\s,]+/).filter(Boolean);
+      if (scopes.some(scope => scope.length > 120)) throw new Error('OAuth scope is too long.');
+      item.auth = { type: 'oauth2', ...(clientId ? { clientId } : {}), ...(scopes.length ? { scopes: [...new Set(scopes)] } : {}) };
+    } else if (input.authEnv?.trim()) {
       item.authEnv = text(input.authEnv, 'Authentication variable', 100);
       if (!/^[A-Z][A-Z0-9_]*$/.test(item.authEnv)) throw new Error('Use a variable name such as MCP_TOKEN.');
     }

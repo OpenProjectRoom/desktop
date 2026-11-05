@@ -40,6 +40,7 @@ function parseConfig(raw) {
     mcpIds.add(item.id);
     if ((item.transport === 'stdio' || (!item.transport && !item.url)) && !item.command) throw new Error(`MCP server ${item.id} needs a command.`);
     if ((item.transport === 'http' || item.transport === 'sse' || (!item.transport && item.url)) && !item.url) throw new Error(`MCP server ${item.id} needs a URL.`);
+    if (item.auth && (item.authEnv || !['http', 'sse'].includes(item.transport || (item.url ? 'http' : 'stdio')))) throw new Error(`MCP server ${item.id} OAuth requires a remote endpoint and cannot be combined with authEnv.`);
   }
   const apiIds = new Set();
   for (const item of config.workspace?.apiSources || []) {
@@ -50,6 +51,17 @@ function parseConfig(raw) {
     if (url.username || url.password || url.search || url.hash ||
       (url.protocol !== 'https:' && !(url.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)))) {
       throw new Error(`API source ${item.id} must use HTTPS or local HTTP, with no credentials or query in the base URL.`);
+    }
+    if (item.auth && item.authEnv) throw new Error(`API source ${item.id} must choose one authentication method.`);
+    if (item.auth?.type === 'apiKey' && (!item.auth.env || !item.auth.in || !item.auth.name)) throw new Error(`API source ${item.id} needs API key variable, placement and name.`);
+    if (item.auth?.type === 'apiKey' && /^(authorization|cookie|host|content-length|proxy-authorization)$/i.test(item.auth.name)) throw new Error(`API source ${item.id} uses a protected header name.`);
+    if (item.auth?.type === 'bearer' && !item.auth.env) throw new Error(`API source ${item.id} needs a Bearer variable name.`);
+    if (item.auth?.type === 'oauth2' && (!item.auth.clientId || !item.auth.authorizationUrl || !item.auth.tokenUrl)) throw new Error(`API source ${item.id} needs OAuth endpoints and client ID.`);
+    if (item.auth?.type === 'oauth2') for (const field of ['authorizationUrl', 'tokenUrl', 'issuer']) {
+      if (!item.auth[field]) continue;
+      let endpoint;
+      try { endpoint = new URL(item.auth[field]); } catch { throw new Error(`API source ${item.id} has an invalid OAuth ${field}.`); }
+      if (endpoint.username || endpoint.password || endpoint.hash || (endpoint.protocol !== 'https:' && !(endpoint.protocol === 'http:' && ['localhost', '127.0.0.1', '[::1]'].includes(endpoint.hostname)))) throw new Error(`API source ${item.id} OAuth ${field} must use HTTPS or local HTTP without credentials.`);
     }
   }
   for (const component of config.components) {

@@ -1,8 +1,9 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, StreamableHTTPClientTransport, SSEClientTransport } = require('@modelcontextprotocol/client');
+const { Client, StreamableHTTPClientTransport, SSEClientTransport, UnauthorizedError } = require('@modelcontextprotocol/client');
 const { StdioClientTransport } = require('@modelcontextprotocol/client/stdio');
 const { readBuildIdentity, sourceRevision } = require('./build-identity.cjs');
+const { LoopbackCallback, mcpOAuthProvider } = require('./oauth.cjs');
 
 const CONFIG_FILES = ['.mcp.json', '.cursor/mcp.json', '.vscode/mcp.json', 'mcp.json'];
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
@@ -28,7 +29,7 @@ function discoverMcpServers(root, config = {}, options = {}) {
   for (const item of config.workspace?.mcpServers || []) candidates.push({
     id: `yaml:${item.id}`, name: item.name, description: item.description || '', source: '.projectroom/project.yaml',
     transport: item.transport || (item.url ? 'http' : 'stdio'), command: item.command, args: item.args || [],
-    cwd: item.cwd || '.', url: item.url, environment: item.environment || [], authEnv: item.authEnv, linkedFrom: item.linkedFrom, build: item.build
+    cwd: item.cwd || '.', url: item.url, environment: item.environment || [], authEnv: item.authEnv, auth: item.auth, linkedFrom: item.linkedFrom, build: item.build
   });
   for (const relative of CONFIG_FILES) {
     const parsed = readJson(root, relative);
@@ -61,7 +62,7 @@ function publicCandidate(item, hasEnvironment = () => false) {
   } else endpoint = item.builtIn ? 'Bundled local server' : item.command || 'Command missing';
   const names = item.builtIn ? [] : referencedNames(item);
   return { id: item.id, name: item.name, description: item.description, source: item.source, transport: item.transport,
-    endpoint, builtIn: !!item.builtIn, environment: names.map(name => ({ name, available: hasEnvironment(name) || !!item.env?.[name] })) };
+    endpoint, builtIn: !!item.builtIn, authType: item.auth?.type || (item.authEnv ? 'bearer' : 'none'), environment: names.map(name => ({ name, available: hasEnvironment(name) || !!item.env?.[name] })) };
 }
 
 function substitute(value, environment) {
@@ -91,6 +92,14 @@ class McpExplorer {
     if (active) try { await active.client.close(); } finally { this.options.record?.('mcp.disconnected', { server: id }); }
     return true;
   }
+  async forgetAuth(id) {
+    const item = this.discover().find(candidate => candidate.id === id);
+    if (!item || item.auth?.type !== 'oauth2') throw new Error('This server has no Project Room OAuth session.');
+    await this.disconnect(id);
+    this.options.oauthStore(this.options.getRoot(), 'mcp', `${item.id}\0${item.url}\0${item.auth.clientId || ''}\0${(item.auth.scopes || []).join(' ')}`).clear();
+    this.options.record?.('mcp.signed-out', { server: id });
+    return true;
+  }
   async connect(id) {
     const item = this.discover().find(candidate => candidate.id === id);
     if (!item) throw new Error('MCP server is no longer configured. Refresh the list.');
@@ -103,6 +112,8 @@ class McpExplorer {
       if (ENV_NAME.test(name) && typeof value === 'string' && !environment[name]) environment[name] = substitute(value, { ...process.env, ...environment });
     }
     let transport;
+    let callback;
+    let retryTransport;
     if (item.transport === 'stdio') {
       if (typeof item.command !== 'string' || !item.command) throw new Error('This server needs a command in its project configuration.');
       const workspace = fs.realpathSync(root);
@@ -125,13 +136,33 @@ class McpExplorer {
         headers.Authorization = `Bearer ${environment[item.authEnv]}`;
       }
       const opts = { requestInit: { headers, redirect: 'error' } };
-      transport = item.transport === 'sse' ? new SSEClientTransport(url, opts) : new StreamableHTTPClientTransport(url, opts);
+      if (item.auth?.type === 'oauth2') {
+        if (!this.options.oauthStore || !this.options.openExternal) throw new Error('OAuth is unavailable in this session.');
+        const store = this.options.oauthStore(root, 'mcp', `${item.id}\0${item.url}\0${item.auth.clientId || ''}\0${(item.auth.scopes || []).join(' ')}`);
+        if (!store.encryption?.isEncryptionAvailable()) throw new Error('Secure OS storage is unavailable; OAuth sign-in cannot start.');
+        callback = new LoopbackCallback();
+        await callback.start();
+        opts.authProvider = mcpOAuthProvider(store, callback, item.auth, this.options.openExternal);
+      }
+      const makeTransport = () => item.transport === 'sse' ? new SSEClientTransport(url, opts) : new StreamableHTTPClientTransport(url, opts);
+      transport = makeTransport();
+      retryTransport = makeTransport;
     }
     const client = new Client({ name: 'project-room-explorer', version: require('../package.json').version },
       { versionNegotiation: item.builtIn ? { mode: 'legacy' } : { mode: 'auto', probe: { timeoutMs: 1000 } } });
-    let timeout;
+    const connectWithTimeout = async candidate => {
+      let timeout;
+      try { return await Promise.race([client.connect(candidate), new Promise((_resolve, reject) => { timeout = setTimeout(() => reject(new Error('MCP connection timed out after 15 seconds.')), 15000); })]); }
+      finally { clearTimeout(timeout); }
+    };
     try {
-      await Promise.race([client.connect(transport), new Promise((_resolve, reject) => { timeout = setTimeout(() => reject(new Error('MCP connection timed out after 15 seconds.')), 15000); })]);
+      try { await connectWithTimeout(transport); }
+      catch (error) {
+        if (!(error instanceof UnauthorizedError) || !callback) throw error;
+        const params = await callback.wait();
+        await transport.finishAuth(params);
+        await connectWithTimeout(retryTransport());
+      }
       this.active.set(id, { item, client, connectedAt: new Date().toISOString(),
         buildIdentity: item.transport === 'stdio' && !item.builtIn && item.build?.file ? readBuildIdentity(root, item, sourceRevision(root)) : null });
       this.options.record?.('mcp.connected', { server: item.id, transport: item.transport });
@@ -140,9 +171,7 @@ class McpExplorer {
       await client.close().catch(() => {});
       this.active.delete(id);
       throw error;
-    } finally {
-      clearTimeout(timeout);
-    }
+    } finally { await callback?.close(); }
   }
   async describe(id) {
     const active = this.active.get(id);

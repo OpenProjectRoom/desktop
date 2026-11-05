@@ -103,3 +103,50 @@ test('blocks cross-origin paths, credential headers and requests to unregistered
   await assert.rejects(sendApiRequest(root, added.config, { sourceId: added.id, method: 'GET', path: '/', headers: { Authorization: 'Bearer inline' } }, secret), /local Environment/);
   await assert.rejects(sendApiRequest(root, added.config, { sourceId: 'unknown', method: 'GET', path: '/' }, secret), /registered/);
 });
+
+test('API keys come from local Environment and redact echoed header and query values', async t => {
+  const root = fixture(t);
+  const secret = () => 'local-key-value';
+  const headerSource = addApiSource(root, { name: 'Header API', baseUrl: 'https://example.com', auth: { type: 'apiKey', env: 'HEADER_KEY', in: 'header', name: 'X-API-Key' } });
+  let seenHeader;
+  const header = await sendApiRequest(root, headerSource.config, { sourceId: headerSource.id, method: 'GET', path: '/' }, secret, async (_url, options) => {
+    seenHeader = options.headers['X-API-Key'];
+    return new Response(seenHeader, { status: 200 });
+  });
+  assert.equal(seenHeader, 'local-key-value');
+  assert.equal(header.body, '[redacted]');
+  await assert.rejects(sendApiRequest(root, headerSource.config, { sourceId: headerSource.id, method: 'GET', path: '/', headers: { 'X-API-Key': 'typed-secret' } }, secret), /cannot be entered manually/);
+  const querySource = addApiSource(root, { name: 'Query API', baseUrl: 'https://example.com', auth: { type: 'apiKey', env: 'QUERY_KEY', in: 'query', name: 'api_key' } });
+  let seenQuery;
+  const query = await sendApiRequest(root, querySource.config, { sourceId: querySource.id, method: 'GET', path: '/items?api_key=old' }, secret, async url => {
+    seenQuery = url.searchParams.get('api_key');
+    return new Response(url.search, { status: 200 });
+  });
+  assert.equal(seenQuery, 'local-key-value');
+  assert.doesNotMatch(query.body, /local-key-value/);
+  assert.equal(query.path, '/items');
+});
+
+test('API OAuth configuration keeps only public client metadata in YAML', t => {
+  const root = fixture(t);
+  const saved = addApiSource(root, { name: 'Protected API', baseUrl: 'https://example.com', auth: {
+    type: 'oauth2', authorizationUrl: 'https://id.example.com/authorize', tokenUrl: 'https://id.example.com/token', clientId: 'public-client', scopes: ['read']
+  } });
+  assert.equal(saved.config.workspace.apiSources[0].auth.clientId, 'public-client');
+  assert.equal(saved.config.workspace.apiSources[0].auth.authorizationUrl, 'https://id.example.com/authorize');
+  assert.equal(saved.config.workspace.apiSources[0].auth.refresh_token, undefined);
+  assert.throws(() => addApiSource(root, { name: 'Unsafe', baseUrl: 'https://example.com', auth: { type: 'oauth2', authorizationUrl: 'http://id.example.com/authorize', tokenUrl: 'https://id.example.com/token', clientId: 'public-client' } }), /HTTPS/);
+});
+
+test('OAuth API request receives its token only in the desktop main process', async t => {
+  const root = fixture(t);
+  const saved = addApiSource(root, { name: 'Protected API', baseUrl: 'https://example.com', auth: {
+    type: 'oauth2', authorizationUrl: 'https://id.example.com/authorize', tokenUrl: 'https://id.example.com/token', clientId: 'public-client'
+  } });
+  let authHeader;
+  const result = await sendApiRequest(root, saved.config, { sourceId: saved.id, method: 'GET', path: '/orders' }, () => null,
+    async (_url, options) => { authHeader = options.headers.Authorization; return new Response(authHeader); }, async () => 'oauth-access-token');
+  assert.equal(authHeader, 'Bearer oauth-access-token');
+  assert.equal(result.body, 'Bearer [redacted]');
+  await assert.rejects(sendApiRequest(root, saved.config, { sourceId: saved.id, method: 'GET', path: '/orders' }, () => null), /Sign in/);
+});

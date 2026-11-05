@@ -19,7 +19,7 @@
       for (const name of item.environment || []) add(name, item.name);
       add(item.authEnv, item.name);
     }
-    for (const item of projectConfig.workspace?.apiSources || []) add(item.authEnv, item.name);
+    for (const item of projectConfig.workspace?.apiSources || []) { add(item.authEnv, item.name); add(item.auth?.env, item.name); }
     for (const item of projectConfig.components || []) {
       for (const name of item.runtime?.environment || []) add(name, item.name);
       for (const name of item.tests?.environment || []) add(name, item.name);

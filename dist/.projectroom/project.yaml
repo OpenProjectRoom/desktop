@@ -98,12 +98,12 @@ product:
       relatedComponents: [product-spec, tests]
     - id: mcp-explorer
       title: MCP Explorer
-      summary: Discover project MCP servers, connect on request, inspect tools, resources and prompts, and render structured and media results.
+      summary: Discover project MCP servers, connect on request with local Bearer or remote OAuth when configured, inspect tools, resources and prompts, and render structured and media results.
       status: done
       relatedComponents: [product-spec, web]
     - id: api-explorer
       title: API Explorer
-      summary: Discover OpenAPI files, show parameters and request/response schemas, register HTTP APIs and send explicit local requests.
+      summary: Discover OpenAPI files, show request and response schemas, register HTTP APIs with Bearer, API key or public-client OAuth, and send explicit local requests.
       status: done
       relatedComponents: [product-spec, web, api]
     - id: test-case-explorer

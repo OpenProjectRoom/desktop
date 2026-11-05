@@ -20,7 +20,10 @@ function declarations(config) {
     for (const name of item.environment || []) add(name, item.name);
     if (item.authEnv) add(item.authEnv, item.name);
   }
-  for (const item of config.workspace?.apiSources || []) if (item.authEnv) add(item.authEnv, item.name);
+  for (const item of config.workspace?.apiSources || []) {
+    if (item.authEnv) add(item.authEnv, item.name);
+    if (item.auth?.env) add(item.auth.env, item.name);
+  }
   for (const item of config.components || []) {
     for (const name of item.runtime?.environment || []) add(name, item.name);
     for (const name of item.tests?.environment || []) add(name, item.name);

@@ -76,3 +76,14 @@ test('invalid MCP registrations do not change YAML', () => {
     assert.equal(fs.readFileSync(file, 'utf8'), original);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+test('remote MCP OAuth registration stores public metadata and no token', () => {
+  const root = fixture();
+  try {
+    const saved = addMcpServer(root, { name: 'Protected tools', transport: 'http', url: 'https://example.com/mcp', authType: 'oauth2', scopes: 'read write' });
+    const item = saved.config.workspace.mcpServers.find(entry => entry.id === saved.id);
+    assert.deepEqual(item.auth, { type: 'oauth2', scopes: ['read', 'write'] });
+    assert.equal(new McpExplorer({ getRoot: () => root, getConfig: () => saved.config, getEnvironment: () => null }).list().find(entry => entry.id === `yaml:${saved.id}`).authType, 'oauth2');
+    assert.throws(() => addMcpServer(root, { name: 'Mixed', transport: 'http', url: 'https://example.com/mcp', authType: 'oauth2', authEnv: 'TOKEN' }), /Choose Bearer or OAuth/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

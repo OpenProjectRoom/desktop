@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
 const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
+const { safeEndpoint } = require('./oauth.cjs');
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 const SPEC_NAME = /^(?:openapi|swagger)(?:\.[\w-]+)?\.(?:yaml|yml|json)$/i;
@@ -15,6 +16,28 @@ function cleanUrl(raw) {
     throw new Error('Use HTTPS or local HTTP. Keep credentials and query values out of the base URL.');
   }
   return url.toString().replace(/\/$/, '');
+}
+function validateAuth(auth) {
+  if (!auth || typeof auth !== 'object') return null;
+  if (auth.type === 'none') return { type: 'none' };
+  if (auth.type === 'bearer') {
+    if (!/^[A-Z][A-Z0-9_]*$/.test(auth.env || '')) throw new Error('Bearer auth needs an Environment variable name.');
+    return { type: 'bearer', env: auth.env };
+  }
+  if (auth.type === 'apiKey') {
+    if (!/^[A-Z][A-Z0-9_]*$/.test(auth.env || '') || !['header', 'query'].includes(auth.in) || !/^[A-Za-z][A-Za-z0-9_-]{0,79}$/.test(auth.name || '')) throw new Error('API key needs a variable name, header or query placement, and parameter name.');
+    if (/^(authorization|cookie|host|content-length|proxy-authorization)$/i.test(auth.name)) throw new Error('Use Bearer auth for Authorization; protected headers cannot hold API keys.');
+    return { type: 'apiKey', env: auth.env, in: auth.in, name: auth.name };
+  }
+  if (auth.type === 'oauth2') {
+    const authorizationUrl = safeEndpoint(auth.authorizationUrl).href;
+    const tokenUrl = safeEndpoint(auth.tokenUrl).href;
+    if (typeof auth.clientId !== 'string' || !auth.clientId.trim() || auth.clientId.length > 240) throw new Error('OAuth needs a public client ID.');
+    if (auth.scopes && (!Array.isArray(auth.scopes) || auth.scopes.some(scope => typeof scope !== 'string' || !scope.trim()))) throw new Error('OAuth scopes must be nonempty names.');
+    if (auth.issuer) safeEndpoint(auth.issuer);
+    return { type: 'oauth2', authorizationUrl, tokenUrl, clientId: auth.clientId.trim(), scopes: auth.scopes || [], ...(auth.issuer ? { issuer: new URL(auth.issuer).href } : {}) };
+  }
+  throw new Error('Unsupported API authentication type.');
 }
 function cleanSpec(root, relative) {
   if (!relative) return null;
@@ -161,6 +184,10 @@ function addApiSource(root, input) {
   const authEnv = String(input.authEnv || '').trim();
   if (authEnv && !/^[A-Z][A-Z0-9_]*$/.test(authEnv)) throw new Error('Use an environment name such as API_TOKEN, never a value.');
   if (authEnv) item.authEnv = authEnv;
+  if (input.auth && input.auth.type !== 'none') {
+    if (authEnv) throw new Error('Choose one API authentication method.');
+    item.auth = validateAuth(input.auth);
+  }
   if (!record.document.has('workspace')) record.document.set('workspace', new YAML.YAMLMap());
   const sources = record.document.getIn(['workspace', 'apiSources'], true);
   if (YAML.isSeq(sources)) sources.add(item);
@@ -174,7 +201,7 @@ function removeApiSource(root, id) {
   sources.items = sources.items.filter(item => item.get('id') !== id);
   return save(record);
 }
-async function sendApiRequest(root, config, input, getSecret, fetcher = fetch) {
+async function sendApiRequest(root, config, input, getSecret, fetcher = fetch, getOAuthToken = null) {
   const source = (config.workspace?.apiSources || []).find(item => item.id === input?.sourceId);
   if (!source) throw new Error('Choose an API registered in .projectroom/project.yaml.');
   const base = new URL(cleanUrl(source.baseUrl));
@@ -193,10 +220,20 @@ async function sendApiRequest(root, config, input, getSecret, fetcher = fetch) {
       headers[name] = value;
     }
   }
+  const auth = source.auth || (source.authEnv ? { type: 'bearer', env: source.authEnv } : { type: 'none' });
   let token = null;
-  if (source.authEnv) {
-    token = getSecret(source.authEnv);
-    if (!token) throw new Error(`${source.authEnv} is missing. Set it in local Environment first.`);
+  if (auth.type === 'bearer' || auth.type === 'apiKey') {
+    token = getSecret(auth.env);
+    if (!token) throw new Error(`${auth.env} is missing. Set it in local Environment first.`);
+    if (auth.type === 'bearer') headers.Authorization = `Bearer ${token}`;
+    else if (auth.in === 'header') {
+      if (Object.keys(headers).some(name => name.toLowerCase() === auth.name.toLowerCase())) throw new Error('The configured API key header cannot be entered manually.');
+      headers[auth.name] = token;
+    } else target.searchParams.set(auth.name, token);
+  } else if (auth.type === 'oauth2') {
+    if (!getOAuthToken) throw new Error('Sign in to this API with OAuth first.');
+    token = await getOAuthToken(source);
+    if (!token) throw new Error('Sign in to this API with OAuth first.');
     headers.Authorization = `Bearer ${token}`;
   }
   const body = String(input.body || '');
@@ -216,4 +253,4 @@ async function sendApiRequest(root, config, input, getSecret, fetcher = fetch) {
   return { status: response.status, statusText: response.statusText, durationMs: Date.now() - started, contentType: response.headers.get('content-type') || '', body: text.slice(0, 200_000), truncated: text.length > 200_000, method, path: target.pathname };
 }
 
-module.exports = { cleanUrl, readSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest };
+module.exports = { cleanUrl, validateAuth, readSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest };

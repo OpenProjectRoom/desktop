@@ -22,6 +22,7 @@ const { inspectFolder, exportContract, agentPrompt, reviewConfig } = require('./
 const { McpExplorer, referencedNames } = require('./mcp-explorer.cjs');
 const { addMcpServer, linkMcpServer, removeMcpServer } = require('./mcp-management.cjs');
 const { listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('./api-explorer.cjs');
+const { SecureOAuthStore, ApiOAuth } = require('./oauth.cjs');
 const { listCases, discoverCargo } = require('./test-explorer.cjs');
 const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
@@ -194,6 +195,13 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   });
 }
 function registerIpc() {
+  const oauthStore = (root, kind, id) => new SecureOAuthStore(app.getPath('userData'), safeStorage, root, kind, id);
+  const apiOAuth = source => new ApiOAuth(oauthStore(requireProject(), 'api', `${source.id}\0${source.baseUrl}\0${source.auth?.authorizationUrl}\0${source.auth?.tokenUrl}\0${source.auth?.clientId}\0${(source.auth?.scopes || []).join(' ')}`), url => shell.openExternal(url));
+  const apiSource = id => {
+    const source = selectedConfig?.workspace?.apiSources?.find(item => item.id === String(id).replace(/^yaml:/, ''));
+    if (!source) throw new Error('API source is no longer configured.');
+    return source;
+  };
   mcpExplorer = new McpExplorer({
     getRoot: () => selectedRoot, getConfig: () => selectedConfig,
     appPath: app.getAppPath(), executable: process.execPath, isElectron: true,
@@ -203,11 +211,13 @@ function registerIpc() {
       if (!declarations(config).some(item => item.name === name)) return process.env[name] || null;
       return readEnvironment(app.getPath('userData'), selectedRoot, config, safeStorage, name) || process.env[name] || null;
     },
-    record: (type, details) => { if (selectedRoot) appendEvent(selectedRoot, type, details); }
+    record: (type, details) => { if (selectedRoot) appendEvent(selectedRoot, type, details); },
+    oauthStore, openExternal: url => shell.openExternal(url)
   });
   ipcMain.handle('mcp:list', event => { assertSender(event); return mcpExplorer.list(); });
   ipcMain.handle('mcp:connect', (event, id) => { assertSender(event); return mcpExplorer.connect(String(id)); });
   ipcMain.handle('mcp:disconnect', (event, id) => { assertSender(event); return mcpExplorer.disconnect(String(id)); });
+  ipcMain.handle('mcp:forget-auth', (event, id) => { assertSender(event); return mcpExplorer.forgetAuth(String(id)); });
   ipcMain.handle('mcp:describe', (event, id) => { assertSender(event); return mcpExplorer.describe(String(id)); });
   ipcMain.handle('mcp:add', (event, input) => { assertSender(event); const added = addMcpServer(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'mcp.registered', { server: added.id, transport: input.transport }); return { ...updated, addedId: `yaml:${added.id}` }; });
   ipcMain.handle('mcp:link', (event, sourceId) => { assertSender(event); const added = linkMcpServer(requireProject(), String(sourceId)); const updated = updatedProject(added); appendEvent(selectedRoot, 'mcp.linked', { server: added.id, source: String(sourceId) }); return { ...updated, addedId: `yaml:${added.id}` }; });
@@ -218,10 +228,13 @@ function registerIpc() {
   ipcMain.handle('api:list', event => { assertSender(event); return listApiSources(selectedRoot, selectedConfig); });
   ipcMain.handle('api:add', (event, input) => { assertSender(event); const added = addApiSource(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'api.registered', { api: added.id, spec: input.spec || null }); return { ...updated, addedId: `yaml:${added.id}` }; });
   ipcMain.handle('api:remove', (event, id) => { assertSender(event); const key = String(id); if (!key.startsWith('yaml:')) throw new Error('Only YAML API sources can be removed.'); const removed = removeApiSource(requireProject(), key.slice(5)); const updated = updatedProject(removed); appendEvent(selectedRoot, 'api.removed', { api: key.slice(5) }); return updated; });
+  ipcMain.handle('api:auth-status', (event, id) => { assertSender(event); const source = apiSource(String(id)); return source.auth?.type === 'oauth2' ? apiOAuth(source).status() : { signedIn: false }; });
+  ipcMain.handle('api:sign-in', async (event, id) => { assertSender(event); const source = apiSource(String(id)); if (source.auth?.type !== 'oauth2') throw new Error('This API is not configured for OAuth.'); const status = await apiOAuth(source).signIn(source.auth); appendEvent(selectedRoot, 'api.signed-in', { api: source.id }); return status; });
+  ipcMain.handle('api:sign-out', (event, id) => { assertSender(event); const source = apiSource(String(id)); apiOAuth(source).signOut(); appendEvent(selectedRoot, 'api.signed-out', { api: source.id }); return { signedIn: false }; });
   ipcMain.handle('api:request', async (event, input) => {
     assertSender(event); requireProject();
     try {
-      const result = await sendApiRequest(selectedRoot, selectedConfig, input, name => readEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, name) || process.env[name] || null);
+      const result = await sendApiRequest(selectedRoot, selectedConfig, input, name => readEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, name) || process.env[name] || null, fetch, source => apiOAuth(source).token(source.auth));
       appendEvent(selectedRoot, 'api.requested', { api: input.sourceId, method: result.method, path: result.path, status: result.status, durationMs: result.durationMs });
       return result;
     } catch (error) { throw new Error(String(error?.message || error).slice(0, 500)); }

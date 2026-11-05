@@ -56,6 +56,11 @@
           "url": { "type": "string", "minLength": 1 },
           "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
           "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "auth": { "type": "object", "required": ["type"], "properties": {
+            "type": { "const": "oauth2" },
+            "clientId": { "type": "string", "minLength": 1, "maxLength": 240 },
+            "scopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+          }, "additionalProperties": false },
           "build": { "$ref": "#/$defs/build" }
         }, "additionalProperties": false } },
         "apiSources": { "type": "array", "items": { "type": "object", "required": ["id", "name", "baseUrl"], "properties": {
@@ -64,7 +69,18 @@
           "description": { "type": "string", "maxLength": 240 },
           "baseUrl": { "type": "string", "minLength": 1, "maxLength": 500 },
           "spec": { "$ref": "#/$defs/relativePath" },
-          "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+          "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "auth": { "type": "object", "required": ["type"], "properties": {
+            "type": { "enum": ["none", "bearer", "apiKey", "oauth2"] },
+            "env": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+            "in": { "enum": ["header", "query"] },
+            "name": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,79}$" },
+            "authorizationUrl": { "type": "string", "minLength": 1 },
+            "tokenUrl": { "type": "string", "minLength": 1 },
+            "issuer": { "type": "string", "minLength": 1 },
+            "clientId": { "type": "string", "minLength": 1, "maxLength": 240 },
+            "scopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
+          }, "additionalProperties": false }
         }, "additionalProperties": false } },
         "environment": { "type": "array", "items": { "type": "object", "required": ["name"], "properties": {
           "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
