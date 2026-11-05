@@ -41,7 +41,7 @@
         if (state.page === 'tests') render();
       });
     }
-    return `${pageHead('Tests', 'Inspect the tests behind each suite and run a suite or a single entry.')}<div class="test-explorer">${error ? `<div class="test-error" role="alert">${safe(error)}</div>` : ''}${suites().length ? suites().map(suiteCard).join('') : '<section class="card test-empty">No test suites configured in .projectroom/project.yaml.</section>'}<p class="test-footnote">Runs are manual. Results and command output are saved in this repository’s <code>.productview/</code> history.</p></div>`;
+    return `${pageHead('Test Explorer', 'Inspect the tests behind each suite and run a suite or a single entry.')}<div class="test-explorer">${error ? `<div class="test-error" role="alert">${safe(error)}</div>` : ''}${suites().length ? suites().map(suiteCard).join('') : '<section class="card test-empty">No test suites configured in .projectroom/project.yaml.</section>'}<p class="test-footnote">Runs are manual. Results and command output are saved in this repository’s <code>.productview/</code> history.</p></div>`;
   };
   document.addEventListener('click', async event => {
     if (state.page !== 'tests') return;

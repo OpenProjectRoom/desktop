@@ -15,7 +15,7 @@ The focused screenshot shows the **real included example** after starting its se
 1. Download the [Apple Silicon Mac preview](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
 2. Have [Node.js 20+](https://nodejs.org/) installed for the working example's service and tests. The desktop app itself does not require Node.js.
 3. Open the app and click **Try working example**. It copies a small project to `~/Documents/Project Room Examples/hello-workspace` and opens it without starting anything.
-4. Start **Notes web service** in Services and open its local URL. Try `GET /health` and `GET /api/notes` in **API Explorer**. Run **Node endpoint tests** in Tests, inspect `notes.json` in Data Sources, then open the linked feature in Requirements.
+4. Start **Notes web service** in Services and open its local URL. Try `GET /health` and `GET /api/notes` in **API Explorer**. Run **Node endpoint tests** in Test Explorer, inspect `notes.json` in Data Explorer, then open the linked feature in Requirements.
 
 The example is [here in the repository](examples/hello-workspace). It has a real Node service, local JSON storage, tests, a constitution, and standard Spec Kit `specs/001-notes/` artifacts. No account, database server, secret, or cloud deployment is needed.
 

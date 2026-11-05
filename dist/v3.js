@@ -1,6 +1,6 @@
 /* Project Room 0.4: English workspace, product hub, agent guide, persistent history. */
 const pv = window.productView;
-const pageNames = { dashboard: 'Overview', onboarding: 'Onboarding', product: 'Vision', vision: 'Vision', 'north-star': 'North Star', roadmap: 'Roadmap', docs: 'Documentation', overview: 'Project Map', spec: 'Requirements', runtime: 'Services', commands: 'CLI Explorer', tests: 'Tests', data: 'Data Sources', environment: 'Environment', files: 'Files', issues: 'Backlog', activity: 'Activity', agent: 'Agent Access' };
+const pageNames = { dashboard: 'Overview', onboarding: 'Onboarding', product: 'Vision', vision: 'Vision', 'north-star': 'North Star', roadmap: 'Roadmap', docs: 'Documentation', overview: 'Project Map', spec: 'Requirements', runtime: 'Services', commands: 'CLI Explorer', tests: 'Test Explorer', data: 'Data Explorer', environment: 'Environment', files: 'Files', issues: 'Backlog', activity: 'Activity', agent: 'Agent Access' };
 Object.assign(labels, pageNames);
 document.querySelectorAll('#nav [data-page]').forEach(button => { button.querySelector('span').textContent = pageNames[button.dataset.page]; button.title = pageNames[button.dataset.page]; });
 document.querySelector('#nav [data-page="overview"]').insertAdjacentHTML('beforebegin', `<button data-page="product" title="Product">${icon('doc')}<span>Product</span></button>`);
@@ -196,7 +196,7 @@ function runtimePage() {
 }
 function testsPage() {
   const suites = projectConfig.components.filter(x => x.kind === 'testSuite');
-  return `${pageHead('Tests', 'Run test suites configured in your repository.')}
+  return `${pageHead('Test Explorer', 'Run test suites configured in your repository.')}
   <section class="card"><div class="card-head"><div><h2>Test Suites</h2><p>Results and output are recorded in .productview/</p></div></div>${suites.map(c => `<div class="env-row"><div class="service-icon green">${icon('flask')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)}</div><div class="service-sub">${escapeHtml((c.tests?.command || []).join(' '))} · ${escapeHtml((c.tests?.categories || []).join(', '))}</div></div><button class="btn small" data-v3="test:${escapeHtml(c.id)}">${icon('play')} Run</button></div>`).join('') || v3Empty('No test suites configured.')}</section>`;
 }
 function specMarkdown(value) {
@@ -299,8 +299,8 @@ async function refreshSpecifications() {
 }
 function dataPage() {
   const sources = projectConfig.components.filter(x => ['database', 'storage', 'external'].includes(x.kind));
-  return `${pageHead('Data Sources', 'Configured databases, storage and external dependencies.')}
-  <section class="card"><div class="card-head"><div><h2>Data Sources</h2><p>Connection values come from environment variables; viewers are external</p></div></div>${sources.map(c => `<div class="env-row"><div class="service-icon blue">${icon(c.icon || 'database')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge('Configured', 'off')}</div><div class="service-sub">${escapeHtml(c.data?.engine || c.data?.path || c.url || c.kind)} · ${escapeHtml(c.data?.connectionEnv || 'No credential variable')}</div></div><button class="btn small" data-v3="inspect:${escapeHtml(c.id)}">Details</button></div>`).join('') || v3Empty('No data sources configured.')}</section>`;
+  return `${pageHead('Data Explorer', 'Configured databases, storage and external dependencies.')}
+  <section class="card"><div class="card-head"><div><h2>Data Explorer</h2><p>Connection values come from environment variables; viewers are external</p></div></div>${sources.map(c => `<div class="env-row"><div class="service-icon blue">${icon(c.icon || 'database')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge('Configured', 'off')}</div><div class="service-sub">${escapeHtml(c.data?.engine || c.data?.path || c.url || c.kind)} · ${escapeHtml(c.data?.connectionEnv || 'No credential variable')}</div></div><button class="btn small" data-v3="inspect:${escapeHtml(c.id)}">Details</button></div>`).join('') || v3Empty('No data sources configured.')}</section>`;
 }
 function filesPageV3() {
   return `${pageHead('Files', 'Browse the project configuration and source tree.', '<button type="button" class="btn" data-cursor-refresh-files>Refresh files</button><button type="button" class="btn" data-cursor-explorer-open>Show explorer</button>')}
@@ -372,7 +372,7 @@ answerChat = function (input) {
   const q = input.toLowerCase();
   if (/roadmap|milestone|vision|documentation|product direction/.test(q)) return `Vision: ${productContents.vision?.replace(/^#.*\n/, '').trim().slice(0, 240) || 'No vision document loaded.'} Roadmap: ${(projectConfig.product?.roadmap || []).map(item => `${item.title} (${item.status})`).join('; ') || 'no items yet'}. Documentation: ${(projectConfig.product?.documentation || []).map(item => item.title).join(', ') || 'none'}.`;
   if (/component|architecture|map/.test(q)) return `This project has ${projectConfig.components.length} components and ${projectConfig.connections.length} connections: ${projectConfig.components.map(c => c.name).join(', ')}. Click a card for details.`;
-  if (/test|performance/.test(q)) return `${projectConfig.components.filter(c => c.kind === 'testSuite').length} test suite(s) are configured. Use the Tests page to run them in the desktop app. Results are saved in .productview/.`;
+  if (/test|performance/.test(q)) return `${projectConfig.components.filter(c => c.kind === 'testSuite').length} test suite(s) are configured. Use the Test Explorer page to run them in the desktop app. Results are saved in .productview/.`;
   if (/spec|requirement|vision/.test(q)) return `Specification files: ${projectConfig.components.filter(c => c.kind === 'specification').map(c => c.path).join(', ') || 'none configured'}.`;
   return 'I can explain the components, connections, tests and specifications in .projectroom/project.yaml. This is a local demo response; no Codex or Claude model is connected.';
 };

@@ -147,8 +147,8 @@
     ${navButton('commands', 'terminal', 'CLI Explorer')}
     ${navButton('mcp', 'cube', 'MCP Explorer')}
     ${navButton('api', 'activity', 'API Explorer')}
-    ${navButton('tests', 'flask', 'Tests')}
-    ${navButton('data', 'database', 'Data Sources')}
+    ${navButton('tests', 'flask', 'Test Explorer')}
+    ${navButton('data', 'database', 'Data Explorer')}
     ${navButton('environment', 'settings', 'Environment')}
     <div class="nav-divider" aria-hidden="true"></div>
     ${navButton('activity', 'activity', 'Activity')}`;

@@ -27,8 +27,8 @@
         <button type="button" role="menuitem" data-page="commands">${icon('terminal')}<span>CLI Explorer</span></button>
         <button type="button" role="menuitem" data-page="mcp">${icon('cube')}<span>MCP Explorer</span></button>
         <button type="button" role="menuitem" data-page="api">${icon('activity')}<span>API Explorer</span></button>
-        <button type="button" role="menuitem" data-page="tests">${icon('flask')}<span>Tests</span></button>
-        <button type="button" role="menuitem" data-page="data">${icon('database')}<span>Data Sources</span></button>
+        <button type="button" role="menuitem" data-page="tests">${icon('flask')}<span>Test Explorer</span></button>
+        <button type="button" role="menuitem" data-page="data">${icon('database')}<span>Data Explorer</span></button>
         <button type="button" role="menuitem" data-page="environment">${icon('settings')}<span>Environment</span></button>
         <div class="cursor-open-group">Observe</div>
         <button type="button" role="menuitem" data-page="activity">${icon('activity')}<span>Activity</span></button>
