@@ -1,4 +1,4 @@
-# OpenBuildRoom · repository contract (prototype 0.9.49)
+# OpenBuildRoom · repository contract (prototype 0.9.50)
 
 OpenBuildRoom is an installable desktop workspace for a software repository. It reads `productview.yaml` from the selected project folder and renders a connected map of specifications, services, tests, data sources, storage, issue sources and external systems. The YAML belongs in the project repository so other developers see the same product model.
 
