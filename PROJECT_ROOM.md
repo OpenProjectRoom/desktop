@@ -1,4 +1,4 @@
-# Project Room · repository contract (prototype 0.9.52)
+# Project Room · repository contract (prototype 0.9.65)
 
 Project Room is an installable desktop workspace for a software repository. It reads `.projectroom/project.yaml` from the selected project folder and renders a connected map of runtime services, databases, storage, and long-running command servers. Specifications, tests, issue sources, and external links have their own views. The YAML belongs in the project repository so other developers see the same product model.
 
@@ -201,7 +201,7 @@ Click **Inspect source** to connect or list files. Choose a table or file to loa
 
 ### Individual tests
 
-Open **Test Explorer** and expand a suite to inspect its entries. Project Room recognizes test files from a simple npm, pnpm, Yarn or Bun script whose final command is `node ... --test tests/*.test.*`; earlier `&&` commands remain setup steps when running one file. It does not execute the script merely to list files. For `cargo test` suites, click **Discover Rust tests**; this runs Cargo with `--list`, which may compile test binaries but does not run tests. A Rust entry runs with an exact name filter. Both full-suite and individual runs require a manual click, record their actual exit code and offer saved output. A file entry can still contain several tests; running it executes that file.
+Open **Test Explorer** and expand a suite to inspect its entries. Project Room recognizes test files from a simple npm, pnpm, Yarn or Bun script, or a direct Node command, whose final command is `node ... --test tests/*.test.*` (explicit file paths work too). Earlier `&&` commands remain setup steps. It reads JavaScript and TypeScript source to list literal `test` and `it` names, including names inside `describe` or `suite`, without loading or executing project code. **Refresh test names** rereads files after an edit. Each named entry runs that file with Node's exact `--test-name-pattern` filter; the file entry still runs every test in that file. Dynamic or duplicate names, skipped or todo tests, files over 1 MB, and unsupported runners fall back to file-level or explicitly configured `tests.cases` entries. For `cargo test` suites, click **Discover Rust tests**; this runs Cargo with `--list`, which may compile test binaries but does not run tests. Both full-suite and individual runs require a manual click, record their actual exit code and offer saved output. Running one Node test still loads its file and can run file-level hooks or setup code; it is not a sandbox.
 
 For other runners, declare individual commands under `tests.cases` instead of showing guessed test names:
 

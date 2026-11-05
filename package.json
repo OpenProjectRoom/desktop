@@ -1,6 +1,6 @@
 {
   "name": "project-room-desktop",
-  "version": "0.9.64",
+  "version": "0.9.65",
   "private": true,
   "description": "Desktop workspace for product specifications, services, tests and project topology",
   "main": "desktop/main.cjs",
@@ -17,6 +17,7 @@
     "ajv": "8.20.0",
     "mysql2": "^3.24.6",
     "pg": "^8.23.1",
+    "typescript": "^5.9.3",
     "yaml": "2.9.1"
   },
   "devDependencies": {

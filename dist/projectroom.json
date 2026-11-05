@@ -207,7 +207,7 @@
       {
         "id": "test-case-explorer",
         "title": "Test case explorer",
-        "summary": "Expand test suites to inspect detected Node test files or on-demand Rust test names, run one entry, and review recorded output.",
+        "summary": "Expand test suites to inspect Node test files and statically named JavaScript or TypeScript cases, or discover Rust test names on demand; run one entry and review recorded output.",
         "status": "done",
         "relatedComponents": [
           "tests",
