@@ -162,6 +162,15 @@ function setProject(data) {
   if (projectRoot) recentEvents = ['Projekt geladen · ' + (projectConfig.project?.name || 'Repository')];
   selectedComponent = projectConfig.components.find(c => c.kind === 'service')?.id || projectConfig.components[0]?.id || null;
   desktopStatus = data.status || {};
+  window.projectRoomMetrics = { services: {}, totals: [] };
+  if (window.productView && projectRoot) {
+    const metricsRoot = projectRoot;
+    window.productView.listProcessMetrics().then(snapshot => {
+      if (projectRoot !== metricsRoot) return;
+      window.projectRoomMetrics = snapshot;
+      if (state.page === 'dashboard' || state.page === 'runtime') render();
+    }).catch(() => {});
+  }
   activeConfigPath = data.configFile || '.projectroom/project.yaml';
   if (data.raw) files[activeConfigPath] = data.raw;
   selectedFilePath = activeConfigPath; selectedFileText = data.raw || '';

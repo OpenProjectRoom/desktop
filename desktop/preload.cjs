@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('productView', {
   createProject: mode => ipcRenderer.invoke('project:create', String(mode)),
   discoverProjects: () => ipcRenderer.invoke('project:discover'),
   listHistory: () => ipcRenderer.invoke('history:list'),
+  listProcessMetrics: () => ipcRenderer.invoke('metrics:list'),
   listSpecifications: () => ipcRenderer.invoke('specifications:list'),
   listDocumentation: () => ipcRenderer.invoke('documentation:list'),
   readProduct: () => ipcRenderer.invoke('product:read'),

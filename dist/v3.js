@@ -53,7 +53,27 @@ const demoEvents = [
   { at: new Date(Date.now() - 120000).toISOString(), type: 'test.finished', component: 'tests', exitCode: 0, demo: true },
   { at: new Date(Date.now() - 480000).toISOString(), type: 'service.started', component: 'web', demo: true }
 ];
-let dashboardMetric = 'latency';
+let dashboardMetric = 'cpu';
+let serviceMetricType = 'cpu';
+let serviceMetricSelected = null;
+const processMetricState = () => window.projectRoomMetrics || { services: {}, totals: [] };
+const metricValue = (point, type) => type === 'memory' ? point.memoryBytes / 1048576 : point.cpu;
+const metricLabel = (value, type) => type === 'memory' ? `${Math.round(value)} MB` : `${Number(value).toFixed(1)}%`;
+function liveMetricChart(samples, type, emptyMessage) {
+  if (!samples?.length) return `<div class="dashboard-empty-metric"><div class="dashboard-empty-symbol">${icon('activity')}</div><strong>No measurements yet</strong><p>${escapeHtml(emptyMessage)}</p></div>`;
+  const stride = Math.max(1, Math.ceil(samples.length / 300));
+  const display = samples.filter((_, index) => index % stride === 0 || index === samples.length - 1);
+  const values = display.map(point => metricValue(point, type));
+  const ceiling = Math.max(1, ...values) * 1.15;
+  const points = values.map((value, index) => `${Math.round(index * 630 / Math.max(1, values.length - 1))},${Math.round(102 - value / ceiling * 88)}`).join(' ');
+  const last = display.at(-1);
+  const start = new Date(display[0].at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const end = new Date(last.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  return `<div class="live-metric-chart"><svg viewBox="0 0 630 110" preserveAspectRatio="none" role="img" aria-label="${type === 'cpu' ? 'CPU' : 'Memory'} trend"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${values.length === 1 ? `<circle cx="0" cy="${Math.round(102 - values[0] / ceiling * 88)}" r="4" fill="currentColor"/>` : ''}</svg></div><div class="live-metric-times"><span>${escapeHtml(start)}</span><span>${escapeHtml(end)}</span></div><div class="live-metric-current"><strong>${metricLabel(metricValue(last, type), type)}</strong><span>${samples.length} samples · 5-second interval · local session</span></div>`;
+}
+function metricTabs(type, action) {
+  return `<div class="metric-tabs"><button class="${type === 'cpu' ? 'active' : ''}" data-v3="${action}:cpu">CPU</button><button class="${type === 'memory' ? 'active' : ''}" data-v3="${action}:memory">Memory</button></div>`;
+}
 let mapDisplay = 'map';
 let mapSourceText = null;
 let mapSourceError = null;
@@ -98,6 +118,7 @@ function projectMap() {
 }
 function dashboardPage() {
   const demo = !projectRoot;
+  if (!demo && dashboardMetric === 'latency') dashboardMetric = 'cpu';
   const services = projectConfig.components.filter(c => c.kind === 'service');
   const suites = projectConfig.components.filter(c => c.kind === 'testSuite');
   const issueSources = projectConfig.components.filter(c => c.kind === 'issues');
@@ -111,7 +132,7 @@ function dashboardPage() {
     memory: { label: 'Memory', value: '384 MB', detail: 'Process memory', path: 'M0 82 C35 80 53 77 80 75 S128 73 160 70 S206 70 238 67 S284 65 315 62 S361 57 389 55 S430 55 458 50 S503 48 532 43 S581 42 607 39 S620 40 630 37' }
   };
   const activeMetric = metricData[dashboardMetric];
-  const metricCard = demo ? `<div class="metric-wrap"><div class="metric-tabs">${Object.entries(metricData).map(([key, m]) => `<button class="${dashboardMetric === key ? 'active' : ''}" data-v3="metric:${key}">${m.label}</button>`).join('')}</div><div class="chart"><svg viewBox="0 0 630 100" preserveAspectRatio="none" aria-label="Sample ${activeMetric.label} trend"><defs><linearGradient id="dashboard-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7c6d7" stop-opacity=".23"/><stop offset="1" stop-color="#b7c6d7" stop-opacity="0"/></linearGradient></defs><path d="${activeMetric.path} L630 100 L0 100Z" fill="url(#dashboard-fill)"/><path d="${activeMetric.path}" stroke="#6c87a2" stroke-width="2.4" fill="none"/></svg></div><div class="chart-labels"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>Now</span></div></div><div class="metric-summary"><div><span>${activeMetric.detail}</span><strong>${activeMetric.value}</strong></div><div><span>CPU</span><strong>18.6 %</strong></div><div><span>Memory</span><strong>384 MB</strong></div></div>` : `<div class="dashboard-empty-metric"><div class="dashboard-empty-symbol">${icon('activity')}</div><strong>No measurements recorded yet</strong><p>The configuration requests ${escapeHtml(projectConfig.views?.metrics?.source || 'a metrics')} source. A collector is not connected in this prototype.</p></div>`;
+  const metricCard = demo ? `<div class="metric-wrap"><div class="metric-tabs">${Object.entries(metricData).map(([key, m]) => `<button class="${dashboardMetric === key ? 'active' : ''}" data-v3="metric:${key}">${m.label}</button>`).join('')}</div><div class="chart"><svg viewBox="0 0 630 100" preserveAspectRatio="none" aria-label="Sample ${activeMetric.label} trend"><defs><linearGradient id="dashboard-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7c6d7" stop-opacity=".23"/><stop offset="1" stop-color="#b7c6d7" stop-opacity="0"/></linearGradient></defs><path d="${activeMetric.path} L630 100 L0 100Z" fill="url(#dashboard-fill)"/><path d="${activeMetric.path}" stroke="#6c87a2" stroke-width="2.4" fill="none"/></svg></div><div class="chart-labels"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>Now</span></div></div><div class="metric-summary"><div><span>${activeMetric.detail}</span><strong>${activeMetric.value}</strong></div><div><span>CPU</span><strong>18.6 %</strong></div><div><span>Memory</span><strong>384 MB</strong></div></div>` : `<div class="metric-wrap">${metricTabs(dashboardMetric, 'metric')}${liveMetricChart(processMetricState().totals, dashboardMetric, 'Start a service in Project Room to record its CPU and memory usage. Only processes started here are measured.')}</div>`;
   const sampleIssues = [
     ['PV-42', 'Improve onboarding for new users', 'GitHub', 'Feature'],
     ['PV-38', 'Keep response times below 200 ms', 'Linear', 'Performance'],
@@ -123,8 +144,8 @@ function dashboardPage() {
   const serviceRows = services.map(c => { const [status, kind] = v3Status(c); const command = (c.runtime?.command || []).join(' '); return `<div class="env-row"><div class="service-icon ${c.id === 'api' ? 'blue' : ''}">${icon(c.icon || 'terminal')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge(status, kind)}</div><div class="service-sub">${escapeHtml(command || c.kind)}${c.runtime?.port ? ' · :' + c.runtime.port : ''}</div>${buildIdentityLine(c.id)}</div><div class="dashboard-service-actions">${c.runtime?.url ? `<button class="mini-btn" data-v3="preview:${escapeHtml(c.id)}" title="Open preview">${icon('arrow')}</button>` : ''}<button class="mini-btn" data-v3="service:${escapeHtml(c.id)}" title="${status.startsWith('Running') ? 'Stop' : 'Start'} ${escapeHtml(c.name)}">${icon(status.startsWith('Running') ? 'stop' : 'play')}</button></div></div>`; }).join('') || v3Empty('No services configured.');
   const stat = (title, number, foot, symbol, page) => `<button class="card stat-card dashboard-stat" data-page="${page}"><div class="stat-top">${title} ${icon(symbol)}</div><div class="stat-number">${number}</div><div class="stat-foot">${foot}</div></button>`;
   return `<div class="dashboard-shell">${pageHead('Everything at a glance.', 'Development, quality and product progress in one place.', demo ? v3Button(icon('play') + ' Try working example', 'open-example', true) : suites.length ? v3Button(icon('flask') + ' Open tests', 'page:tests', true) : '')}
-  <div class="grid summary-grid">${stat('Running services' + (demo ? ' · demo' : ''), `${running}<span class="stat-denominator">/${services.length}</span>`, demo ? '● Simulated local status' : '● Local process status', 'play', 'runtime')}${stat(demo ? 'Latest tests · demo' : 'Recorded test runs', demo ? '3<span class="stat-denominator">/4</span>' : String(runs.length), demo ? 'Sample result' : (lastRun ? (lastRun.exitCode === 0 ? 'Latest run passed' : 'Latest run failed') : 'No run yet'), 'flask', 'tests')}${stat(demo ? 'Backlog · demo' : 'Open backlog issues', demo ? '03' : String(localBacklog.issues.filter(issue => issue.status !== 'done').length).padStart(2, '0'), demo ? 'GitHub · Linear sample' : 'Saved in the repository', 'list', 'issues')}${stat(demo ? 'P95 response · demo' : 'Performance', demo ? '186<span class="stat-unit"> ms</span>' : '—', demo ? 'Sample measurement' : 'No measurements yet', 'activity', 'activity')}</div>
-  <div class="grid two-col"><div class="stack"><section class="card"><div class="card-head"><div><h2>Development environment</h2><p>Services and versions in this project</p></div><button class="link" data-page="runtime">All services ${icon('arrow')}</button></div>${serviceRows}</section><section class="card"><div class="card-head"><div><h2>Performance</h2><p>${demo ? 'Sample signal · last 4 hours' : 'Local workspace · configured runtime source'}</p></div><button class="link" data-page="activity">Activity ${icon('arrow')}</button></div>${metricCard}</section></div><div class="stack"><section class="card"><div class="card-head"><div><h2>${demo ? 'Next tasks' : 'Next issues'}</h2><p>${demo ? 'GitHub and Linear · sample tasks' : 'Local repository backlog'}</p></div><button class="link" data-page="issues">View backlog ${icon('arrow')}</button></div>${issueRows}</section>${projectConfig.components.some(c => c.kind === 'commandTool') ? `<section class="card command-summary"><div class="card-head"><div><h2>CLI Explorer</h2><p>Discover and inspect project commands</p></div><button class="link" data-page="commands">Open tools ${icon('arrow')}</button></div><div class="command-summary-body"><span class="command-summary-icon">${icon('terminal')}</span><div><strong>${projectConfig.components.filter(c => c.kind === 'commandTool').length} configured tool${projectConfig.components.filter(c => c.kind === 'commandTool').length === 1 ? '' : 's'}</strong><small>Usage · options · output · controls</small></div></div></section>` : ''}<section class="card"><div class="card-head"><div><h2>${demo ? 'Test coverage' : 'Latest test run'}</h2><p>${demo ? 'Sample result' : `${suites.length} configured suite${suites.length === 1 ? '' : 's'}`}</p></div><button class="link" data-page="tests">View tests ${icon('arrow')}</button></div>${testStatus}</section><section class="card spec-card"><div class="spec-symbol">${icon('doc')}</div><div><h2>Keep the product idea visible</h2><p>${projectConfig.product?.roadmap?.length || 0} roadmap items and ${projectConfig.product?.documentation?.length || 0} documents guide the code and tests.</p><button data-page="${window.productViewOptionalViewEnabled?.('vision') ? 'vision' : 'docs'}">${window.productViewOptionalViewEnabled?.('vision') ? 'Open Vision' : 'Open Documentation'} →</button></div></section></div></div><div class="footer-note">${icon('clock')} ${demo ? 'Interactive demo · sample data and simulated actions' : 'Workspace data from .projectroom/project.yaml and .productview/ · metrics and issue sync are not connected yet'}</div></div>`;
+  <div class="grid summary-grid">${stat('Running services' + (demo ? ' · demo' : ''), `${running}<span class="stat-denominator">/${services.length}</span>`, demo ? '● Simulated local status' : '● Local process status', 'play', 'runtime')}${stat(demo ? 'Latest tests · demo' : 'Recorded test runs', demo ? '3<span class="stat-denominator">/4</span>' : String(runs.length), demo ? 'Sample result' : (lastRun ? (lastRun.exitCode === 0 ? 'Latest run passed' : 'Latest run failed') : 'No run yet'), 'flask', 'tests')}${stat(demo ? 'Backlog · demo' : 'Open backlog issues', demo ? '03' : String(localBacklog.issues.filter(issue => issue.status !== 'done').length).padStart(2, '0'), demo ? 'GitHub · Linear sample' : 'Saved in the repository', 'list', 'issues')}${stat(demo ? 'P95 response · demo' : (running ? 'Local CPU' : 'Last CPU sample'), demo ? '186<span class="stat-unit"> ms</span>' : (processMetricState().totals.length ? metricLabel(processMetricState().totals.at(-1).cpu, 'cpu') : '—'), demo ? 'Sample measurement' : (processMetricState().totals.length ? `${metricLabel(processMetricState().totals.at(-1).memoryBytes / 1048576, 'memory')} · Project Room services` : 'Start a service to measure'), 'activity', 'runtime')}</div>
+  <div class="grid two-col"><div class="stack"><section class="card"><div class="card-head"><div><h2>Development environment</h2><p>Services and versions in this project</p></div><button class="link" data-page="runtime">All services ${icon('arrow')}</button></div>${serviceRows}</section><section class="card"><div class="card-head"><div><h2>Performance</h2><p>${demo ? 'Sample signal · last 4 hours' : 'Project Room services · this app session'}</p></div><button class="link" data-page="activity">Activity ${icon('arrow')}</button></div>${metricCard}</section></div><div class="stack"><section class="card"><div class="card-head"><div><h2>${demo ? 'Next tasks' : 'Next issues'}</h2><p>${demo ? 'GitHub and Linear · sample tasks' : 'Local repository backlog'}</p></div><button class="link" data-page="issues">View backlog ${icon('arrow')}</button></div>${issueRows}</section>${projectConfig.components.some(c => c.kind === 'commandTool') ? `<section class="card command-summary"><div class="card-head"><div><h2>CLI Explorer</h2><p>Discover and inspect project commands</p></div><button class="link" data-page="commands">Open tools ${icon('arrow')}</button></div><div class="command-summary-body"><span class="command-summary-icon">${icon('terminal')}</span><div><strong>${projectConfig.components.filter(c => c.kind === 'commandTool').length} configured tool${projectConfig.components.filter(c => c.kind === 'commandTool').length === 1 ? '' : 's'}</strong><small>Usage · options · output · controls</small></div></div></section>` : ''}<section class="card"><div class="card-head"><div><h2>${demo ? 'Test coverage' : 'Latest test run'}</h2><p>${demo ? 'Sample result' : `${suites.length} configured suite${suites.length === 1 ? '' : 's'}`}</p></div><button class="link" data-page="tests">View tests ${icon('arrow')}</button></div>${testStatus}</section><section class="card spec-card"><div class="spec-symbol">${icon('doc')}</div><div><h2>Keep the product idea visible</h2><p>${projectConfig.product?.roadmap?.length || 0} roadmap items and ${projectConfig.product?.documentation?.length || 0} documents guide the code and tests.</p><button data-page="${window.productViewOptionalViewEnabled?.('vision') ? 'vision' : 'docs'}">${window.productViewOptionalViewEnabled?.('vision') ? 'Open Vision' : 'Open Documentation'} →</button></div></section></div></div><div class="footer-note">${icon('clock')} ${demo ? 'Interactive demo · sample data and simulated actions' : 'Workspace data from .projectroom/project.yaml · process metrics are local to this app session'}</div></div>`;
 }
 function productMarkdown(value) {
   if (value === null || value === undefined) return v3Empty('This Markdown file is not available in the current workspace.');
@@ -191,8 +212,11 @@ async function refreshProductContents() {
 }
 function runtimePage() {
   const services = projectConfig.components.filter(x => x.kind === 'service');
+  const selected = services.find(item => item.id === serviceMetricSelected) || services[0];
+  const selectedMetrics = selected ? processMetricState().services[selected.id] : null;
+  const latest = selectedMetrics?.samples?.at(-1);
   return `${pageHead('Services', 'Start and stop services defined in .projectroom/project.yaml.')}
-  <section class="card"><div class="card-head"><div><h2>Services</h2><p>${services.length} configured · manual start</p></div></div>${services.map(c => { const [status, kind] = v3Status(c); return `<div class="env-row"><div class="service-icon">${icon(c.icon || 'terminal')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge(status, kind)}</div><div class="service-sub">${escapeHtml((c.runtime?.command || []).join(' '))}${c.runtime?.port ? ' · :' + c.runtime.port : ''}</div>${buildIdentityLine(c.id)}</div><button class="btn small" data-v3="service:${escapeHtml(c.id)}">${icon(status.startsWith('Running') ? 'stop' : 'play')} ${status.startsWith('Running') ? 'Stop' : 'Start'}</button>${c.runtime?.url ? `<button class="btn small" data-v3="preview:${escapeHtml(c.id)}">Open</button>` : ''}</div>`; }).join('') || v3Empty('No services configured.')}</section>`;
+  <section class="card"><div class="card-head"><div><h2>Services</h2><p>${services.length} configured · manual start</p></div></div>${services.map(c => { const [status, kind] = v3Status(c); const point = processMetricState().services[c.id]?.samples?.at(-1); return `<div class="env-row"><div class="service-icon">${icon(c.icon || 'terminal')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge(status, kind)}</div><div class="service-sub">${escapeHtml((c.runtime?.command || []).join(' '))}${c.runtime?.port ? ' · :' + c.runtime.port : ''}</div>${buildIdentityLine(c.id)}${point ? `<div class="service-metric-inline">CPU ${metricLabel(point.cpu, 'cpu')} · Memory ${metricLabel(point.memoryBytes / 1048576, 'memory')}</div>` : ''}</div><button class="btn small" data-v3="service-metrics:${escapeHtml(c.id)}">Metrics</button><button class="btn small" data-v3="service:${escapeHtml(c.id)}">${icon(status.startsWith('Running') ? 'stop' : 'play')} ${status.startsWith('Running') ? 'Stop' : 'Start'}</button>${c.runtime?.url ? `<button class="btn small" data-v3="preview:${escapeHtml(c.id)}">Open</button>` : ''}</div>`; }).join('') || v3Empty('No services configured.')}</section>${selected ? `<section class="card service-metric-card"><div class="card-head"><div><h2>${escapeHtml(selected.name)} · resource use</h2><p>${selectedMetrics?.running ? 'Recording while this service runs' : latest ? 'Last run in this app session' : 'Start this service to see resource use'} · CPU includes child processes</p></div></div><div class="metric-wrap">${metricTabs(serviceMetricType, 'service-metric')}${liveMetricChart(selectedMetrics?.samples, serviceMetricType, selectedMetrics?.error || 'Project Room samples this service and its child processes every five seconds while it runs.')}</div></section>` : ''}`;
 }
 function testsPage() {
   const suites = projectConfig.components.filter(x => x.kind === 'testSuite');
@@ -538,6 +562,8 @@ document.addEventListener('click', async event => {
     else if (action === 'doc-refresh') await refreshDocumentation();
     else if (action === 'spec-refresh') await refreshSpecifications();
     else if (action === 'metric') { dashboardMetric = arg; render(); }
+    else if (action === 'service-metric') { serviceMetricType = arg; render(); }
+    else if (action === 'service-metrics') { serviceMetricSelected = arg; state.page = 'runtime'; render(); document.querySelector('.service-metric-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     else if (action === 'map-view') {
       mapDisplay = ['map', 'list', 'source'].includes(arg) ? arg : 'map';
       if (mapDisplay !== 'source') { render(); return; }
@@ -563,6 +589,30 @@ document.addEventListener('click', async event => {
   } catch (cause) { toast(cause.message); }
 }, true);
 document.getElementById('projectPicker').dataset.v2 = '';
+let metricRenderTimer = null;
+if (pv?.onProcessEvent) pv.onProcessEvent(event => {
+  if (event.type === 'status' && event.status === 'stopped') {
+    const service = window.projectRoomMetrics?.services?.[event.id];
+    if (service) service.running = false;
+    return;
+  }
+  if (!projectRoot || !['metrics', 'metrics-total', 'metrics-error'].includes(event.type)) return;
+  const model = window.projectRoomMetrics || (window.projectRoomMetrics = { services: {}, totals: [] });
+  if (event.type === 'metrics') {
+    const service = model.services[event.id] || (model.services[event.id] = { running: true, samples: [], error: null });
+    service.samples.push(event.point);
+    if (service.samples.length > 20000) service.samples.splice(0, 10000, ...service.samples.slice(0, 10000).filter((_, index) => index % 2 === 0));
+    service.running = true;
+    service.error = null;
+  } else if (event.type === 'metrics-total') {
+    model.totals.push(event.point);
+    if (model.totals.length > 20000) model.totals.splice(0, 10000, ...model.totals.slice(0, 10000).filter((_, index) => index % 2 === 0));
+  }
+  if (state.page === 'dashboard' || state.page === 'runtime') {
+    clearTimeout(metricRenderTimer);
+    metricRenderTimer = setTimeout(() => render(), 180);
+  }
+});
 document.getElementById('projectPicker').dataset.v3 = 'workspace';
 document.getElementById('settingsBtn').dataset.v2 = '';
 document.getElementById('settingsBtn').dataset.v3 = 'page:files';

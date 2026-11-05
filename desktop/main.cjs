@@ -27,6 +27,7 @@ const { listCases, discoverCargo } = require('./test-explorer.cjs');
 const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
 const { readBuildIdentity, listBuildIdentities, sourceRevision } = require('./build-identity.cjs');
+const { ProcessMetrics } = require('./process-metrics.cjs');
 
 let windowRef;
 let selectedRoot = null;
@@ -34,6 +35,7 @@ let selectedConfig = null;
 let selectedRaw = null;
 const processes = new Map();
 const launchedBuilds = new Map();
+const processMetrics = new ProcessMetrics({ onSample: notify });
 let projectWatcher;
 let pendingOnboardingRoot = null;
 let chatChild = null;
@@ -142,7 +144,7 @@ function stopChild(child) {
     else child.kill('SIGTERM');
   } catch (error) { /* Process may already have exited. */ }
 }
-function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); launchedBuilds.clear(); }
+function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); launchedBuilds.clear(); processMetrics.reset(); }
 function prepareOnboarding(root) {
   const inventory = inspectFolder(root);
   pendingOnboardingRoot = inventory.root;
@@ -179,9 +181,10 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     child.stdout.on('data', data => stdout.write(stdoutDecoder.write(data)));
     child.stderr.on('data', data => stderr.write(stderrDecoder.write(data)));
     const flushOutput = () => { stdout.write(stdoutDecoder.end()); stderr.write(stderrDecoder.end()); stdout.end(); stderr.end(); output.end(); };
-    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } processes.delete(id); notify({ type: 'status', id, status: 'stopped' }); });
+    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (processes.get(id) === child) { processes.delete(id); if (kind === 'service') processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
     child.once('spawn', () => {
       if (buildIdentity) launchedBuilds.set(id, { ...buildIdentity, startedAt });
+      if (kind === 'service') processMetrics.start(id, child.pid);
       if (!waitForExit) { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); settled = true; resolve({ status: 'running', pid: child.pid, buildIdentity: launchedBuilds.get(id) }); }
       else { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); }
     });
@@ -189,12 +192,13 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
       if (failed) return;
       flushOutput();
       appendEvent(root, `${kind}.finished`, { component: id, ...details, exitCode: code, signal, log: relativeLog });
-      processes.delete(id); notify({ type: 'status', id, status: 'stopped' });
+      if (processes.get(id) === child) { processes.delete(id); if (kind === 'service') processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); }
       if (waitForExit && !settled) { settled = true; resolve({ status: 'stopped', exitCode: code ?? (signal ? 1 : 0), log: relativeLog }); }
     });
   });
 }
 function registerIpc() {
+  ipcMain.handle('metrics:list', event => { assertSender(event); return processMetrics.snapshot(); });
   const oauthStore = (root, kind, id) => new SecureOAuthStore(app.getPath('userData'), safeStorage, root, kind, id);
   const apiOAuth = source => new ApiOAuth(oauthStore(requireProject(), 'api', `${source.id}\0${source.baseUrl}\0${source.auth?.authorizationUrl}\0${source.auth?.tokenUrl}\0${source.auth?.clientId}\0${(source.auth?.scopes || []).join(' ')}`), url => shell.openExternal(url));
   const apiSource = id => {

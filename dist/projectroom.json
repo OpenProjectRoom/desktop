@@ -137,6 +137,17 @@
         ]
       },
       {
+        "id": "local-process-metrics",
+        "title": "Session-only service resource charts",
+        "summary": "Sample CPU and resident memory for services started by Project Room and their child processes every five seconds; show overview and per-service charts without saving measurements.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "api",
+          "worker"
+        ]
+      },
+      {
         "id": "local-backlog",
         "title": "Repository-backed local backlog",
         "summary": "Capture and update product issues in Markdown files without an external tracker.",
@@ -447,7 +458,6 @@
     "metrics": {
       "source": "process",
       "display": [
-        "latency",
         "cpu",
         "memory"
       ]
