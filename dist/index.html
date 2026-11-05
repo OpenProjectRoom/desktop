@@ -24,6 +24,7 @@
 <link rel="stylesheet" href="cli-explorer-ui.css?v=0.9.42">
 <link rel="stylesheet" href="test-explorer.css?v=0.9.35">
 <link rel="stylesheet" href="data-viewer.css?v=0.9.40">
+<link rel="stylesheet" href="build-identity.css?v=0.9.49">
 <style id="compact-ui">
 /* OpenBuildRoom 0.8.2: compact, quiet typography for a daily-use workspace. */
 body{font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
@@ -284,9 +285,9 @@ document.addEventListener('click',e=>{let page=e.target.closest('[data-page]');i
 document.addEventListener('input',e=>{if(e.target.id==='testSearch')document.getElementById('testTable').innerHTML=testTable(e.target.value)});
 document.getElementById('projectPicker').onclick=()=>toast('Projektwechsel ist in diesem Prototypen noch nicht verbunden.');document.getElementById('settingsBtn').onclick=()=>toast('Projektkonfiguration liegt beispielhaft in productview.yaml.');document.getElementById('notifications').onclick=()=>toast('Keine neuen Benachrichtigungen.');document.addEventListener('keydown',e=>{if(e.key==='Escape')document.getElementById('modalRoot').innerHTML=''});render();
 </script>
-<script src="v2.js?v=0.9.12"></script>
-<script src="v3.js?v=0.9.43"></script>
-<script src="v5.js?v=0.9.42"></script>
+<script src="v2.js?v=0.9.49"></script>
+<script src="v3.js?v=0.9.49"></script>
+<script src="v5.js?v=0.9.49"></script>
 <script src="cli-explorer-ui.js?v=0.9.42"></script>
 <script src="v7.js?v=6.2"></script>
 <script src="v8.js?v=0.9.43"></script>
@@ -296,7 +297,7 @@ document.getElementById('projectPicker').onclick=()=>toast('Projektwechsel ist i
 <script src="onboarding-page.js?v=0.9.39"></script>
 <script src="chat-markdown.js?v=0.9.38"></script>
 <script src="local-agent.js?v=0.9.38"></script>
-<script src="mcp-explorer.js?v=0.9.41"></script>
+<script src="mcp-explorer.js?v=0.9.49"></script>
 <script src="test-explorer.js?v=0.9.35"></script>
 <script src="data-viewer.js?v=0.9.40"></script>
 </body>

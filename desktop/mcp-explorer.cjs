@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, StreamableHTTPClientTransport, SSEClientTransport } = require('@modelcontextprotocol/client');
 const { StdioClientTransport } = require('@modelcontextprotocol/client/stdio');
+const { readBuildIdentity, sourceRevision } = require('./build-identity.cjs');
 
 const CONFIG_FILES = ['.mcp.json', '.cursor/mcp.json', '.vscode/mcp.json', 'mcp.json'];
 const ENV_NAME = /^[A-Z][A-Z0-9_]*$/;
@@ -27,7 +28,7 @@ function discoverMcpServers(root, config = {}, options = {}) {
   for (const item of config.workspace?.mcpServers || []) candidates.push({
     id: `yaml:${item.id}`, name: item.name, description: item.description || '', source: 'productview.yaml',
     transport: item.transport || (item.url ? 'http' : 'stdio'), command: item.command, args: item.args || [],
-    cwd: item.cwd || '.', url: item.url, environment: item.environment || [], authEnv: item.authEnv, linkedFrom: item.linkedFrom
+    cwd: item.cwd || '.', url: item.url, environment: item.environment || [], authEnv: item.authEnv, linkedFrom: item.linkedFrom, build: item.build
   });
   for (const relative of CONFIG_FILES) {
     const parsed = readJson(root, relative);
@@ -77,8 +78,11 @@ class McpExplorer {
   }
   list() {
     const linked = new Map((this.options.getConfig()?.workspace?.mcpServers || []).filter(item => item.linkedFrom).map(item => [item.linkedFrom, item.id]));
+    const root = this.options.getRoot();
+    const revision = root ? sourceRevision(root) : null;
     return this.discover().map(item => ({ ...publicCandidate(item, name => !!this.options.getEnvironment(name)),
-      connected: this.active.has(item.id), linkedId: linked.get(item.id) || null }));
+      connected: this.active.has(item.id), linkedId: linked.get(item.id) || null,
+      buildIdentity: this.active.get(item.id)?.buildIdentity || (item.transport === 'stdio' && !item.builtIn && item.build?.file ? readBuildIdentity(root, item, revision) : null) }));
   }
   async disconnect(id) {
     if (id === undefined) { await Promise.all([...this.active.keys()].map(key => this.disconnect(key))); return true; }
@@ -128,7 +132,8 @@ class McpExplorer {
     let timeout;
     try {
       await Promise.race([client.connect(transport), new Promise((_resolve, reject) => { timeout = setTimeout(() => reject(new Error('MCP connection timed out after 15 seconds.')), 15000); })]);
-      this.active.set(id, { item, client });
+      this.active.set(id, { item, client, connectedAt: new Date().toISOString(),
+        buildIdentity: item.transport === 'stdio' && !item.builtIn && item.build?.file ? readBuildIdentity(root, item, sourceRevision(root)) : null });
       this.options.record?.('mcp.connected', { server: item.id, transport: item.transport });
       return await this.describe(id);
     } catch (error) {
@@ -151,7 +156,7 @@ class McpExplorer {
       capabilities.prompts ? client.listPrompts() : Promise.resolve({ prompts: [] })
     ]);
     const value = (index, key) => results[index].status === 'fulfilled' ? results[index].value[key] || [] : [];
-    return { id: item.id, serverInfo: client.getServerVersion(), instructions: client.getInstructions() || '', capabilities,
+    return { id: item.id, serverInfo: client.getServerVersion(), connectedAt: active.connectedAt, buildIdentity: active.buildIdentity, instructions: client.getInstructions() || '', capabilities,
       tools: value(0, 'tools'), resources: value(1, 'resources'), resourceTemplates: value(2, 'resourceTemplates'), prompts: value(3, 'prompts'),
       errors: results.map((result, index) => result.status === 'rejected' ? `${['Tools', 'Resources', 'Resource templates', 'Prompts'][index]}: ${result.reason.message}` : '').filter(Boolean) };
   }

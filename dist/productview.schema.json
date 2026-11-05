@@ -55,7 +55,8 @@
           "cwd": { "$ref": "#/$defs/relativePath" },
           "url": { "type": "string", "minLength": 1 },
           "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
-          "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }
+          "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
+          "build": { "$ref": "#/$defs/build" }
         }, "additionalProperties": false } },
         "environment": { "type": "array", "items": { "type": "object", "required": ["name"], "properties": {
           "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
@@ -93,6 +94,9 @@
     "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
     "relativePath": { "type": "string", "minLength": 1, "pattern": "^(?!/)(?!.*\\.\\.)[^\\\\]+$" },
     "command": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+    "build": { "type": "object", "required": ["file"], "properties": {
+      "file": { "$ref": "#/$defs/relativePath" }
+    }, "additionalProperties": false },
     "position": { "type": "object", "required": ["x", "y"], "properties": {
       "x": { "type": "number", "minimum": 0, "maximum": 100 }, "y": { "type": "number", "minimum": 0 }
     }, "additionalProperties": false },
@@ -100,6 +104,7 @@
       "id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["service", "commandTool", "database", "testSuite", "specification", "issues", "storage", "external"] },
       "name": { "type": "string", "minLength": 1 }, "icon": { "type": "string" }, "position": { "$ref": "#/$defs/position" },
       "path": { "$ref": "#/$defs/relativePath" }, "url": { "type": "string" },
+      "build": { "$ref": "#/$defs/build" },
       "runtime": { "type": "object", "required": ["command", "startup"], "properties": {
         "command": { "$ref": "#/$defs/command" }, "cwd": { "$ref": "#/$defs/relativePath" },
         "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },

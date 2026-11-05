@@ -1,0 +1,4 @@
+.build-identity{margin-top:4px;color:#697d90;font-size:10px;line-height:1.4;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.map-node-kind{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cli-man-toolbar .build-identity,.mcp-main-head .build-identity{margin-top:7px;font-size:11px}
+body[data-theme="dark"] .build-identity{color:#a8bbcb}

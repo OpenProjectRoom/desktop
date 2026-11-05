@@ -24,12 +24,14 @@ const { addMcpServer, linkMcpServer, removeMcpServer } = require('./mcp-manageme
 const { listCases, discoverCargo } = require('./test-explorer.cjs');
 const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
+const { readBuildIdentity, listBuildIdentities, sourceRevision } = require('./build-identity.cjs');
 
 let windowRef;
 let selectedRoot = null;
 let selectedConfig = null;
 let selectedRaw = null;
 const processes = new Map();
+const launchedBuilds = new Map();
 let projectWatcher;
 let pendingOnboardingRoot = null;
 let chatChild = null;
@@ -69,7 +71,7 @@ function readSelected(root) {
       appendEvent(root, 'file.changed', { path: changed });
     });
   } catch { /* File watching is optional on unsupported filesystems. */ }
-  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status() };
+  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
 }
 function loadInitial() {
   const pref = path.join(app.getPath('userData'), 'last-project-v1.json');
@@ -83,7 +85,7 @@ function loadInitial() {
   selectedRoot = null;
   selectedConfig = demo.config;
   selectedRaw = demo.raw;
-  return { config: selectedConfig, raw: selectedRaw, root: null, status: {} };
+  return { config: selectedConfig, raw: selectedRaw, root: null, status: {}, buildIdentities: {} };
 }
 function component(id, kind) {
   if (!selectedRoot) throw new Error('Open a repository with productview.yaml first.');
@@ -117,7 +119,7 @@ function environmentConfig() {
   return { ...selectedConfig, workspace: { ...selectedConfig.workspace,
     mcpServers: [...(selectedConfig.workspace?.mcpServers || []), ...discovered] } };
 }
-function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status() }; }
+function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status(), buildIdentities: listBuildIdentities(selectedRoot, selectedConfig.components, launchedBuilds) }; }
 function cwdWithinProject(relative = '.') {
   const root = fs.realpathSync(selectedRoot);
   const cwd = fs.realpathSync(path.resolve(root, relative));
@@ -138,7 +140,7 @@ function stopChild(child) {
     else child.kill('SIGTERM');
   } catch (error) { /* Process may already have exited. */ }
 }
-function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); }
+function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); launchedBuilds.clear(); }
 function prepareOnboarding(root) {
   const inventory = inspectFolder(root);
   pendingOnboardingRoot = inventory.root;
@@ -149,6 +151,8 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in productview.yaml.');
   const cwd = cwdWithinProject(relativeCwd);
   const runComponent = selectedConfig.components.find(item => item.id === id);
+  const buildIdentity = runComponent && ['service', 'commandTool'].includes(runComponent.kind) ? readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
+  const startedAt = new Date().toISOString();
   const localEnv = runtimeEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, runComponent);
   const sensitiveValues = declarations(selectedConfig).map(item => localEnv[item.name]).filter(Boolean);
   return new Promise((resolve, reject) => {
@@ -156,7 +160,7 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     const outputFile = logPath(root, id, kind);
     const output = fs.createWriteStream(outputFile, { flags: 'a' });
     const relativeLog = path.relative(root, outputFile);
-    appendEvent(root, `${kind}.started`, { component: id, ...details, command, log: relativeLog });
+    appendEvent(root, `${kind}.started`, { component: id, ...details, command, log: relativeLog, startedAt, ...(buildIdentity ? { buildIdentity } : {}) });
     const child = spawn(command[0], command.slice(1), { cwd, env: localEnv, shell: false, detached: process.platform !== 'win32', stdio: [keepStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] });
     let settled = false;
     let failed = false;
@@ -175,8 +179,9 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     const flushOutput = () => { stdout.write(stdoutDecoder.end()); stderr.write(stderrDecoder.end()); stdout.end(); stderr.end(); output.end(); };
     child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } processes.delete(id); notify({ type: 'status', id, status: 'stopped' }); });
     child.once('spawn', () => {
-      if (!waitForExit) { processes.set(id, child); notify({ type: 'status', id, status: 'running' }); settled = true; resolve({ status: 'running', pid: child.pid }); }
-      else { processes.set(id, child); notify({ type: 'status', id, status: 'running' }); }
+      if (buildIdentity) launchedBuilds.set(id, { ...buildIdentity, startedAt });
+      if (!waitForExit) { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); settled = true; resolve({ status: 'running', pid: child.pid, buildIdentity: launchedBuilds.get(id) }); }
+      else { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); }
     });
     child.once('close', (code, signal) => {
       if (failed) return;

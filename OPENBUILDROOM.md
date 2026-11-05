@@ -1,4 +1,4 @@
-# OpenBuildRoom · repository contract (prototype 0.9.44)
+# OpenBuildRoom · repository contract (prototype 0.9.49)
 
 OpenBuildRoom is an installable desktop workspace for a software repository. It reads `productview.yaml` from the selected project folder and renders a connected map of specifications, services, tests, data sources, storage, issue sources and external systems. The YAML belongs in the project repository so other developers see the same product model.
 
@@ -198,6 +198,12 @@ Each case ID must be unique within its suite. Case commands run in the suite wor
 **Add component** on the Project Map supports runtime services, databases and storage, with an optional dependency to another visible resource. In the desktop app, this writes a validated `productview.yaml` entry and a `component.created` history event; in the web demo it only changes the current session. Adding a service does not run it. Test suites belong on Tests, specifications on Requirements, issue sources in Project settings, and CLI tasks or servers in CLI Explorer.
 
 Commands are arrays of arguments such as `[npm, run, dev]`. The app runs them without a shell and only after a user clicks Start or Run. Command working directories must stay inside the project. Do not store credentials in YAML; use environment variable names such as `DATABASE_URL`.
+
+## Build identity for executable components
+
+Services, linked CLI tools and explicitly configured local MCP servers can show a verified build time, source commit and optional version. For a service or CLI tool, add `build: {file: dist/build-info.json}` to its component in `productview.yaml`; an MCP entry under `workspace.mcpServers` accepts the same field. The path is relative to the repository root. For a service or CLI tool without `build.file`, OpenBuildRoom checks `build-info.json` and `dist/build-info.json` under its `runtime.cwd`. Use an explicit path if multiple artifacts share that directory.
+
+The build pipeline should write a small JSON file **after a successful build**, for example `{"builtAt":"2026-11-05T11:34:56Z","revision":"aabbccddeeff0011","version":"1.2.3"}`. `builtAt` needs an ISO timestamp with timezone; `revision` is the commit used to produce the artifact. A project may omit `version`. The UI labels current Git HEAD as **source**, artifact revision as **build**, and the actual process time as **Started**. It never converts a file modification or commit time into a build time. Development commands without build metadata show **Build time unavailable** and, once launched, their start time. Build identity is captured at launch, so rebuilding later cannot silently change the label of a running process. Start events also save the snapshot in `.productview/events.jsonl`. MCP Explorer separately shows the protocol-reported server version and connection time.
 
 ## CLI Explorer
 

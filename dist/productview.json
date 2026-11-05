@@ -64,6 +64,17 @@
         ]
       },
       {
+        "id": "executable-build-identity",
+        "title": "Executable build identity",
+        "summary": "Show artifact build time, commit and optional version separately from process start time for services, CLI tools and MCP servers.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web",
+          "api"
+        ]
+      },
+      {
         "id": "north-star-page",
         "title": "North Star progress page",
         "summary": "Give the manually recorded outcome metric its own page with a historical plot and all observations.",

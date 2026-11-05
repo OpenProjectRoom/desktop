@@ -26,6 +26,20 @@ let chatMessages = [];
 let mapZoom = 1;
 let desktopStatus = {};
 let projectRoot = null;
+let componentBuilds = {};
+function buildIdentityText(id, compact = false) {
+  const info = componentBuilds[id] || {};
+  const when = value => { try { return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'medium' }); } catch { return ''; } };
+  const parts = [];
+  if (info.builtAt) parts.push(`Built ${when(info.builtAt)}`);
+  else if (projectRoot) parts.push('Build time unavailable');
+  if (info.version) parts.push(`v${info.version}`);
+  if (info.revision) parts.push(`build ${info.revision.slice(0, 12)}`);
+  else if (info.sourceRevision && !compact) parts.push(`source ${info.sourceRevision}`);
+  if (info.startedAt) parts.push(`${desktopStatus[id] === 'running' ? 'Started' : 'Last started'} ${when(info.startedAt)}`);
+  return parts.join(' · ');
+}
+function buildIdentityLine(id) { const value = buildIdentityText(id); return value ? `<div class="build-identity" title="Build data comes from the artifact; the source revision and start time are separate.">${escapeHtml(value)}</div>` : ''; }
 let projectFiles = [];
 let selectedFilePath = 'productview.yaml';
 let selectedFileText = '';
@@ -49,7 +63,7 @@ function mapNode(c) {
   const [status, kind] = getNodeStatus(c);
   const x = Math.max(0, Math.min(72, Number(c.position?.x) || 0));
   const y = Math.max(0, Math.min(620, Number(c.position?.y) || 0));
-  const helper = c.kind === 'service' ? [c.runtime?.port && ':' + c.runtime.port, projectConfig.project?.version && 'v' + projectConfig.project.version].filter(Boolean).join(' · ') :
+  const helper = c.kind === 'service' ? [c.runtime?.port && ':' + c.runtime.port, buildIdentityText(c.id, true)].filter(Boolean).join(' · ') :
     c.kind === 'specification' ? c.path : c.kind === 'database' ? c.data?.engine : c.kind === 'issues' ? c.integration?.provider : c.kind === 'testSuite' ? (c.tests?.categories || []).join(' · ') : '';
   return `<article class="map-node kind-${escapeHtml(c.kind)} ${selectedComponent === c.id ? 'selected' : ''}" data-map-node="${escapeHtml(c.id)}" style="left:${x}%;top:${y}px" tabindex="0" role="button" aria-label="${escapeHtml(c.name)} öffnen">
     <div class="map-node-header"><div class="map-node-icon">${icon(c.icon || 'cube')}</div><div class="map-node-name">${escapeHtml(c.name)}</div></div>
@@ -109,7 +123,7 @@ function renderPanel() {
       const [status, badgeKind] = getNodeStatus(c);
       const edges = (projectConfig.connections || []).filter(e => e.from === c.id || e.to === c.id);
       const fields = c.kind === 'service' ? [
-        ['Befehl', (c.runtime?.command || []).join(' ')], ['Port', c.runtime?.port ? ':' + c.runtime.port : '—'], ['Start', c.runtime?.startup || 'manual'], ['Health', c.runtime?.health || '—']
+        ['Befehl', (c.runtime?.command || []).join(' ')], ['Port', c.runtime?.port ? ':' + c.runtime.port : '—'], ['Start', c.runtime?.startup || 'manual'], ['Health', c.runtime?.health || '—'], ['Build', buildIdentityText(c.id)]
       ] : c.kind === 'database' ? [['Engine', c.data?.engine || '—'], ['Zugang', c.data?.connectionEnv || '—'], ['Viewer', c.data?.viewer || '—']] :
         c.kind === 'testSuite' ? [['Befehl', (c.tests?.command || []).join(' ')], ['Kategorien', (c.tests?.categories || []).join(', ') || '—']] :
         c.kind === 'specification' ? [['Datei', c.path || '—']] :
@@ -143,7 +157,7 @@ function sendChat(text) {
 function addEvent(text) { const now = new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); recentEvents.unshift(`${now}  ${text}`); recentEvents = recentEvents.slice(0, 10); if (state.page === 'overview') render(); }
 function setProject(data) {
   if (!data?.config || !Array.isArray(data.config.components)) throw new Error('Die Projektkonfiguration ist ungültig.');
-  projectConfig = data.config; projectRoot = data.root || null;
+  projectConfig = data.config; projectRoot = data.root || null; componentBuilds = data.buildIdentities || {};
   if (projectRoot) recentEvents = ['Projekt geladen · ' + (projectConfig.project?.name || 'Repository')];
   selectedComponent = projectConfig.components.find(c => c.kind === 'service')?.id || projectConfig.components[0]?.id || null;
   desktopStatus = data.status || {};
@@ -289,6 +303,6 @@ render();
   } catch (err) { toast('Projektdatei konnte nicht geladen werden: ' + err.message); }
 })();
 if (window.productView?.onProcessEvent) window.productView.onProcessEvent(event => {
-  if (event.type === 'status') { desktopStatus[event.id] = event.status; render(); }
+  if (event.type === 'status') { desktopStatus[event.id] = event.status; if (event.buildIdentity) componentBuilds[event.id] = event.buildIdentity; render(); }
   else if (event.type === 'log') { addEvent(`${event.id}: ${event.text.trim().slice(0, 100)}`); }
 });
