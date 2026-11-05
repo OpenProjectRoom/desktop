@@ -14,7 +14,7 @@ Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens th
 
 [![Watch the Project Room walkthrough](assets/demo/project-room-walkthrough-poster.png)](assets/demo/project-room-walkthrough.mp4)
 
-[Play or download the MP4](assets/demo/project-room-walkthrough.mp4). This silent walkthrough uses captured screens from **Order Desk**, a separate sample application built to exercise Project Room's Spec Kit, service, API, PostgreSQL, CLI, MCP, and test views. The film animates those captures; the website's [interactive tour](https://openprojectroom.com/#live-tour) is a labeled simulation. Neither is a recording of unattended agent actions.
+[Play or download the MP4](assets/demo/project-room-walkthrough.mp4). The green outline follows the app element discussed in each scene. This silent walkthrough uses captured screens from **Order Desk**, a separate sample application built to exercise Project Room's Spec Kit, service, API, PostgreSQL, CLI, MCP, and test views. The film animates those captures; the website's [interactive tour](https://openprojectroom.com/#live-tour) is a labeled simulation. Neither is a recording of unattended agent actions.
 
 ## One repository, two ways to work
 
