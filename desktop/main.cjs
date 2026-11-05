@@ -4,7 +4,7 @@ const { StringDecoder } = require('node:string_decoder');
 const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
-const { loadConfig } = require('../scripts/config.cjs');
+const { loadConfig, configPath, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 const { listSpecifications } = require('../scripts/specifications.cjs');
 const { listDocumentation } = require('../scripts/documentation.cjs');
 const { appendEvent, ensureHistory, logPath, readEvents } = require('./history.cjs');
@@ -51,7 +51,7 @@ function status() {
   return Object.fromEntries([...processes].map(([id, child]) => [id, child.exitCode === null ? 'running' : 'stopped']));
 }
 function readSelected(root) {
-  const loaded = loadConfig(path.join(root, 'productview.yaml'));
+  const loaded = loadConfig(configPath(root));
   mcpExplorer?.disconnect().catch(() => {});
   if (selectedRoot && selectedRoot !== root) { stopAll(); if (chatChild) stopChild(chatChild); }
   if (projectWatcher) { projectWatcher.close(); projectWatcher = null; }
@@ -72,24 +72,24 @@ function readSelected(root) {
       appendEvent(root, 'file.changed', { path: changed });
     });
   } catch { /* File watching is optional on unsupported filesystems. */ }
-  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
+  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
 }
 function loadInitial() {
   const pref = path.join(app.getPath('userData'), 'last-project-v1.json');
   if (fs.existsSync(pref)) {
     try {
       const root = JSON.parse(fs.readFileSync(pref, 'utf8')).root;
-      if (typeof root === 'string' && fs.existsSync(path.join(root, 'productview.yaml'))) return readSelected(root);
+      if (typeof root === 'string' && fs.existsSync(configPath(root))) return readSelected(root);
     } catch (error) { /* Fall back to packaged demo. */ }
   }
-  const demo = loadConfig(path.join(app.getAppPath(), 'productview.yaml'));
+  const demo = loadConfig(configPath(app.getAppPath()));
   selectedRoot = null;
   selectedConfig = demo.config;
   selectedRaw = demo.raw;
-  return { config: selectedConfig, raw: selectedRaw, root: null, status: {}, buildIdentities: {} };
+  return { config: selectedConfig, raw: selectedRaw, root: null, configFile: CONFIG_RELATIVE, status: {}, buildIdentities: {} };
 }
 function component(id, kind) {
-  if (!selectedRoot) throw new Error('Open a repository with productview.yaml first.');
+  if (!selectedRoot) throw new Error('Open a repository with .projectroom/project.yaml first.');
   const found = selectedConfig?.components?.find(item => item.id === id && item.kind === kind);
   if (!found) throw new Error(`Unknown ${kind} component: ${id}`);
   return found;
@@ -115,12 +115,12 @@ function dataError(error, value) {
   return new Error(message.slice(0, 700));
 }
 function environmentConfig() {
-  const discovered = (mcpExplorer?.discover() || []).filter(item => !item.builtIn && item.source !== 'productview.yaml')
+  const discovered = (mcpExplorer?.discover() || []).filter(item => !item.builtIn && item.source !== '.projectroom/project.yaml')
     .map(item => ({ id: item.id, name: item.name, environment: referencedNames(item) }));
   return { ...selectedConfig, workspace: { ...selectedConfig.workspace,
     mcpServers: [...(selectedConfig.workspace?.mcpServers || []), ...discovered] } };
 }
-function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, status: status(), buildIdentities: listBuildIdentities(selectedRoot, selectedConfig.components, launchedBuilds) }; }
+function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(selectedRoot, loaded.file), status: status(), buildIdentities: listBuildIdentities(selectedRoot, selectedConfig.components, launchedBuilds) }; }
 function cwdWithinProject(relative = '.') {
   const root = fs.realpathSync(selectedRoot);
   const cwd = fs.realpathSync(path.resolve(root, relative));
@@ -149,7 +149,7 @@ function prepareOnboarding(root) {
   return { onboarding: true, inventory, prompt: agentPrompt(inventory, contract), review: reviewConfig(inventory.root) };
 }
 function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = false, keepStdin = false, details = {}) {
-  if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in productview.yaml.');
+  if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in .projectroom/project.yaml.');
   const cwd = cwdWithinProject(relativeCwd);
   const runComponent = selectedConfig.components.find(item => item.id === id);
   const buildIdentity = runComponent && ['service', 'commandTool'].includes(runComponent.kind) ? readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
@@ -231,12 +231,12 @@ function registerIpc() {
     assertSender(event);
     const source = path.join(app.getAppPath(), 'examples', 'hello-workspace');
     const root = path.join(app.getPath('documents'), 'Project Room Examples', 'hello-workspace');
-    if (!fs.existsSync(path.join(source, 'productview.yaml'))) throw new Error('The example workspace is missing from this build.');
+    if (!fs.existsSync(configPath(source))) throw new Error('The example workspace is missing from this build.');
     if (!fs.existsSync(root)) {
       fs.mkdirSync(path.dirname(root), { recursive: true });
       fs.cpSync(source, root, { recursive: true, force: false });
     }
-    if (!fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('The example destination already exists without productview.yaml. Move it before trying again.');
+    if (!fs.existsSync(configPath(root))) throw new Error('The example destination already exists without .projectroom/project.yaml. Move it before trying again.');
     const registered = addWorkspace(app.getPath('userData'), root);
     return readSelected(registered);
   });
@@ -290,7 +290,7 @@ function registerIpc() {
     pendingOnboardingRoot = null;
     return readSelected(root);
   });
-  ipcMain.handle('project:list', event => { assertSender(event); return readRegistry(app.getPath('userData')).map(root => { try { return { root, name: loadConfig(path.join(root, 'productview.yaml')).config.project.name }; } catch { return { root, name: path.basename(root) }; } }); });
+  ipcMain.handle('project:list', event => { assertSender(event); return readRegistry(app.getPath('userData')).map(root => { try { return { root, name: loadConfig(configPath(root)).config.project.name }; } catch { return { root, name: path.basename(root) }; } }); });
   ipcMain.handle('project:open', (event, root) => { assertSender(event); if (!readRegistry(app.getPath('userData')).includes(root)) throw new Error('Unknown workspace.'); addWorkspace(app.getPath('userData'), root); return readSelected(root); });
   ipcMain.handle('project:create', async (event, mode) => {
     assertSender(event);
@@ -306,19 +306,19 @@ function registerIpc() {
     assertSender(event);
     const choice = await dialog.showOpenDialog(windowRef, { title: 'Find Project Room workspaces', properties: ['openDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return [];
-    return discover(choice.filePaths[0]).map(root => ({ root, name: loadConfig(path.join(root, 'productview.yaml')).config.project.name }));
+    return discover(choice.filePaths[0]).map(root => ({ root, name: loadConfig(configPath(root)).config.project.name }));
   });
   ipcMain.handle('project:register', (event, root) => { assertSender(event); const registered = addWorkspace(app.getPath('userData'), root); return readSelected(registered); });
   ipcMain.handle('history:list', event => { assertSender(event); return readEvents(selectedRoot); });
-  ipcMain.handle('specifications:list', event => { assertSender(event); return selectedRoot ? listSpecifications(selectedRoot, loadConfig(path.join(selectedRoot, 'productview.yaml')).config, { status: status(), statusKnown: true, events: readEvents(selectedRoot, 1000) }) : { roots: [], entries: [], specKit: { detected: false, features: [] } }; });
-  ipcMain.handle('documentation:list', event => { assertSender(event); return selectedRoot ? listDocumentation(selectedRoot, loadConfig(path.join(selectedRoot, 'productview.yaml')).config) : { root: null, missing: true, entries: [] }; });
+  ipcMain.handle('specifications:list', event => { assertSender(event); return selectedRoot ? listSpecifications(selectedRoot, loadConfig(configPath(selectedRoot)).config, { status: status(), statusKnown: true, events: readEvents(selectedRoot, 1000) }) : { roots: [], entries: [], specKit: { detected: false, features: [] } }; });
+  ipcMain.handle('documentation:list', event => { assertSender(event); return selectedRoot ? listDocumentation(selectedRoot, loadConfig(configPath(selectedRoot)).config) : { root: null, missing: true, entries: [] }; });
   ipcMain.handle('product:read', event => { assertSender(event); return readProduct(requireProject()); });
   ipcMain.handle('environment:list', event => { assertSender(event); return listEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage); });
   ipcMain.handle('environment:reveal', (event, name) => { assertSender(event); return readEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name); });
   ipcMain.handle('environment:save', (event, name, value) => { assertSender(event); return saveEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name, value); });
   ipcMain.handle('environment:delete', (event, name) => { assertSender(event); return deleteEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name); });
   ipcMain.handle('workspace:additional-view', (event, page, enabled) => { assertSender(event); const result = updatedProject(setAdditionalView(requireProject(), page, enabled)); appendEvent(selectedRoot, 'workspace.view-updated', { page, enabled }); return result; });
-  ipcMain.handle('product:setup', event => { assertSender(event); const result = updatedProject(setupProduct(requireProject())); appendEvent(selectedRoot, 'product.setup', { path: 'productview.yaml' }); return result; });
+  ipcMain.handle('product:setup', event => { assertSender(event); const result = updatedProject(setupProduct(requireProject())); appendEvent(selectedRoot, 'product.setup', { path: result.configFile }); return result; });
   ipcMain.handle('product:roadmap', (event, item) => { assertSender(event); const result = updatedProject(upsertRoadmap(requireProject(), item)); appendEvent(selectedRoot, 'roadmap.updated', { item: item?.id || item?.title, status: item?.status }); return result; });
   ipcMain.handle('product:north-star', (event, metric) => { assertSender(event); const result = updatedProject(upsertNorthStar(requireProject(), metric)); appendEvent(selectedRoot, 'north-star.defined', { name: metric?.name, cadence: metric?.cadence }); return result; });
   ipcMain.handle('product:north-star-record', (event, measurement) => { assertSender(event); const result = updatedProject(recordNorthStar(requireProject(), measurement)); appendEvent(selectedRoot, 'north-star.recorded', { date: measurement?.date, value: measurement?.value }); return result; });
@@ -365,7 +365,7 @@ function registerIpc() {
     const skill = fs.readFileSync(path.join(app.getAppPath(), 'agent/project-room/SKILL.md'), 'utf8');
     const executable = process.execPath;
     const script = path.join(app.getAppPath(), 'mcp/server.cjs');
-    return { skill, schema: fs.readFileSync(path.join(app.getAppPath(), 'schemas/productview.schema.json'), 'utf8'), example: selectedRaw, mcp: { command: executable, args: [script, selectedRoot || '<project-folder>'], env: { ELECTRON_RUN_AS_NODE: '1' } } };
+    return { skill, schema: fs.readFileSync(path.join(app.getAppPath(), 'schemas/projectroom.schema.json'), 'utf8'), example: selectedRaw, mcp: { command: executable, args: [script, selectedRoot || '<project-folder>'], env: { ELECTRON_RUN_AS_NODE: '1' } } };
   });
   ipcMain.handle('component:start', (event, id) => {
     assertSender(event);

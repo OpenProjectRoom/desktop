@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
 const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
 const SPEC_NAME = /^(?:openapi|swagger)(?:\.[\w-]+)?\.(?:yaml|yml|json)$/i;
@@ -67,14 +67,14 @@ function listApiSources(root, config) {
   const configured = (config.workspace?.apiSources || []).map(item => {
     let spec = null, error = '';
     if (item.spec) try { spec = readSpec(root, item.spec); } catch (cause) { error = cause.message; }
-    return { ...item, id: `yaml:${item.id}`, source: 'productview.yaml', linked: true, operations: spec?.operations || [], specTitle: spec?.title || '', specVersion: spec?.version || '', error };
+    return { ...item, id: `yaml:${item.id}`, source: '.projectroom/project.yaml', linked: true, operations: spec?.operations || [], specTitle: spec?.title || '', specVersion: spec?.version || '', error };
   });
   const linkedPaths = new Set((config.workspace?.apiSources || []).map(item => item.spec).filter(Boolean));
   return [...configured, ...discoverSpecs(root).filter(item => !linkedPaths.has(item.spec)).map(item => ({ ...item, linked: false, baseUrl: '' }))];
 }
 function editDocument(root) {
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const document = YAML.parseDocument(current.raw, { uniqueKeys: true });
@@ -117,13 +117,13 @@ function addApiSource(root, input) {
 function removeApiSource(root, id) {
   const record = editDocument(root);
   const sources = record.document.getIn(['workspace', 'apiSources'], true);
-  if (!YAML.isSeq(sources) || !sources.items.some(item => item.get('id') === id)) throw new Error('API source is no longer in productview.yaml.');
+  if (!YAML.isSeq(sources) || !sources.items.some(item => item.get('id') === id)) throw new Error('API source is no longer in .projectroom/project.yaml.');
   sources.items = sources.items.filter(item => item.get('id') !== id);
   return save(record);
 }
 async function sendApiRequest(root, config, input, getSecret, fetcher = fetch) {
   const source = (config.workspace?.apiSources || []).find(item => item.id === input?.sourceId);
-  if (!source) throw new Error('Choose an API registered in productview.yaml.');
+  if (!source) throw new Error('Choose an API registered in .projectroom/project.yaml.');
   const base = new URL(cleanUrl(source.baseUrl));
   const method = String(input.method || '').toUpperCase();
   if (!METHODS.includes(method)) throw new Error('Unsupported HTTP method.');

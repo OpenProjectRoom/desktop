@@ -1,16 +1,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig } = require('../scripts/config.cjs');
+const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 
 function registryPath(userData) { return path.join(userData, 'workspaces.json'); }
 function readRegistry(userData) {
-  try { return JSON.parse(fs.readFileSync(registryPath(userData), 'utf8')).filter(x => typeof x === 'string' && fs.existsSync(path.join(x, 'productview.yaml'))); }
+  try { return JSON.parse(fs.readFileSync(registryPath(userData), 'utf8')).filter(x => typeof x === 'string' && hasConfig(x)); }
   catch { return []; }
 }
 function addWorkspace(userData, root) {
   const canonical = fs.realpathSync(root);
-  loadConfig(path.join(canonical, 'productview.yaml'));
+  loadConfig(configPath(canonical));
   fs.mkdirSync(userData, { recursive: true });
   fs.writeFileSync(registryPath(userData), JSON.stringify([canonical, ...readRegistry(userData).filter(x => x !== canonical)], null, 2));
   fs.writeFileSync(path.join(userData, 'last-project-v1.json'), JSON.stringify({ root: canonical }));
@@ -36,7 +36,7 @@ function detect(root) {
   return { components: findings, connections };
 }
 function createWorkspace(root, mode = 'auto') {
-  if (fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('This folder already has a Project Room workspace. Open it instead.');
+  if (hasConfig(root)) throw new Error('This folder already has a Project Room workspace. Open it instead.');
   const name = path.basename(root).replace(/[-_]/g, ' ') || 'New Product';
   const discovered = mode === 'blank' ? { components: [], connections: [] } : detect(root);
   if (!discovered.components.length) {
@@ -55,17 +55,19 @@ function createWorkspace(root, mode = 'auto') {
   const guidePath = `${docsRoot}/getting-started.md`;
   if (!fs.existsSync(path.join(root, guidePath))) fs.writeFileSync(path.join(root, guidePath), `# Getting started\n\nDescribe how a new contributor can understand and run ${name}.\n`, { flag: 'wx' });
   const config = { schemaVersion: 1, project: { id: path.basename(root).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'new-product', name }, product: { vision, docsRoot, backlogRoot: 'backlog', roadmap: [], documentation: [{ id: 'getting-started', title: 'Getting started', path: guidePath, summary: 'How to use this product workspace.' }] }, workspace: { startPage: 'overview', additionalViews: [], environment: [], layout: 'freeform', chat: { enabled: true, context: ['specs', 'components', 'tests', 'issues'], provider: 'none' } }, components: discovered.components, connections: discovered.connections, views: { ...(fs.existsSync(path.join(root, 'specs')) ? { specifications: { roots: ['specs'] } } : {}), timeline: { enabled: true } } };
-  fs.writeFileSync(path.join(root, 'productview.yaml'), YAML.stringify(config));
-  return loadConfig(path.join(root, 'productview.yaml'));
+  const file = path.join(root, CONFIG_RELATIVE);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, YAML.stringify(config));
+  return loadConfig(file);
 }
 function discover(root) {
   const matches = [];
   for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
     if (entry.name.startsWith('.') || ['node_modules', 'Library', 'Applications'].includes(entry.name) || !entry.isDirectory()) continue;
     const candidate = path.join(root, entry.name);
-    if (fs.existsSync(path.join(candidate, 'productview.yaml'))) matches.push(candidate);
+    if (hasConfig(candidate)) matches.push(candidate);
   }
-  if (fs.existsSync(path.join(root, 'productview.yaml'))) matches.unshift(root);
+  if (hasConfig(root)) matches.unshift(root);
   return matches.slice(0, 100);
 }
 module.exports = { addWorkspace, createWorkspace, discover, readRegistry };

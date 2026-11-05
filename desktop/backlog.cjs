@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig } = require('../scripts/config.cjs');
+const { loadConfig, configPath } = require('../scripts/config.cjs');
 
 const statuses = new Set(['inbox', 'planned', 'in-progress', 'done']);
 const priorities = new Set(['low', 'medium', 'high']);
@@ -9,7 +9,7 @@ const types = new Set(['feature', 'bug', 'task', 'idea']);
 
 function backlogFolder(root, create = false) {
   const base = fs.realpathSync(root);
-  const config = loadConfig(path.join(base, 'productview.yaml')).config;
+  const config = loadConfig(configPath(base)).config;
   const relative = config.product?.backlogRoot || 'backlog';
   if (path.isAbsolute(relative) || !relative.split(/[\\/]/).every(part => part && part !== '.' && part !== '..' && !part.startsWith('.'))) throw new Error('Invalid backlog folder.');
   let current = base;

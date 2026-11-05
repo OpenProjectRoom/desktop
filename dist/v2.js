@@ -41,7 +41,8 @@ function buildIdentityText(id, compact = false) {
 }
 function buildIdentityLine(id) { const value = buildIdentityText(id); return value ? `<div class="build-identity" title="Build data comes from the artifact; the source revision and start time are separate.">${escapeHtml(value)}</div>` : ''; }
 let projectFiles = [];
-let selectedFilePath = 'productview.yaml';
+let activeConfigPath = '.projectroom/project.yaml';
+let selectedFilePath = activeConfigPath;
 let selectedFileText = '';
 let recentEvents = ['13:42  Tests bestanden · 26/30 Checks', '13:36  Web App bereit · :3000', '12:18  Product Spec aktualisiert'];
 const kindLabels = { service: 'Service', database: 'Datenbank', testSuite: 'Testsammlung', specification: 'Spezifikation', issues: 'Aufgaben', storage: 'Speicher', external: 'Extern' };
@@ -76,10 +77,10 @@ overview = function () {
   const connectionCount = projectConfig.connections?.length || 0;
   return `<div class="workspace-head"><div><div class="eyebrow">PROJECT ROOM / ${window.productView ? 'DESKTOP WORKSPACE' : 'INTERAKTIVER PROTOTYP'}</div><h1>${escapeHtml(projectConfig.project?.name || 'Projektkarte')}</h1><p>Alle Bausteine deines Produkts – verbunden mit Spezifikation, Code und Betrieb.</p></div><div class="workspace-head-actions"><button class="btn" data-v2="choose-project">${icon('folder')} Projekt öffnen</button>${window.productView ? `<button class="btn primary" data-v2="config">${icon('doc')} Konfiguration</button>` : `<button class="btn primary" data-v2="add-component">${icon('plus')} Komponente</button>`}</div></div>
     <div class="map-meta"><span class="dot"></span><strong>${projectRoot ? 'Lokales Projekt' : 'Demo-Projekt'}</strong><span>·</span><span>${projectConfig.components.length} Komponenten</span><span>·</span><span>${connectionCount} Verbindungen</span><span>·</span><span>${serviceCount} Dienste</span></div>
-    <section class="map-frame"><div class="map-toolbar"><div class="map-toolbar-left"><span class="map-toolbar-title">Projektkarte</span><span class="toolbar-pill">${icon('git')} main</span><span class="toolbar-pill">${window.productView ? 'productview.yaml' : 'Demo · productview.yaml'}</span></div><div class="map-toolbar-right"><button class="tool-button" data-v2="fit" title="Ansicht zentrieren">⌗</button><button class="tool-button" data-v2="config" title="Konfiguration ansehen">${icon('doc')}</button></div></div>
+    <section class="map-frame"><div class="map-toolbar"><div class="map-toolbar-left"><span class="map-toolbar-title">Projektkarte</span><span class="toolbar-pill">${icon('git')} main</span><span class="toolbar-pill">${window.productView ? '.projectroom/project.yaml' : 'Demo · .projectroom/project.yaml'}</span></div><div class="map-toolbar-right"><button class="tool-button" data-v2="fit" title="Ansicht zentrieren">⌗</button><button class="tool-button" data-v2="config" title="Konfiguration ansehen">${icon('doc')}</button></div></div>
       <div class="map-canvas" id="mapCanvas"><div class="map-content" id="mapContent" style="transform:scale(${mapZoom})"><svg class="map-links" id="mapLinks" aria-hidden="true"></svg>${projectConfig.components.map(mapNode).join('')}</div><div class="map-float-controls"><button data-v2="zoom-in" title="Vergrößern">+</button><button data-v2="zoom-out" title="Verkleinern">−</button><button data-v2="fit" title="Einpassen">⌗</button></div><div class="map-legend"><span><i></i> Aktiv</span><span><i></i> Bereit</span><span><i></i> Hinweis</span></div></div></section>
     <div class="workspace-bottom"><section class="card"><div class="mini-section-head">Produktweg <small>${projectRoot ? 'Workflow-Vorlage' : 'Beispielablauf'}</small></div><div class="phase-strip"><div class="phase ${projectRoot ? '' : 'done'}"><strong>01 · Idee</strong><small>Vision</small><div class="phase-bar"></div></div><div class="phase ${projectRoot ? '' : 'done'}"><strong>02 · Spec</strong><small>Anforderungen</small><div class="phase-bar"></div></div><div class="phase ${projectRoot ? '' : 'active'}"><strong>03 · Build</strong><small>Entwicklung</small><div class="phase-bar"></div></div><div class="phase"><strong>04 · Test</strong><small>Qualität</small><div class="phase-bar"></div></div><div class="phase"><strong>05 · Release</strong><small>Version</small><div class="phase-bar"></div></div></div></section><section class="card"><div class="mini-section-head">Build-Log <small>letzte Ereignisse</small></div><div class="build-log" id="buildLog">${recentEvents.slice(0, 3).map((line, i) => `<div>${i === 0 ? '<b>●</b>' : '·'} ${escapeHtml(line)}</div>`).join('')}</div></section></div>
-    <div class="footer-note">${icon('clock')} ${window.productView ? 'Befehle laufen nur nach Klick auf Start.' : 'Web-Demo mit Beispieldaten · die Desktop-App liest productview.yaml aus einem Repository.'}</div>`;
+    <div class="footer-note">${icon('clock')} ${window.productView ? 'Befehle laufen nur nach Klick auf Start.' : 'Web-Demo mit Beispieldaten · die Desktop-App liest .projectroom/project.yaml aus einem Repository.'}</div>`;
 };
 
 function drawConnections() {
@@ -132,7 +133,7 @@ function renderPanel() {
         <div class="inspector-actions">${c.kind === 'service' ? `<button class="btn primary" data-v2="toggle-service:${escapeHtml(c.id)}">${icon(desktopStatus[c.id] === 'running' || (!window.productView && status === 'Läuft') ? 'stop' : 'play')} ${desktopStatus[c.id] === 'running' || (!window.productView && status === 'Läuft') ? 'Stoppen' : 'Starten'}</button>` : ''}${c.runtime?.url ? `<button class="btn" data-v2="open-url:${escapeHtml(c.id)}">${icon('external')} Öffnen</button>` : ''}${c.kind === 'testSuite' ? `<button class="btn primary" data-v2="run-suite:${escapeHtml(c.id)}">${icon('play')} Ausführen</button>` : ''}</div>
         <div class="inspector-block"><h3>Konfiguration</h3>${fields.map(([k, v]) => `<div class="inspector-row"><span>${escapeHtml(k)}</span><strong>${escapeHtml(v)}</strong></div>`).join('')}<div class="inspector-row"><span>ID</span><strong>${escapeHtml(c.id)}</strong></div></div>
         <div class="inspector-block"><h3>Verbindungen · ${edges.length}</h3>${edges.map(e => { const other = currentComponent(e.from === c.id ? e.to : e.from); return `<div class="inspector-row"><span>${escapeHtml(e.label || 'verbunden')}</span><strong>${escapeHtml(other?.name || '—')}</strong></div>`; }).join('') || '<div class="muted" style="font-size:11px">Keine Verbindungen</div>'}</div>
-        <div class="inspector-block"><h3>Quelle</h3><div class="inspector-row"><span>Projektdatei</span><strong>productview.yaml</strong></div></div>`;
+        <div class="inspector-block"><h3>Quelle</h3><div class="inspector-row"><span>Projektdatei</span><strong>.projectroom/project.yaml</strong></div></div>`;
     }
   } else {
     body.innerHTML = `<div class="chat-messages" id="chatMessages">${chatMessages.length ? chatMessages.map(m => `<div class="chat-message ${m.role}">${escapeHtml(m.text)}</div>`).join('') : `<div class="panel-empty" style="min-height:220px;height:auto"><div class="panel-symbol">${icon('cube')}</div><strong>Sprich mit deinem Produkt</strong><p>Frag nach Komponenten, Verbindungen oder nächsten Schritten. Dieser Prototyp antwortet aus der Projektkonfiguration.</p></div>`}</div><div class="chat-suggestions"><button data-v2="suggest:Welche Komponenten gibt es?">Komponenten erklären</button><button data-v2="suggest:Was ist der nächste Schritt?">Nächster Schritt</button><button data-v2="suggest:Welche Tests sind definiert?">Tests zeigen</button></div>`;
@@ -147,7 +148,7 @@ function answerChat(input) {
   if (/test|qualität|performance/.test(q)) return `Die Projektdatei definiert ${projectConfig.components.filter(c => c.kind === 'testSuite').length} Testsammlung(en). In der Desktop-App kannst du den konfigurierten Testbefehl über die Karte ausführen. Ergebnisse und Verlauf werden in einer späteren Ausbaustufe dauerhaft gespeichert.`;
   if (/nächst|schritt|priorität|aufgabe/.test(q)) return 'Als Nächstes würde ich die Produkt-Spezifikation mit der Web App und den Tests abgleichen. Im Beispiel-Backlog stehen Onboarding und Antwortzeit oben. Das ist eine Demo-Einschätzung, keine Live-Auswertung von GitHub oder Linear.';
   if (/spec|anforder|vision/.test(q)) return `Die Spezifikation ist über ${projectConfig.components.filter(c => c.kind === 'specification').map(c => c.path).join(', ') || 'noch keine Datei'} eingebunden. Änderungen daran werden im Repository versioniert und können auf der Karte mit Services und Tests verknüpft werden.`;
-  return 'Ich kann dir die Projektkarte, Komponenten, Tests und Spezifikationen aus productview.yaml erklären. Ein echter Codex- oder Claude-Chat ist in diesem Prototyp noch nicht verbunden.';
+  return 'Ich kann dir die Projektkarte, Komponenten, Tests und Spezifikationen aus .projectroom/project.yaml erklären. Ein echter Codex- oder Claude-Chat ist in diesem Prototyp noch nicht verbunden.';
 }
 function sendChat(text) {
   const message = text.trim(); if (!message) return;
@@ -161,8 +162,9 @@ function setProject(data) {
   if (projectRoot) recentEvents = ['Projekt geladen · ' + (projectConfig.project?.name || 'Repository')];
   selectedComponent = projectConfig.components.find(c => c.kind === 'service')?.id || projectConfig.components[0]?.id || null;
   desktopStatus = data.status || {};
-  if (data.raw) files['productview.yaml'] = data.raw;
-  selectedFilePath = 'productview.yaml'; selectedFileText = data.raw || '';
+  activeConfigPath = data.configFile || '.projectroom/project.yaml';
+  if (data.raw) files[activeConfigPath] = data.raw;
+  selectedFilePath = activeConfigPath; selectedFileText = data.raw || '';
   document.querySelector('.project-picker strong').textContent = projectConfig.project?.name || 'Project';
   document.querySelector('.project-picker small').textContent = projectRoot ? 'Local repository' : 'Demo project';
   document.querySelector('.project-avatar').textContent = (projectConfig.project?.name || 'PV').split(/\s+/).slice(0, 2).map(word => word[0]).join('').toUpperCase();
@@ -178,7 +180,7 @@ const previousRuntime = runtime, previousTests = tests, previousSpec = spec, pre
 runtime = function () {
   if (!window.productView) return previousRuntime();
   const services = projectConfig.components.filter(c => c.kind === 'service');
-  return `${head('Laufzeit', 'Dienste aus productview.yaml starten und stoppen.')}
+  return `${head('Laufzeit', 'Dienste aus .projectroom/project.yaml starten und stoppen.')}
     <section class="card"><div class="card-head"><div><h2>Konfigurierte Dienste</h2><p>${services.length} Dienste · Start nur auf Klick</p></div></div>
     ${services.map(c => { const [status, kind] = getNodeStatus(c); return `<div class="env-row"><div class="service-icon">${icon(c.icon || 'terminal')}</div><div class="service-meta"><div class="service-title">${escapeHtml(c.name)} ${badge(status, kind)}</div><div class="service-sub">${escapeHtml((c.runtime?.command || []).join(' '))}${c.runtime?.port ? ' · :' + c.runtime.port : ''}</div></div><button class="btn small" data-v2="toggle-service:${escapeHtml(c.id)}">${icon(status === 'Läuft' ? 'stop' : 'play')} ${status === 'Läuft' ? 'Stoppen' : 'Starten'}</button></div>`; }).join('') || '<div class="empty">Keine Dienste konfiguriert.</div>'}</section>
     <section class="card" style="margin-top:16px"><div class="card-head"><div><h2>Letzte Ereignisse</h2><p>Prozessausgabe und Statusänderungen</p></div></div><div class="build-log">${recentEvents.map(x => `<div>${escapeHtml(x)}</div>`).join('')}</div></section>`;
@@ -206,7 +208,7 @@ data = function () {
 };
 filesPage = function () {
   if (!window.productView) return previousFiles();
-  const items = [{ path: 'productview.yaml', type: 'file', depth: 0 }, ...projectFiles.filter(x => x.path !== 'productview.yaml')];
+  const items = projectFiles;
   return `${head('Dateien', 'Projektdatei und Quelltext des geöffneten Repositories.')}
     <section class="card file-layout"><div class="file-tree"><div style="font-size:10px;color:#9da7b4;text-transform:uppercase;letter-spacing:1px;padding:4px 9px 13px;font-weight:800">Explorer</div>
     ${items.map(x => `<button style="padding-left:${9 + x.depth * 15}px" class="${selectedFilePath === x.path ? 'active' : ''}" ${x.type === 'file' ? `data-v2="open-file:${escapeHtml(x.path)}"` : ''}>${icon(x.type === 'directory' ? 'folder' : 'doc')} ${escapeHtml(x.path.split('/').pop())}</button>`).join('')}</div>
@@ -252,11 +254,11 @@ document.addEventListener('click', async e => {
   else if (name === 'suggest') sendChat(arg);
   else if (name === 'fit') { mapZoom = 1; render(); }
   else if (name === 'zoom-in' || name === 'zoom-out') { mapZoom = Math.max(.75, Math.min(1.25, mapZoom + (name === 'zoom-in' ? .1 : -.1))); render(); }
-  else if (name === 'config') { state.page = 'files'; state.file = 'productview.yaml'; render(); }
+  else if (name === 'config') { state.page = 'files'; state.file = activeConfigPath; render(); }
   else if (name === 'open-file') {
     try {
       selectedFilePath = arg;
-      selectedFileText = arg === 'productview.yaml' ? files['productview.yaml'] : await window.productView.readFile(arg);
+      selectedFileText = arg === activeConfigPath ? files[activeConfigPath] : await window.productView.readFile(arg);
       state.page = 'files'; render();
     } catch (err) { toast(err.message); }
   }
@@ -289,7 +291,7 @@ document.addEventListener('click', async e => {
       const name = f.get('name').trim(), kind = f.get('kind'), id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'component';
       if (projectConfig.components.some(c => c.id === id)) { toast('Diese ID existiert bereits.'); return; }
       projectConfig.components.push({ id, name, kind, icon: kind === 'database' ? 'database' : kind === 'testSuite' ? 'flask' : kind === 'specification' ? 'doc' : 'cube', position: { x: 7 + (projectConfig.components.length % 3) * 30, y: 595 } });
-      selectedComponent = id; addEvent(`${name} zur Karte hinzugefügt · nur Sitzung`); toast('Für dauerhafte Änderungen productview.yaml bearbeiten.');
+      selectedComponent = id; addEvent(`${name} zur Karte hinzugefügt · nur Sitzung`); toast('Für dauerhafte Änderungen .projectroom/project.yaml bearbeiten.');
     });
   }
 });
@@ -298,7 +300,7 @@ window.addEventListener('resize', () => { if (state.page === 'overview') request
 render();
 (async () => {
   try {
-    const data = window.productView ? await window.productView.loadProject() : { config: await fetch('./productview.json').then(r => r.json()) };
+    const data = window.productView ? await window.productView.loadProject() : { config: await fetch('./projectroom.json').then(r => r.json()) };
     setProject(data);
   } catch (err) { toast('Projektdatei konnte nicht geladen werden: ' + err.message); }
 })();

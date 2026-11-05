@@ -55,7 +55,7 @@ function writeVault(userData, root, values) {
   } finally { if (fs.existsSync(temporary)) fs.unlinkSync(temporary); }
 }
 function assertName(config, name) {
-  if (!NAME.test(name || '') || !declarations(config).some(item => item.name === name)) throw new Error('Unknown environment variable. Declare its name in productview.yaml first.');
+  if (!NAME.test(name || '') || !declarations(config).some(item => item.name === name)) throw new Error('Unknown environment variable. Declare its name in .projectroom/project.yaml first.');
 }
 function listEnvironment(userData, root, config, encryption) {
   const values = readVault(userData, root);

@@ -9,7 +9,7 @@ const { loadConfig } = require('./config.cjs');
 
 function fixture() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-mcp-management-'));
-  fs.copyFileSync(path.join(__dirname, '..', 'productview.yaml'), path.join(root, 'productview.yaml'));
+  fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), path.join(root, 'productview.yaml'));
   return root;
 }
 

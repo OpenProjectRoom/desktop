@@ -4,7 +4,7 @@ Thanks for helping make agent-built software easier to understand and operate.
 
 ## Start here
 
-Read [the repository contract](PROJECT_ROOM.md), [architecture notes](docs/product/architecture.md), and [the working example](examples/hello-workspace/productview.yaml). For behavior changes, check the product vision and roadmap in `productview.yaml`. Spec Kit artifacts stay in their standard `.specify/` and `specs/` folders.
+Read [the repository contract](PROJECT_ROOM.md), [architecture notes](docs/product/architecture.md), and [the working example](examples/hello-workspace/.projectroom/project.yaml). For behavior changes, check the product vision and roadmap in `.projectroom/project.yaml`. Spec Kit artifacts stay in their standard `.specify/` and `specs/` folders.
 
 ```sh
 npm ci

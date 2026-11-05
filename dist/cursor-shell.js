@@ -85,9 +85,9 @@
     if (explorerRoot !== (projectRoot || 'demo')) { expandedFolders.clear(); explorerRoot = projectRoot || 'demo'; }
     document.getElementById('cursorExplorerProject').textContent = (projectConfig.project?.name || 'Project').toUpperCase();
     let items;
-    if (projectRoot) items = [{ path: 'productview.yaml', type: 'file', depth: 0 }, ...(typeof projectFiles === 'undefined' ? [] : projectFiles.filter(item => item.path !== 'productview.yaml'))];
+    if (projectRoot) items = typeof projectFiles === 'undefined' ? [] : projectFiles;
     else {
-      const paths = ['productview.yaml', ...Object.keys(files).filter(path => path !== 'productview.yaml').sort()];
+      const paths = ['.projectroom/project.yaml', ...Object.keys(files).filter(path => path !== '.projectroom/project.yaml').sort()];
       const seen = new Set();
       items = [];
       for (const path of paths) {
@@ -169,7 +169,7 @@
     const relative = file.dataset.cursorFile;
     try {
       selectedFilePath = relative;
-      selectedFileText = relative === 'productview.yaml' ? (files[relative] || '') : window.productView && projectRoot ? await window.productView.readFile(relative) : (files[relative] || 'Open this file in a local workspace.');
+      selectedFileText = relative === activeConfigPath ? (files[relative] || '') : window.productView && projectRoot ? await window.productView.readFile(relative) : (files[relative] || 'Open this file in a local workspace.');
       state.page = 'files';
       render();
     } catch (error) { toast(error.message); }
@@ -184,10 +184,10 @@
   setExplorer(state.page === 'files');
   setChatOpen(localStorage.getItem(chatPreferenceKey) === 'true', false);
   render();
-  if (!window.productView) fetch('./productview.yaml').then(response => response.ok ? response.text() : null).then(content => {
+  if (!window.productView) fetch('./.projectroom/project.yaml').then(response => response.ok ? response.text() : null).then(content => {
     if (!content) return;
-    files['productview.yaml'] = content;
-    if (selectedFilePath === 'productview.yaml') selectedFileText = content;
+    files['.projectroom/project.yaml'] = content;
+    if (selectedFilePath === '.projectroom/project.yaml') selectedFileText = content;
     if (state.page === 'files') render();
   }).catch(() => {});
 })();

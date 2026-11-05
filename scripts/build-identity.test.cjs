@@ -26,7 +26,7 @@ test('a build timestamp comes from an actual metadata file and stays separate fr
 });
 
 test('schema accepts a build file for a service and MCP server but rejects a path escape', () => {
-  const config = YAML.parse(fs.readFileSync(path.join(__dirname, '../productview.yaml'), 'utf8'));
+  const config = YAML.parse(fs.readFileSync(path.join(__dirname, '../.projectroom/project.yaml'), 'utf8'));
   config.components.find(item => item.kind === 'service').build = { file: 'dist/build-info.json' };
   config.workspace.mcpServers = [{ id: 'example', name: 'Example', command: 'node', build: { file: 'mcp/build-info.json' } }];
   assert.doesNotThrow(() => parseConfig(YAML.stringify(config)));

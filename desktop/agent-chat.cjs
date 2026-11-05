@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawn } = require('node:child_process');
+const { configPath } = require('../scripts/config.cjs');
 
 const providers = { codex: 'Codex CLI', claude: 'Claude Code' };
 const maxOutput = 2_000_000;
@@ -63,7 +64,7 @@ function invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir) {
 function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild }) {
   const settings = readSettings(userData);
   if (!providers[settings.provider]) throw new Error('Connect Codex CLI or Claude Code in Settings → AI & Chat.');
-  if (!root || !fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('Open a local Project Room workspace first.');
+  if (!root || !fs.existsSync(configPath(root))) throw new Error('Open a local Project Room workspace first.');
   const prompt = promptFor(messages, root);
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-chat-'));
   const command = invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir);

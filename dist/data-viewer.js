@@ -13,7 +13,7 @@
   const typeLabel = item => item.kind === 'storage' ? 'Local files' : item.kind === 'external' ? 'External source' : item.data?.engine || 'Database';
   const button = (label, action, disabled = false) => `<button type="button" class="btn small" data-data-viewer="${safe(action)}"${disabled ? ' disabled' : ''}>${label}</button>`;
   function sourceList() {
-    return sources().map(item => `<button type="button" class="data-source-row ${selectedId === item.id ? 'active' : ''}" data-data-viewer="source:${safe(item.id)}"><span class="data-source-icon">${icon(item.kind === 'storage' ? 'folder' : 'database')}</span><span><strong>${safe(item.name)}</strong><small>${safe(typeLabel(item))}</small></span></button>`).join('') || '<p class="data-viewer-empty">No data sources configured in productview.yaml.</p>';
+    return sources().map(item => `<button type="button" class="data-source-row ${selectedId === item.id ? 'active' : ''}" data-data-viewer="source:${safe(item.id)}"><span class="data-source-icon">${icon(item.kind === 'storage' ? 'folder' : 'database')}</span><span><strong>${safe(item.name)}</strong><small>${safe(typeLabel(item))}</small></span></button>`).join('') || '<p class="data-viewer-empty">No data sources configured in .projectroom/project.yaml.</p>';
   }
   function table() {
     if (!preview) return '<div class="data-preview-empty">Choose a table or file to see its structure and a small preview.</div>';
@@ -36,7 +36,7 @@
   }
   dataPage = function () {
     if (loadedConfig !== projectConfig) { loadedConfig = projectConfig; selectedId = sources()[0]?.id || null; catalog = null; selectedEntry = null; preview = null; error = ''; }
-    return `${pageHead('Data Sources', 'Inspect database structures and a small, read-only data preview.', `<button type="button" class="btn primary" data-data-viewer="add" ${!pv || !projectRoot ? 'disabled title="Open a local project to edit productview.yaml"' : ''}>Add data source</button>`)}<div class="data-viewer-shell">${error ? `<div class="data-viewer-error" role="alert">${safe(error)}</div>` : ''}<div class="data-viewer-layout"><section class="card data-source-list"><div class="data-source-title"><strong>Project sources</strong><span>${sources().length}</span></div>${sourceList()}<p class="data-source-note">PostgreSQL · MySQL/MariaDB · SQLite · local files. Connections come from local Environment values.</p></section><section class="card data-viewer-main">${workspace()}</section></div></div>`;
+    return `${pageHead('Data Sources', 'Inspect database structures and a small, read-only data preview.', `<button type="button" class="btn primary" data-data-viewer="add" ${!pv || !projectRoot ? 'disabled title="Open a local project to edit .projectroom/project.yaml"' : ''}>Add data source</button>`)}<div class="data-viewer-shell">${error ? `<div class="data-viewer-error" role="alert">${safe(error)}</div>` : ''}<div class="data-viewer-layout"><section class="card data-source-list"><div class="data-source-title"><strong>Project sources</strong><span>${sources().length}</span></div>${sourceList()}<p class="data-source-note">PostgreSQL · MySQL/MariaDB · SQLite · local files. Connections come from local Environment values.</p></section><section class="card data-viewer-main">${workspace()}</section></div></div>`;
   };
   const modalRoot = document.getElementById('modalRoot');
   const fields = {
@@ -47,7 +47,7 @@
   function closeModal() { modalRoot.innerHTML = ''; }
   function openAdd() {
     const links = projectConfig.components.map(item => `<option value="${safe(item.id)}">${safe(item.name)}</option>`).join('');
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal" role="dialog" aria-modal="true" aria-label="Add data source"><div class="modal-head"><h2>Add data source</h2><button type="button" class="icon-btn" data-data-modal="close" aria-label="Close">×</button></div><form id="dataSourceForm"><div class="modal-body"><p>Save a source in this repository’s productview.yaml. Connection values remain in local Environment.</p><label>Name<input name="name" required maxlength="100" placeholder="Analytics database"></label><label>Source type<select name="kind" id="dataAddKind"><option value="database">Database</option><option value="storage">Local files</option><option value="external">External source</option></select></label><div id="dataAddFields">${fields.database}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-data-modal="close">Cancel</button><button type="submit" class="btn primary">Add to repository</button></div></form></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal" role="dialog" aria-modal="true" aria-label="Add data source"><div class="modal-head"><h2>Add data source</h2><button type="button" class="icon-btn" data-data-modal="close" aria-label="Close">×</button></div><form id="dataSourceForm"><div class="modal-body"><p>Save a source in this repository’s .projectroom/project.yaml. Connection values remain in local Environment.</p><label>Name<input name="name" required maxlength="100" placeholder="Analytics database"></label><label>Source type<select name="kind" id="dataAddKind"><option value="database">Database</option><option value="storage">Local files</option><option value="external">External source</option></select></label><div id="dataAddFields">${fields.database}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-data-modal="close">Cancel</button><button type="submit" class="btn primary">Add to repository</button></div></form></div></div>`;
     const update = () => {
       const sqlite = document.getElementById('dataAddEngine')?.value === 'SQLite';
       for (const label of modalRoot.querySelectorAll('[data-data-config]')) {
@@ -66,7 +66,7 @@
         const updated = await pv.addMapComponent(Object.fromEntries(new FormData(event.target)));
         closeModal(); setProject(updated); state.page = 'data'; selectedId = updated.addedId; loadedConfig = projectConfig;
         catalog = null; preview = null; selectedEntry = null; error = ''; render();
-        toast('Data source added to productview.yaml.');
+        toast('Data source added to .projectroom/project.yaml.');
       } catch (cause) { toast(String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, '')); }
       finally { submit.disabled = false; }
     });
@@ -74,7 +74,7 @@
   function openRemove() {
     const item = selected(); if (!item) return;
     const edges = (projectConfig.connections || []).filter(edge => edge.from === item.id || edge.to === item.id).length;
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal" role="dialog" aria-modal="true" aria-label="Remove data source"><div class="modal-head"><h2>Remove ${safe(item.name)}?</h2><button type="button" class="icon-btn" data-data-modal="close" aria-label="Close">×</button></div><div class="modal-body"><p>This removes the data source from productview.yaml${edges ? ` and its ${edges} map connection${edges === 1 ? '' : 's'}` : ''}. Related Spec Kit and roadmap links are updated. Your data and files stay in place.</p></div><div class="modal-actions"><button type="button" class="btn" data-data-modal="close">Cancel</button><button type="button" class="btn component-remove-button" data-data-modal="confirm-remove" data-id="${safe(item.id)}">Remove from YAML</button></div></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal" role="dialog" aria-modal="true" aria-label="Remove data source"><div class="modal-head"><h2>Remove ${safe(item.name)}?</h2><button type="button" class="icon-btn" data-data-modal="close" aria-label="Close">×</button></div><div class="modal-body"><p>This removes the data source from .projectroom/project.yaml${edges ? ` and its ${edges} map connection${edges === 1 ? '' : 's'}` : ''}. Related Spec Kit and roadmap links are updated. Your data and files stay in place.</p></div><div class="modal-actions"><button type="button" class="btn" data-data-modal="close">Cancel</button><button type="button" class="btn component-remove-button" data-data-modal="confirm-remove" data-id="${safe(item.id)}">Remove from YAML</button></div></div></div>`;
   }
   document.addEventListener('click', async event => {
     const target = event.target.closest('[data-data-modal]'); if (!target) return;
@@ -85,7 +85,7 @@
       const updated = await pv.removeComponent(target.dataset.id);
       closeModal(); setProject(updated); state.page = 'data'; selectedId = sources()[0]?.id || null; loadedConfig = projectConfig;
       catalog = null; preview = null; selectedEntry = null; error = ''; render();
-      toast('Data source removed from productview.yaml.');
+      toast('Data source removed from .projectroom/project.yaml.');
     } catch (cause) { toast(String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, '')); target.disabled = false; }
   });
   document.addEventListener('click', async event => {

@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 const { ensureDocumentationRoot } = require('../scripts/documentation.cjs');
 
 const roadmapStatuses = new Set(['draft', 'planned', 'in-progress', 'done']);
@@ -34,7 +34,7 @@ function textField(value, label, limit) {
 }
 function slug(value) { return value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'document'; }
 function saveConfig(root, product) {
-  const file = path.join(rootPath(root), 'productview.yaml');
+  const file = configPath(rootPath(root));
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = fs.readFileSync(file, 'utf8');
   const document = YAML.parseDocument(current, { uniqueKeys: true });
@@ -50,15 +50,15 @@ function saveConfig(root, product) {
   return loadConfig(file);
 }
 function readProduct(root) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   if (!product) return { vision: null, documents: {} };
   const documents = {};
   for (const item of product.documentation) documents[item.path] = readText(root, item.path);
   return { vision: readText(root, product.vision), documents };
 }
 function setupProduct(root) {
-  const config = loadConfig(path.join(rootPath(root), 'productview.yaml')).config;
-  if (config.product) return loadConfig(path.join(rootPath(root), 'productview.yaml'));
+  const config = loadConfig(configPath(rootPath(root))).config;
+  if (config.product) return loadConfig(configPath(rootPath(root)));
   const docsRoot = 'docs/product';
   const docsFolder = rootPath(root);
   for (const relative of ['docs', docsRoot]) {
@@ -77,7 +77,7 @@ function setupProduct(root) {
   return saveConfig(root, { vision, docsRoot, backlogRoot: 'backlog', roadmap: [], documentation: [{ id: 'getting-started', title: 'Getting started', path: guide, summary: 'First steps for this product workspace.' }] });
 }
 function upsertRoadmap(root, input) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   if (!product) throw new Error('Set up Product Hub first.');
   const title = textField(input?.title, 'Title', 120);
   const summary = typeof input?.summary === 'string' ? input.summary.trim().slice(0, 500) : '';
@@ -87,14 +87,14 @@ function upsertRoadmap(root, input) {
   const existing = typeof input?.id === 'string' ? product.roadmap.find(item => item.id === input.id) : null;
   let id = existing?.id || slug(title);
   if (!existing) { let suffix = 2; while (used.has(id)) id = `${slug(title)}-${suffix++}`; }
-  const known = new Set(loadConfig(path.join(rootPath(root), 'productview.yaml')).config.components.map(item => item.id));
+  const known = new Set(loadConfig(configPath(rootPath(root))).config.components.map(item => item.id));
   const relatedComponents = Array.isArray(input?.relatedComponents) ? [...new Set(input.relatedComponents.filter(value => known.has(value)))].slice(0, 30) : [];
   const item = { id, title, summary, status, relatedComponents };
   product.roadmap = existing ? product.roadmap.map(value => value.id === id ? item : value) : [...product.roadmap, item];
   return saveConfig(root, product);
 }
 function upsertNorthStar(root, input) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   if (!product) throw new Error('Set up Product Hub first.');
   const name = textField(input?.name, 'Metric name', 100);
   const unit = textField(input?.unit, 'Unit', 24);
@@ -107,7 +107,7 @@ function upsertNorthStar(root, input) {
   return saveConfig(root, product);
 }
 function recordNorthStar(root, input) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   if (!product?.northStar) throw new Error('Define a North Star metric first.');
   const date = input?.date;
   if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`)) || new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) !== date) throw new Error('Choose a valid measurement date.');
@@ -122,7 +122,7 @@ function recordNorthStar(root, input) {
   return saveConfig(root, product);
 }
 function createDocument(root, input) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   if (!product) throw new Error('Set up Product Hub first.');
   const title = textField(input?.title, 'Title', 120);
   const summary = typeof input?.summary === 'string' ? input.summary.trim().slice(0, 240) : '';
@@ -140,7 +140,7 @@ function createDocument(root, input) {
   catch (error) { if (created && fs.existsSync(file)) fs.unlinkSync(file); throw error; }
 }
 function saveDocument(root, relative, content) {
-  const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
+  const product = loadConfig(configPath(rootPath(root))).config.product;
   const docsPrefix = product?.docsRoot.replace(/\/$/, '') + '/';
   if (!product || (relative !== product.vision && !relative.startsWith(docsPrefix))) throw new Error('Document is outside the Project Room documentation folder.');
   if (typeof content !== 'string' || Buffer.byteLength(content) > 500_000) throw new Error('Document exceeds the 500 KB editor limit.');

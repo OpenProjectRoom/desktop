@@ -3,19 +3,19 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const readline = require('node:readline');
-const { loadConfig } = require('../scripts/config.cjs');
+const { loadConfig, configPath } = require('../scripts/config.cjs');
 const { listDocumentation } = require('../scripts/documentation.cjs');
 const { listSpecifications } = require('../scripts/specifications.cjs');
 const { listIssues } = require('../desktop/backlog.cjs');
 const { appendEvent, readEvents } = require('../desktop/history.cjs');
 
 const root = process.argv[2] && fs.realpathSync(process.argv[2]);
-if (!root || !fs.existsSync(path.join(root, 'productview.yaml'))) {
-  console.error('Usage: server.cjs <project-folder-containing-productview.yaml>');
+if (!root || !fs.existsSync(configPath(root))) {
+  console.error('Usage: server.cjs <project-folder-containing-.projectroom/project.yaml>');
   process.exit(2);
 }
 const tools = [
-  { name: 'get_product_view', description: 'Read the complete validated productview.yaml as structured data.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
+  { name: 'get_product_view', description: 'Read the complete validated .projectroom/project.yaml as structured data.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'get_product_context', description: 'Read the product vision, roadmap, local backlog, and Markdown documentation.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'list_components', description: 'List the project components and their connections.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'read_project_file', description: 'Read a UTF-8 project file such as a specification. Paths must stay inside the workspace.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'], additionalProperties: false } },
@@ -41,10 +41,10 @@ function readFile(relative) {
 function callTool(name, args = {}) {
   if (!tools.some(tool => tool.name === name)) throw new Error('Unknown tool.');
   appendEvent(root, 'agent.tool-called', { client, tool: name });
-  if (name === 'get_product_view') return text(loadConfig(path.join(root, 'productview.yaml')).config);
+  if (name === 'get_product_view') return text(loadConfig(configPath(root)).config);
   if (name === 'get_product_context') {
-    const product = loadConfig(path.join(root, 'productview.yaml')).config.product;
-    if (!product) { const backlog = listIssues(root); return text({ configured: false, message: 'No product block is configured in productview.yaml.', backlogRoot: backlog.root, backlogCount: backlog.issues.length, backlog: backlog.issues.slice(0, 100).map(issue => ({ ...issue, description: issue.description.slice(0, 5000) })) }); }
+    const product = loadConfig(configPath(root)).config.product;
+    if (!product) { const backlog = listIssues(root); return text({ configured: false, message: 'No product block is configured in .projectroom/project.yaml.', backlogRoot: backlog.root, backlogCount: backlog.issues.length, backlog: backlog.issues.slice(0, 100).map(issue => ({ ...issue, description: issue.description.slice(0, 5000) })) }); }
     const readable = relative => { try { return readFile(relative).slice(0, 30_000); } catch (error) { return `[Unavailable: ${error.message}]`; } };
     const folder = listDocumentation(root, { product });
     const metadata = new Map(product.documentation.map(document => [document.path, document]));
@@ -52,8 +52,8 @@ function callTool(name, args = {}) {
     const backlog = listIssues(root);
     return text({ configured: true, vision: { path: product.vision, content: readable(product.vision) }, northStar: product.northStar || null, roadmap: product.roadmap, backlogRoot: backlog.root, backlogCount: backlog.issues.length, backlog: backlog.issues.slice(0, 100).map(issue => ({ ...issue, description: issue.description.slice(0, 5000) })), documentationRoot: product.docsRoot, documentationCount: files.length, documentation: files.slice(0, 30).map(file => ({ ...(metadata.get(file.path) || { title: path.basename(file.path, path.extname(file.path)) }), path: file.path, content: readable(file.path) })) });
   }
-  if (name === 'list_components') { const config = loadConfig(path.join(root, 'productview.yaml')).config; return text({ components: config.components, connections: config.connections }); }
-  if (name === 'get_spec_kit') { const config = loadConfig(path.join(root, 'productview.yaml')).config; return text(listSpecifications(root, config, { events: readEvents(root, 1000) }).specKit); }
+  if (name === 'list_components') { const config = loadConfig(configPath(root)).config; return text({ components: config.components, connections: config.connections }); }
+  if (name === 'get_spec_kit') { const config = loadConfig(configPath(root)).config; return text(listSpecifications(root, config, { events: readEvents(root, 1000) }).specKit); }
   if (name === 'read_project_file') return text(readFile(args.path));
   return text(readEvents(root, Math.min(100, Math.max(1, Number(args.limit) || 50))));
 }
@@ -68,7 +68,7 @@ readline.createInterface({ input: process.stdin, crlfDelay: Infinity }).on('line
       client = String(params.clientInfo?.name || 'unknown-client').slice(0, 100);
       connected = true;
       appendEvent(root, 'agent.connected', { client, clientVersion: params.clientInfo?.version || null, transport: 'stdio' });
-      result(id, { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'project-room', version: require('../package.json').version }, instructions: 'Read productview.yaml, get_product_context, and the Project Room skill before changing product behavior. This MCP endpoint is read-only; edit repository files with your coding tools, then validate.' });
+      result(id, { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'project-room', version: require('../package.json').version }, instructions: 'Read .projectroom/project.yaml, get_product_context, and the Project Room skill before changing product behavior. This MCP endpoint is read-only; edit repository files with your coding tools, then validate.' });
     } else if (method === 'ping') result(id, {});
     else if (method === 'tools/list') result(id, { tools });
     else if (method === 'tools/call') result(id, callTool(params.name, params.arguments || {}));

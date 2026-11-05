@@ -12,7 +12,7 @@ test('manual CLI and data sources persist in YAML and removal clears references 
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-component-management-'));
   try {
     const file = path.join(root, 'productview.yaml');
-    fs.copyFileSync(path.join(__dirname, '..', 'productview.yaml'), file);
+    fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
     const first = addCliTool(root, { name: 'Inspector', executable: 'node', args: 'tools/inspect.cjs\nscan', cwd: '.', mode: 'task', summary: 'Inspects project state', usage: 'node tools/inspect.cjs scan', helpArg: '--help' });
     const second = addCliTool(root, { name: 'Inspector', executable: 'node', args: 'tools/other.cjs', mode: 'server', summary: 'Runs another tool', usage: 'node tools/other.cjs' });
     assert.equal(first.id, 'inspector');
@@ -42,7 +42,7 @@ test('invalid CLI input never changes repository YAML', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-component-management-'));
   try {
     const file = path.join(root, 'productview.yaml');
-    fs.copyFileSync(path.join(__dirname, '..', 'productview.yaml'), file);
+    fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
     const original = fs.readFileSync(file, 'utf8');
     assert.throws(() => addCliTool(root, { name: 'Bad', executable: 'node', args: 'x', mode: 'task', summary: 'Bad', usage: 'bad', cwd: '../other' }), /relative project path/);
     assert.throws(() => removeComponent(root, 'missing'), /cannot be removed/);

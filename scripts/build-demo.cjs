@@ -3,11 +3,13 @@ const path = require('node:path');
 const { loadConfig } = require('./config.cjs');
 const { listSpecifications } = require('./specifications.cjs');
 const { listDocumentation } = require('./documentation.cjs');
-const { config } = loadConfig(path.resolve(__dirname, '../productview.yaml'));
-fs.writeFileSync(path.resolve(__dirname, '../dist/productview.json'), JSON.stringify(config, null, 2) + '\n');
+const { config } = loadConfig(path.resolve(__dirname, '../.projectroom/project.yaml'));
+fs.writeFileSync(path.resolve(__dirname, '../dist/projectroom.json'), JSON.stringify(config, null, 2) + '\n');
 fs.copyFileSync(path.resolve(__dirname, '../agent/project-room/SKILL.md'), path.resolve(__dirname, '../dist/agent-skill.md'));
-fs.copyFileSync(path.resolve(__dirname, '../schemas/productview.schema.json'), path.resolve(__dirname, '../dist/productview.schema.json'));
-fs.copyFileSync(path.resolve(__dirname, '../productview.yaml'), path.resolve(__dirname, '../dist/productview.yaml'));
+fs.copyFileSync(path.resolve(__dirname, '../schemas/projectroom.schema.json'), path.resolve(__dirname, '../dist/projectroom.schema.json'));
+fs.mkdirSync(path.resolve(__dirname, '../dist/.projectroom'), { recursive: true });
+fs.copyFileSync(path.resolve(__dirname, '../.projectroom/project.yaml'), path.resolve(__dirname, '../dist/.projectroom/project.yaml'));
+fs.rmSync(path.resolve(__dirname, '../dist/productview.yaml'), { force: true });
 for (const relative of [config.product?.vision].filter(Boolean)) {
   const destination = path.resolve(__dirname, '../dist', relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });

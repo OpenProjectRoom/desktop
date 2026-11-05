@@ -59,7 +59,7 @@ function parseCargoList(stdout, suite) {
 }
 function listCases(root, suite, discovered = []) {
   const configured = (suite.tests.cases || []).map(item => ({ id: item.id, name: item.name, kind: 'configured', command: item.command, setup: [] }));
-  if (configured.length) return { source: 'productview.yaml', cases: configured, canDiscover: false };
+  if (configured.length) return { source: '.projectroom/project.yaml', cases: configured, canDiscover: false };
   const node = nodeScript(root, suite);
   if (node) return { ...node, canDiscover: false };
   if (isCargo(suite)) return { source: 'Cargo test list', cases: discovered, canDiscover: true };

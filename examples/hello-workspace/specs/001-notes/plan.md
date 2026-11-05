@@ -6,7 +6,7 @@ Node.js built-in HTTP server. Notes are read from a JSON file in the repository.
 
 ## Constitution Check
 
-The app has no external dependencies or secrets. Its service, storage, tests, and health endpoint are declared in `productview.yaml`.
+The app has no external dependencies or secrets. Its service, storage, tests, and health endpoint are declared in `.projectroom/project.yaml`.
 
 ## Project Structure
 

@@ -10,7 +10,7 @@ const { loadConfig } = require('./config.cjs');
 test('CLI discovery is read-only; linking writes a help-only tool to project YAML', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-cli-'));
   try {
-    fs.copyFileSync(path.join(__dirname, '..', 'productview.yaml'), path.join(root, 'productview.yaml'));
+    fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), path.join(root, 'productview.yaml'));
     fs.mkdirSync(path.join(root, 'bin'));
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'fixture', bin: { pilot: './bin/pilot.cjs' } }));
     fs.writeFileSync(path.join(root, 'bin/pilot.cjs'), '#!/usr/bin/env node\nconst fs = require("node:fs");fs.writeFileSync("ran.txt", "yes");console.log("Usage: pilot [options]\\n  --help  Show help");\n');

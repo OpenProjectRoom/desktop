@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 const { readCommandHelp } = require('./command-tools.cjs');
 
 const SKIP = new Set(['.git', '.productview', 'node_modules', 'dist', 'build', 'target', '.next', 'reports', 'coverage']);
@@ -154,11 +154,11 @@ function inspectCliHelp(root, config, id, helpArg) {
 
 function linkCliTool(root, id, helpArg) {
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const item = candidate(base, current.config, id);
-  if (item.linkedId) throw new Error('This CLI entry point is already linked in productview.yaml.');
+  if (item.linkedId) throw new Error('This CLI entry point is already linked in .projectroom/project.yaml.');
   const argument = helpArgument(helpArg);
   const stem = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cli';
   const slug = /^[a-z]/.test(stem) ? stem : `cli-${stem}`;
@@ -176,7 +176,7 @@ function linkCliTool(root, id, helpArg) {
     position,
     runtime: { command: [...item.command, argument], cwd: '.', startup: 'manual' },
     cli: { mode: 'task', source: item.path, summary: `Local CLI entry point discovered in ${item.source}.`,
-      description: 'Linked for exploration. Run currently opens help; set a specific action in productview.yaml before using this as an operational command.',
+      description: 'Linked for exploration. Run currently opens help; set a specific action in .projectroom/project.yaml before using this as an operational command.',
       usage: item.command.join(' '), helpCommand: [...item.command, argument] }
   };
   document.get('components', true).add(component);

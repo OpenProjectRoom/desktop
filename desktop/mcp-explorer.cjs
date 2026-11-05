@@ -26,7 +26,7 @@ function discoverMcpServers(root, config = {}, options = {}) {
     cwd: root, env: options.isElectron ? { ELECTRON_RUN_AS_NODE: '1' } : {}, builtIn: true
   });
   for (const item of config.workspace?.mcpServers || []) candidates.push({
-    id: `yaml:${item.id}`, name: item.name, description: item.description || '', source: 'productview.yaml',
+    id: `yaml:${item.id}`, name: item.name, description: item.description || '', source: '.projectroom/project.yaml',
     transport: item.transport || (item.url ? 'http' : 'stdio'), command: item.command, args: item.args || [],
     cwd: item.cwd || '.', url: item.url, environment: item.environment || [], authEnv: item.authEnv, linkedFrom: item.linkedFrom, build: item.build
   });

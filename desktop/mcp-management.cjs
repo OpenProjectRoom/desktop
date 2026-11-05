@@ -1,12 +1,12 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 const { discoverMcpServers, referencedNames } = require('./mcp-explorer.cjs');
 
 function documentFor(root) {
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const document = YAML.parseDocument(current.raw, { uniqueKeys: true });
@@ -100,7 +100,7 @@ function linkMcpServer(root, sourceId) {
   const record = documentFor(root);
   const source = discoverMcpServers(record.base, record.current.config).find(item => item.id === sourceId && !item.builtIn && !item.id.startsWith('yaml:'));
   if (!source) throw new Error('Choose a discovered project MCP server.');
-  if ((record.current.config.workspace?.mcpServers || []).some(item => item.linkedFrom === sourceId)) throw new Error('This server is already linked in productview.yaml.');
+  if ((record.current.config.workspace?.mcpServers || []).some(item => item.linkedFrom === sourceId)) throw new Error('This server is already linked in .projectroom/project.yaml.');
   const item = { id: uniqueId(record.current.config, source.name), name: text(source.name, 'Server name', 100),
     transport: source.transport, linkedFrom: sourceId };
   if (source.description) item.description = text(source.description, 'Description', 240);

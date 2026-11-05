@@ -1,11 +1,11 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
 function openDocument(root) {
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const document = YAML.parseDocument(current.raw, { uniqueKeys: true });

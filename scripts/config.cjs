@@ -2,15 +2,31 @@ const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
 const Ajv = require('ajv/dist/2020');
-const schema = require('../schemas/productview.schema.json');
+const schema = require('../schemas/projectroom.schema.json');
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 const validate = ajv.compile(schema);
+const CONFIG_RELATIVE = '.projectroom/project.yaml';
+const LEGACY_CONFIG_RELATIVE = 'productview.yaml';
+
+function configPath(root) {
+  const current = path.join(root, CONFIG_RELATIVE);
+  const legacy = path.join(root, LEGACY_CONFIG_RELATIVE);
+  const folder = path.dirname(current);
+  if (fs.existsSync(folder) && fs.lstatSync(folder).isSymbolicLink()) throw new Error('Project Room configuration folder cannot be a symbolic link.');
+  if (fs.existsSync(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error('Project Room configuration file cannot be a symbolic link.');
+  if (fs.existsSync(legacy) && fs.lstatSync(legacy).isSymbolicLink()) throw new Error('Legacy configuration file cannot be a symbolic link.');
+  return fs.existsSync(current) ? current : fs.existsSync(legacy) ? legacy : current;
+}
+
+function hasConfig(root) {
+  return fs.existsSync(configPath(root));
+}
 
 function parseConfig(raw) {
   const config = YAML.parse(raw, { uniqueKeys: true });
   if (!validate(config)) {
-    throw new Error('productview.yaml is invalid:\n' + validate.errors.map(e => `${e.instancePath || '/'} ${e.message}`).join('\n'));
+    throw new Error(`${CONFIG_RELATIVE} is invalid:\n` + validate.errors.map(e => `${e.instancePath || '/'} ${e.message}`).join('\n'));
   }
   const ids = new Set();
   const environmentNames = new Set();
@@ -80,7 +96,9 @@ function parseConfig(raw) {
 function loadConfig(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const config = parseConfig(raw);
-  return { config, raw, root: path.dirname(filePath) };
+  const directory = path.dirname(filePath);
+  const root = path.basename(directory) === '.projectroom' && path.basename(filePath) === 'project.yaml' ? path.dirname(directory) : directory;
+  return { config, raw, root, file: filePath };
 }
 
-module.exports = { loadConfig, parseConfig };
+module.exports = { loadConfig, parseConfig, configPath, hasConfig, CONFIG_RELATIVE, LEGACY_CONFIG_RELATIVE };

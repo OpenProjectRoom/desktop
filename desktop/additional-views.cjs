@@ -1,14 +1,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
 const allowed = new Set(['vision', 'roadmap', 'north-star', 'commands']);
 
 function setAdditionalView(root, page, enabled) {
   if (!allowed.has(page) || typeof enabled !== 'boolean') throw new Error('Invalid additional view.');
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const views = new Set(current.config.workspace?.additionalViews || []);

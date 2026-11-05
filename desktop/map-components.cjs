@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
 const kinds = new Set(['service', 'database', 'storage', 'testSuite', 'specification', 'external']);
 const icons = { service: 'terminal', database: 'database', storage: 'folder', testSuite: 'flask', specification: 'doc', external: 'cube' };
@@ -14,7 +14,7 @@ function text(value, label, max = 160) {
 function addMapComponent(root, input) {
   if (!input || typeof input !== 'object' || !kinds.has(input.kind)) throw new Error('Choose a supported component type.');
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const name = text(input.name, 'Component name', 100);

@@ -86,11 +86,11 @@ function inspectSpecKit(root, config, roots, context = {}) {
         return { id, name: componentById.get(id).name, result: !last ? 'never run in Project Room' : last.exitCode !== 0 ? 'failed' : Date.parse(last.at) < changed ? 'passed before spec changed' : 'passed', at: last?.at || null };
       });
       const linkedRequirements = [...new Set(explicit.flatMap(link => link.requirements || []))];
-      const trace = explicit.map(link => ({ requirements: link.requirements || [], components: link.components || [], tests: link.tests || [], source: 'productview.yaml' }));
+      const trace = explicit.map(link => ({ requirements: link.requirements || [], components: link.components || [], tests: link.tests || [], source: '.projectroom/project.yaml' }));
       if (graphOnly.length) trace.push({ requirements: [], components: graphOnly.filter(id => componentById.get(id)?.kind !== 'testSuite'), tests: graphOnly.filter(id => componentById.get(id)?.kind === 'testSuite'), source: 'Project Map' });
       const stage = tasks.total && tasks.done === tasks.total ? 'All tasks checked' : tasks.done ? 'Implementation underway' : available.includes('tasks.md') ? 'Tasks available' : available.includes('plan.md') ? 'Plan available' : 'Specification available';
       const checks = [];
-      for (const id of linkedRequirements) if (!requirementIds.includes(id)) checks.push({ level: 'warning', message: `${id} is linked in productview.yaml but is absent from spec.md.` });
+      for (const id of linkedRequirements) if (!requirementIds.includes(id)) checks.push({ level: 'warning', message: `${id} is linked in .projectroom/project.yaml but is absent from spec.md.` });
       for (const test of tests) if (test.result !== 'passed') checks.push({ level: test.result === 'failed' ? 'error' : 'info', message: `${test.name}: ${test.result}.` });
       if (clarifications) checks.push({ level: 'info', message: `${clarifications} clarification marker${clarifications === 1 ? '' : 's'} remain.` });
       if (!linkedIds.length) checks.push({ level: 'info', message: 'No components or tests are linked to this feature yet.' });

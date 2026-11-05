@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const YAML = require('yaml');
-const { loadConfig, parseConfig } = require('../scripts/config.cjs');
+const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
 function field(value, label, max = 160) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(`${label} must contain 1–${max} characters.`);
@@ -11,7 +11,7 @@ function field(value, label, max = 160) {
 function upsertIssueSource(root, input) {
   if (!input || typeof input !== 'object') throw new Error('Invalid issue source.');
   const base = fs.realpathSync(root);
-  const file = path.join(base, 'productview.yaml');
+  const file = configPath(base);
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const existing = input.id ? current.config.components.find(item => item.id === input.id && item.kind === 'issues') : null;

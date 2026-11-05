@@ -11,7 +11,7 @@
     const open = document.getElementById('onboardingOpen');
     open.disabled = review.state !== 'ready';
     if (review.state === 'waiting') {
-      target.innerHTML = '<strong>Waiting for productview.yaml</strong><p>Paste the prompt into your agent. Project Room checks this folder while the dialog is open.</p>';
+      target.innerHTML = '<strong>Waiting for .projectroom/project.yaml</strong><p>Paste the prompt into your agent. Project Room checks this folder while the dialog is open.</p>';
     } else if (review.state === 'invalid') {
       target.innerHTML = '<strong>Configuration needs a fix</strong><pre>' + escapeHtml(review.message) + '</pre>';
     } else {

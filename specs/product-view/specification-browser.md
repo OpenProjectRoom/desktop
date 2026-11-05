@@ -6,7 +6,7 @@ Every specification file in a configured repository folder should be discoverabl
 
 ## Behavior
 
-- Read `views.specifications.roots` from `productview.yaml`.
+- Read `views.specifications.roots` from `.projectroom/project.yaml`.
 - Show folders and files recursively in a tree.
 - Let people search by path or filename and read supported text files.
 - Render Markdown for reading, with a source view for exact text.

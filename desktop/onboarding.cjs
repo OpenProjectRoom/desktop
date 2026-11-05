@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { loadConfig } = require('../scripts/config.cjs');
+const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 const { discoverMcpServers, publicCandidate } = require('./mcp-explorer.cjs');
 const { discoverCliTools } = require('./cli-explorer.cjs');
 const { discoverSpecs } = require('./api-explorer.cjs');
@@ -43,7 +43,7 @@ function inspectFolder(root) {
   const compose = ['compose.yaml', 'compose.yml', 'docker-compose.yml', 'infra/compose/compose.yaml'].filter(has);
   let scripts = [];
   let config = {};
-  try { config = loadConfig(path.join(canonical, 'productview.yaml')).config; } catch { /* An existing project can still be inspected without YAML. */ }
+  try { config = loadConfig(configPath(canonical)).config; } catch { /* An existing project can still be inspected without YAML. */ }
   if (has('package.json')) {
     try { scripts = Object.keys(JSON.parse(fs.readFileSync(path.join(canonical, 'package.json'), 'utf8')).scripts || {}).slice(0, 30); }
     catch { /* The agent can inspect malformed package metadata. */ }
@@ -51,7 +51,7 @@ function inspectFolder(root) {
   return {
     root: canonical,
     name: path.basename(canonical),
-    hasConfig: has('productview.yaml'),
+    hasConfig: hasConfig(canonical),
     specs, docs, compose, scripts, dataCandidates: dataCandidates(canonical, compose),
     mcpServers: discoverMcpServers(canonical, config).map(item => publicCandidate(item)),
     cliTools: discoverCliTools(canonical, config).map(item => ({ name: item.name, path: item.path, source: item.source, linked: !!item.linkedId })),
@@ -64,10 +64,10 @@ function inspectFolder(root) {
 function exportContract(appPath, userData) {
   const directory = path.join(userData, 'agent-onboarding');
   fs.mkdirSync(directory, { recursive: true });
-  const skill = path.join(directory, 'PRODUCT_VIEW_AGENT_GUIDE.md');
-  const schema = path.join(directory, 'productview.schema.json');
+  const skill = path.join(directory, 'PROJECT_ROOM_AGENT_GUIDE.md');
+  const schema = path.join(directory, 'projectroom.schema.json');
   fs.copyFileSync(path.join(appPath, 'agent/project-room/SKILL.md'), skill);
-  fs.copyFileSync(path.join(appPath, 'schemas/productview.schema.json'), schema);
+  fs.copyFileSync(path.join(appPath, 'schemas/projectroom.schema.json'), schema);
   return { skill, schema };
 }
 
@@ -77,7 +77,7 @@ function agentPrompt(inventory, contract) {
     '',
     'Read the repository\'s AGENTS.md or CLAUDE.md if present, its README, current specifications, documentation, package scripts, and runtime configuration. Read the Project Room agent guide at ' + contract.skill + ' and validate against ' + contract.schema + '.',
     '',
-    'Create or improve productview.yaml at the repository root. Use the existing specification and documentation folders directly; do not duplicate their content or introduce a parallel Spec Kit structure. If Spec Kit feature folders exist, map verified feature requirements to real components and test suites with views.specifications.links; do not infer coverage or completion from file names alone. Represent only real components and commands supported by the repository. Set workspace.additionalViews only for useful optional pages supported by actual content: vision, roadmap, north-star, commands. The four pages stay hidden by default. If you choose one as workspace.startPage, include it in additionalViews too. Inspect project MCP configurations (.mcp.json, .cursor/mcp.json, .vscode/mcp.json, mcp.json). Register verified MCP endpoints in workspace.mcpServers only when no existing project config already describes them; use environment variable names and authEnv for credentials. Never connect to or invoke MCP tools during setup. For HTTP APIs, inspect code and OpenAPI 3.x files. Register only verified base URLs and optional local spec paths in workspace.apiSources; use authEnv as a variable name for Bearer authentication, never a token. Do not send API requests during setup. Detect real data sources from code, migrations, compose files and existing files: declare PostgreSQL/MySQL/MariaDB databases with data.engine and a data.connectionEnv name, SQLite with data.path, and local file stores with data.path. Do not invent a running database from a dependency name alone. Declare required environment variable names, and optional descriptions, in workspace.environment, component environment lists or data.connectionEnv. Never put values in YAML or ask the user to paste them into the agent chat; tell them to set values in Project Room\'s local Environment page. Distinguish foreground processes from detached Docker Compose stacks: a command that starts and exits does not prove the service is stopped, and Project Room\'s current service runner cannot monitor Compose state correctly. Do not invent metrics, test results, integration connections, roadmap completion, CLI parameters, or a working chat model. Keep credentials out of the YAML. Register commands as manual and do not start services or tests for this setup task.',
+    'Create or improve .projectroom/project.yaml in the repository. If a legacy productview.yaml exists, move it to .projectroom/project.yaml instead of creating a duplicate. Use the existing specification and documentation folders directly; do not duplicate their content or introduce a parallel Spec Kit structure. If Spec Kit feature folders exist, map verified feature requirements to real components and test suites with views.specifications.links; do not infer coverage or completion from file names alone. Represent only real components and commands supported by the repository. Set workspace.additionalViews only for useful optional pages supported by actual content: vision, roadmap, north-star, commands. The four pages stay hidden by default. If you choose one as workspace.startPage, include it in additionalViews too. Inspect project MCP configurations (.mcp.json, .cursor/mcp.json, .vscode/mcp.json, mcp.json). Register verified MCP endpoints in workspace.mcpServers only when no existing project config already describes them; use environment variable names and authEnv for credentials. Never connect to or invoke MCP tools during setup. For HTTP APIs, inspect code and OpenAPI 3.x files. Register only verified base URLs and optional local spec paths in workspace.apiSources; use authEnv as a variable name for Bearer authentication, never a token. Do not send API requests during setup. Detect real data sources from code, migrations, compose files and existing files: declare PostgreSQL/MySQL/MariaDB databases with data.engine and a data.connectionEnv name, SQLite with data.path, and local file stores with data.path. Do not invent a running database from a dependency name alone. Declare required environment variable names, and optional descriptions, in workspace.environment, component environment lists or data.connectionEnv. Never put values in YAML or ask the user to paste them into the agent chat; tell them to set values in Project Room\'s local Environment page. Distinguish foreground processes from detached Docker Compose stacks: a command that starts and exits does not prove the service is stopped, and Project Room\'s current service runner cannot monitor Compose state correctly. Do not invent metrics, test results, integration connections, roadmap completion, CLI parameters, or a working chat model. Keep credentials out of the YAML. Register commands as manual and do not start services or tests for this setup task.',
     '',
     'Inspect likely sources of truth, draft a small useful map, and validate the YAML against the schema and the files it references. For CLI programs, inspect package bin metadata and real executable entry files; add commandTool components only for verified tools. CLI Explorer can discover candidates without running them, read help after a user click, and link a candidate as a help-only commandTool for further documentation. Do not assume every package script is a user-facing CLI. Install the exported Project Room guide as a repository-local skill for the agent in use (Codex: .agents/skills/project-room/SKILL.md; Claude Code: .claude/skills/project-room/SKILL.md). If both agents are used, install it in both locations. Preserve any existing AGENTS.md or CLAUDE.md; add only a short Project Room pointer there if useful. Report any unsupported lifecycle behavior, missing prerequisites, and uncertain findings. Show me the final component list and validation result. Do not commit automatically.',
     '',
@@ -96,8 +96,8 @@ function agentPrompt(inventory, contract) {
 }
 
 function reviewConfig(root) {
-  const file = path.join(root, 'productview.yaml');
-  if (!fs.existsSync(file)) return { state: 'waiting', message: 'Waiting for productview.yaml in the project folder.' };
+  const file = configPath(root);
+  if (!fs.existsSync(file)) return { state: 'waiting', message: `Waiting for ${CONFIG_RELATIVE} in the project folder.` };
   try {
     const { config, raw } = loadConfig(file);
     const warnings = [];
