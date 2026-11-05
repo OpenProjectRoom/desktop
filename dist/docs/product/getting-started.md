@@ -1,5 +1,12 @@
 # Getting started
 
+Choose one starting point:
+
+- **New app:** In the project folder, give your coding agent the new-project prompt on [openprojectroom.com](https://openprojectroom.com/#get-started). It asks for the first useful release, initializes Git and the official GitHub Spec Kit workflow, and creates `.projectroom/project.yaml` alongside real code and commands.
+- **Existing repository:** In the repository folder, give your current coding agent the existing-project prompt from the same page. It inspects actual code, scripts and any Spec Kit files, then creates or updates `.projectroom/project.yaml` without moving the specifications. You can also open the folder in Project Room first and use the project-specific prompt in its setup dialog.
+
+In both cases, wait for the agent's handoff: exact folder, configured findings, uncertainties, and the first service, test and data source to check. Open that folder in Project Room. If it was already open, select **Refresh analysis** in Onboarding. Then inspect the configured entries and run commands deliberately.
+
 For a first real run, choose **Try working example** from the Overview or Workspaces menu. Project Room copies it into `~/Documents/Project Room Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
 
 Open this repository in the Project Room desktop app. Project Room reads `.projectroom/project.yaml` and opens the Overview.

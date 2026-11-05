@@ -31,6 +31,11 @@ product:
       summary: Detect configured workspace capabilities from YAML and repository files, keep hands-on verification separate, and offer the agent prompt without making it a setup requirement.
       status: done
       relatedComponents: [product-spec, web]
+    - id: two-entry-setup
+      title: Clear setup paths for new and existing projects
+      summary: Offer short website prompts for both starting points, align the agent handoff with the desktop setup dialog, and lead users to verify the same repository in Project Room.
+      status: done
+      relatedComponents: [product-spec, web]
     - id: optional-specialist-views
       title: Optional specialist views
       summary: Keep Vision, Roadmap, North Star and Command-line Tools out of the default navigation, with shared YAML switches in Preferences.

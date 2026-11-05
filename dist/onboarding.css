@@ -19,5 +19,9 @@
 .onboarding-review summary{cursor:pointer;color:#5c7287}
 .onboarding-warning{color:#986b27;background:#fcf6e8;border-radius:7px;padding:8px 10px;margin-top:10px}
 .onboarding-warning ul{margin:6px 0 0;padding-left:18px}
+.onboarding-body>.onboarding-finish{margin:13px 0 0;padding:10px 12px;border-left:3px solid #71a98f;border-radius:5px;background:#edf6f1;color:#4a6970;font-size:11px}
+.onboarding-finish strong{color:#2f6650}
+body[data-theme="dark"] .onboarding-body>.onboarding-finish{background:#203d38;color:#bed8ce;border-left-color:#7ec2a2}
+body[data-theme="dark"] .onboarding-finish strong{color:#dcf1e2}
 .onboarding-modal .btn:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){.onboarding-inventory{grid-template-columns:1fr}.onboarding-body{padding:14px}}
