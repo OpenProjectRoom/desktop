@@ -16,7 +16,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - run: npm run validate:config
-      - run: node scripts/validate-config.cjs examples/hello-workspace/productview.yaml
+      - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test
       - run: npm test --prefix examples/hello-workspace
       - run: npm run build:demo
