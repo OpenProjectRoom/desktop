@@ -28,7 +28,7 @@ function commandGuide(c) {
   const options = (cli.options || []).map(x => commandRow(x.flag, x.description)).join('');
   const examples = (cli.examples || []).map(x => `<div class="cli-man-example"><span>${commandText(x.label)}</span><code>$ ${commandText(commandLine(x.command))}</code></div>`).join('');
   const help = commandHelp[c.id];
-  return `<article class="cli-man-page"><div class="cli-man-source"><span>MANUAL · PRODUCTVIEW.YAML</span>${cli.helpCommand && commandLive() ? `<button class="btn small" data-v5="help:${escapeHtml(c.id)}" ${commandBusy[c.id] ? 'disabled' : ''}>${icon('terminal')} ${commandBusy[c.id] ? 'Reading…' : 'Read actual --help'}</button>` : ''}</div>
+  return `<article class="cli-man-page"><div class="cli-man-source"><span>MANUAL · .PROJECTROOM/PROJECT.YAML</span>${cli.helpCommand && commandLive() ? `<button class="btn small" data-v5="help:${escapeHtml(c.id)}" ${commandBusy[c.id] ? 'disabled' : ''}>${icon('terminal')} ${commandBusy[c.id] ? 'Reading…' : 'Read actual --help'}</button>` : ''}</div>
   <p class="cli-man-provenance">The sections below are documented in this repository. ${cli.helpCommand ? (commandLive() ? 'Use “Read actual --help” to compare them with the executable.' : 'Executable help is available in the desktop app.') : 'No executable help command is configured.'}</p>
   ${commandSection('NAME', `<p><strong>${commandText(c.name)}</strong> — ${commandText(cli.summary)}</p>`)}
   ${commandSection('SYNOPSIS', `<pre>${commandText(usage)}</pre>`)}
