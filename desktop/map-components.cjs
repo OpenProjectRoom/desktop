@@ -15,7 +15,7 @@ function addMapComponent(root, input) {
   if (!input || typeof input !== 'object' || !kinds.has(input.kind)) throw new Error('Choose a supported component type.');
   const base = fs.realpathSync(root);
   const file = path.join(base, 'productview.yaml');
-  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('OpenBuildRoom cannot edit a linked configuration file.');
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('BuildSteer cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const name = text(input.name, 'Component name', 100);
   const stem = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'component';

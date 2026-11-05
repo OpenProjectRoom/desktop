@@ -7,7 +7,7 @@ const { discoverMcpServers, referencedNames } = require('./mcp-explorer.cjs');
 function documentFor(root) {
   const base = fs.realpathSync(root);
   const file = path.join(base, 'productview.yaml');
-  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('OpenBuildRoom cannot edit a linked configuration file.');
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('BuildSteer cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const document = YAML.parseDocument(current.raw, { uniqueKeys: true });
   if (document.errors.length) throw new Error(document.errors[0].message);

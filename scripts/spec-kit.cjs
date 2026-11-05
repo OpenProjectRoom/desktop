@@ -79,11 +79,11 @@ function inspectSpecKit(root, config, roots, context = {}) {
       const explicitIds = new Set(explicit.flatMap(link => [...(link.components || []), ...(link.tests || [])]));
       const graphOnly = [...new Set(graphIds.filter(id => !explicitIds.has(id)))];
       const linkedIds = [...new Set([...explicitIds, ...graphIds])];
-      const components = linkedIds.filter(id => componentById.has(id) && componentById.get(id).kind !== 'testSuite').map(id => ({ id, name: componentById.get(id).name, kind: componentById.get(id).kind, status: runtime[id] || (context.statusKnown ? 'not running in OpenBuildRoom' : 'runtime not observed') }));
+      const components = linkedIds.filter(id => componentById.has(id) && componentById.get(id).kind !== 'testSuite').map(id => ({ id, name: componentById.get(id).name, kind: componentById.get(id).kind, status: runtime[id] || (context.statusKnown ? 'not running in BuildSteer' : 'runtime not observed') }));
       const tests = linkedIds.filter(id => componentById.get(id)?.kind === 'testSuite').map(id => {
         const last = events.find(event => event.type === 'test.finished' && event.component === id);
         const changed = fs.statSync(path.join(root, spec)).mtimeMs;
-        return { id, name: componentById.get(id).name, result: !last ? 'never run in OpenBuildRoom' : last.exitCode !== 0 ? 'failed' : Date.parse(last.at) < changed ? 'passed before spec changed' : 'passed', at: last?.at || null };
+        return { id, name: componentById.get(id).name, result: !last ? 'never run in BuildSteer' : last.exitCode !== 0 ? 'failed' : Date.parse(last.at) < changed ? 'passed before spec changed' : 'passed', at: last?.at || null };
       });
       const linkedRequirements = [...new Set(explicit.flatMap(link => link.requirements || []))];
       const trace = explicit.map(link => ({ requirements: link.requirements || [], components: link.components || [], tests: link.tests || [], source: 'productview.yaml' }));

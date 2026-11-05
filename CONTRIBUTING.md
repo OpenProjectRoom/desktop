@@ -1,10 +1,10 @@
-# Contributing to OpenBuildRoom
+# Contributing to BuildSteer
 
 Thanks for helping make agent-built software easier to understand and operate.
 
 ## Start here
 
-Read [the repository contract](OPENBUILDROOM.md), [architecture notes](docs/product/architecture.md), and [the working example](examples/hello-workspace/productview.yaml). For behavior changes, check the product vision and roadmap in `productview.yaml`. Spec Kit artifacts stay in their standard `.specify/` and `specs/` folders.
+Read [the repository contract](BUILDSTEER.md), [architecture notes](docs/product/architecture.md), and [the working example](examples/hello-workspace/productview.yaml). For behavior changes, check the product vision and roadmap in `productview.yaml`. Spec Kit artifacts stay in their standard `.specify/` and `specs/` folders.
 
 ```sh
 npm ci

@@ -20,8 +20,8 @@ function discoverMcpServers(root, config = {}, options = {}) {
   if (!root) return [];
   const candidates = [];
   if (options.appPath && options.executable) candidates.push({
-    id: 'product-view', name: 'OpenBuildRoom', description: 'Read-only product, component, Spec Kit and activity context for this workspace.',
-    source: 'Built into OpenBuildRoom', transport: 'stdio', command: options.executable,
+    id: 'product-view', name: 'BuildSteer', description: 'Read-only product, component, Spec Kit and activity context for this workspace.',
+    source: 'Built into BuildSteer', transport: 'stdio', command: options.executable,
     args: [path.join(options.appPath, 'mcp/server.cjs'), root],
     cwd: root, env: options.isElectron ? { ELECTRON_RUN_AS_NODE: '1' } : {}, builtIn: true
   });
@@ -127,7 +127,7 @@ class McpExplorer {
       const opts = { requestInit: { headers, redirect: 'error' } };
       transport = item.transport === 'sse' ? new SSEClientTransport(url, opts) : new StreamableHTTPClientTransport(url, opts);
     }
-    const client = new Client({ name: 'openbuildroom-explorer', version: require('../package.json').version },
+    const client = new Client({ name: 'buildsteer-explorer', version: require('../package.json').version },
       { versionNegotiation: item.builtIn ? { mode: 'legacy' } : { mode: 'auto', probe: { timeoutMs: 1000 } } });
     let timeout;
     try {

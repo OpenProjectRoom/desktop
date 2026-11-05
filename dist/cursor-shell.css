@@ -1,4 +1,4 @@
-/* Cursor-inspired workbench shell for the standalone OpenBuildRoom preview. */
+/* Cursor-inspired workbench shell for the standalone BuildSteer preview. */
 body.cursor-shell{--workbench-chrome:#f8fafb;--workbench-chrome-line:#dce4e9;--workbench-chrome-text:#33495c;--workbench-chrome-muted:#667b8d;--workbench-chrome-faint:#8b9ba8;--workbench-chrome-hover:#e9eff3;--workbench-chrome-hover-line:#d4e0e8;--workbench-chrome-hover-text:#243d51;--workbench-chrome-avatar:#e4ebf0;--workbench-chrome-focus:#668aa8}
 body[data-theme="dark"].cursor-shell{--workbench-chrome:#262b30;--workbench-chrome-line:#3b434a;--workbench-chrome-text:#eff4f7;--workbench-chrome-muted:#b6c3cf;--workbench-chrome-faint:#8c9ba7;--workbench-chrome-hover:#39424b;--workbench-chrome-hover-line:#4b5660;--workbench-chrome-hover-text:#f0f5f8;--workbench-chrome-avatar:#465462;--workbench-chrome-focus:#8ca9bf}
 .cursor-titlebar{height:38px;position:fixed;inset:0 0 auto;z-index:12;display:flex;align-items:center;gap:12px;padding:0 12px;background:var(--workbench-chrome);color:var(--workbench-chrome-text);border-bottom:1px solid var(--workbench-chrome-line);font-size:11px;-webkit-app-region:drag}

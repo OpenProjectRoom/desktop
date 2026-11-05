@@ -12,7 +12,7 @@ function upsertIssueSource(root, input) {
   if (!input || typeof input !== 'object') throw new Error('Invalid issue source.');
   const base = fs.realpathSync(root);
   const file = path.join(base, 'productview.yaml');
-  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('OpenBuildRoom cannot edit a linked configuration file.');
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('BuildSteer cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const existing = input.id ? current.config.components.find(item => item.id === input.id && item.kind === 'issues') : null;
   if (input.id && !existing) throw new Error('Unknown issue source.');

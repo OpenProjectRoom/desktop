@@ -35,7 +35,7 @@ function textField(value, label, limit) {
 function slug(value) { return value.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'document'; }
 function saveConfig(root, product) {
   const file = path.join(rootPath(root), 'productview.yaml');
-  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('OpenBuildRoom cannot edit a linked configuration file.');
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('BuildSteer cannot edit a linked configuration file.');
   const current = fs.readFileSync(file, 'utf8');
   const document = YAML.parseDocument(current, { uniqueKeys: true });
   if (document.errors.length) throw new Error(document.errors[0].message);
@@ -142,7 +142,7 @@ function createDocument(root, input) {
 function saveDocument(root, relative, content) {
   const product = loadConfig(path.join(rootPath(root), 'productview.yaml')).config.product;
   const docsPrefix = product?.docsRoot.replace(/\/$/, '') + '/';
-  if (!product || (relative !== product.vision && !relative.startsWith(docsPrefix))) throw new Error('Document is outside the OpenBuildRoom documentation folder.');
+  if (!product || (relative !== product.vision && !relative.startsWith(docsPrefix))) throw new Error('Document is outside the BuildSteer documentation folder.');
   if (typeof content !== 'string' || Buffer.byteLength(content) > 500_000) throw new Error('Document exceeds the 500 KB editor limit.');
   const file = inside(root, relative);
   if (!fs.statSync(file).isFile() || !file.endsWith('.md')) throw new Error('Only configured Markdown files can be edited.');

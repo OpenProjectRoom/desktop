@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://productview.local/schemas/productview.schema.json",
-  "title": "OpenBuildRoom project configuration",
+  "title": "BuildSteer project configuration",
   "type": "object",
   "required": ["schemaVersion", "project", "components", "connections"],
   "properties": {

@@ -2,7 +2,7 @@
 
 ## Goal
 
-Every specification file in a configured repository folder should be discoverable from OpenBuildRoom without adding each file as a map component.
+Every specification file in a configured repository folder should be discoverable from BuildSteer without adding each file as a map component.
 
 ## Behavior
 

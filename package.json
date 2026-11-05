@@ -1,6 +1,6 @@
 {
-  "name": "openbuildroom-desktop",
-  "version": "0.9.50",
+  "name": "buildsteer-desktop",
+  "version": "0.9.51",
   "private": true,
   "description": "Desktop workspace for product specifications, services, tests and project topology",
   "main": "desktop/main.cjs",
@@ -25,9 +25,9 @@
   },
   "build": {
     "appId": "com.openbuildroom.desktop",
-    "productName": "OpenBuildRoom Desktop",
+    "productName": "BuildSteer Desktop",
     "directories": {
-      "output": "../../outputs/openbuildroom-desktop"
+      "output": "../../outputs/buildsteer-desktop"
     },
     "files": [
       "dist/**",
@@ -38,7 +38,7 @@
       "examples/**",
       "schemas/**",
       "productview.yaml",
-      "OPENBUILDROOM.md",
+      "BUILDSTEER.md",
       "package.json"
     ],
     "extraResources": [
@@ -52,12 +52,12 @@
       "icon": "desktop/assets/icon.png",
       "identity": null,
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "OpenBuildRoom records speech only while you dictate into Product Chat.",
-        "NSSpeechRecognitionUsageDescription": "OpenBuildRoom transcribes speech on this Mac for Product Chat."
+        "NSMicrophoneUsageDescription": "BuildSteer records speech only while you dictate into Product Chat.",
+        "NSSpeechRecognitionUsageDescription": "BuildSteer transcribes speech on this Mac for Product Chat."
       }
     },
     "dmg": {
-      "title": "OpenBuildRoom Desktop Preview"
+      "title": "BuildSteer Desktop Preview"
     }
   }
 }

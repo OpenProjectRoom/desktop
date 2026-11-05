@@ -33,7 +33,7 @@ product:
       relatedComponents: [product-spec, web, api]
     - id: local-agent-chat
       title: Local coding agent in Product Chat
-      summary: Connect Codex CLI or Claude Code on this Mac, expose the OpenBuildRoom MCP context, and dictate into chat with on-device speech recognition.
+      summary: Connect Codex CLI or Claude Code on this Mac, expose the BuildSteer MCP context, and dictate into chat with on-device speech recognition.
       status: done
       relatedComponents: [product-spec, web]
     - id: executable-build-identity
@@ -118,7 +118,7 @@ product:
     - id: command-tools
       title: Command tools
       path: docs/product/command-tools.md
-      summary: How CLI tools and servers appear in OpenBuildRoom.
+      summary: How CLI tools and servers appear in BuildSteer.
 
 workspace:
   startPage: overview

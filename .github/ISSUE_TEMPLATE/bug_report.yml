@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible OpenBuildRoom Desktop problem.
+description: Report a reproducible BuildSteer Desktop problem.
 title: "[Bug] "
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Desktop version and macOS version
-      placeholder: OpenBuildRoom 0.9.44, macOS 15.x
+      placeholder: BuildSteer 0.9.44, macOS 15.x
     validations:
       required: true
   - type: textarea

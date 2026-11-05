@@ -5,7 +5,7 @@ const { listSpecifications } = require('./specifications.cjs');
 const { listDocumentation } = require('./documentation.cjs');
 const { config } = loadConfig(path.resolve(__dirname, '../productview.yaml'));
 fs.writeFileSync(path.resolve(__dirname, '../dist/productview.json'), JSON.stringify(config, null, 2) + '\n');
-fs.copyFileSync(path.resolve(__dirname, '../agent/openbuildroom/SKILL.md'), path.resolve(__dirname, '../dist/agent-skill.md'));
+fs.copyFileSync(path.resolve(__dirname, '../agent/buildsteer/SKILL.md'), path.resolve(__dirname, '../dist/agent-skill.md'));
 fs.copyFileSync(path.resolve(__dirname, '../schemas/productview.schema.json'), path.resolve(__dirname, '../dist/productview.schema.json'));
 fs.copyFileSync(path.resolve(__dirname, '../productview.yaml'), path.resolve(__dirname, '../dist/productview.yaml'));
 for (const relative of [config.product?.vision].filter(Boolean)) {
