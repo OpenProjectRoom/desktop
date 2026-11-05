@@ -16,7 +16,7 @@ body:not(.optional-commands-enabled) .command-summary{display:none}
 @media(max-width:700px){.settings-card{padding:17px;gap:12px}.settings-section-head{display:block}.settings-section-head .btn{margin:4px 0 8px}.settings-source{flex-wrap:wrap}.source-editor-body{grid-template-columns:1fr}.settings-key-value{display:block}.settings-key-value span{display:block;margin-bottom:3px}}
 
 /* Dark palette covers the existing workbench as well as settings. */
-body[data-theme="dark"]{color-scheme:dark;--ink:#e5ebf2;--muted:#a8b5c2;--line:#354252;--paper:#171d25;--white:#222c37;--nav:#202a34;--shadow:0 6px 24px #00000018;background:#171d25;color:#e5ebf2}
+body[data-theme="dark"]{color-scheme:dark;--ink:#e5ebf2;--text:#e5ebf2;--muted:#a8b5c2;--line:#354252;--paper:#171d25;--white:#222c37;--surface:#222c37;--nav:#202a34;--shadow:0 6px 24px #00000018;background:#171d25;color:#e5ebf2}
 body[data-theme="dark"] .sidebar{background:#1e2731;color:#aab8c7;border-right-color:#354252}
 body[data-theme="dark"] .brand,body[data-theme="dark"] .breadcrumb strong{color:#e6edf4}
 body[data-theme="dark"] .project-picker,body[data-theme="dark"] .topbar,body[data-theme="dark"] .chat-panel,body[data-theme="dark"] .panel-top,body[data-theme="dark"] .chat-composer,body[data-theme="dark"] .panel-foot{background:#222d38;border-color:#3a4857;color:#e1e9f1}
@@ -103,4 +103,15 @@ body[data-theme="dark"] .modal-body input:focus,body[data-theme="dark"] .modal-b
 body[data-theme="dark"] .backlog-lane,body[data-theme="dark"] .backlog-empty{background:#25313d;border-color:#394959}
 body[data-theme="dark"] .backlog-card{background:#2c3946;border-color:#435263;color:#e5edf4}
 body[data-theme="dark"] .backlog-empty-icon{background:#34475a;color:#b9d0e6}
+/* The overview issue is a button; suppress the native button face in both themes. */
+.backlog-overview-issue{width:100%;background:transparent;color:inherit;text-align:left;border:0;border-bottom:1px solid var(--line,#e1e6eb)}
+.backlog-overview-issue:hover{background:#eef3f7}
+body[data-theme="dark"] .backlog-overview-issue:hover{background:#2d4051}
+body[data-theme="dark"] .backlog-lane-head{color:#dce7f1}
+body[data-theme="dark"] .product-lane-head{color:#cbd9e6}
+body[data-theme="dark"] .product-lane-head>span:last-child,
+body[data-theme="dark"] .product-lane-empty{color:#a8b8c7}
+body[data-theme="dark"] .product-lane-empty{border-color:#526273}
+body[data-theme="dark"] .product-roadmap-card:hover{background:#35485a;border-color:#68829a}
+body[data-theme="dark"] .product-roadmap-card small{background:#34485b;color:#c5d8e8}
 @media(max-width:1100px){.backlog-board{grid-template-columns:repeat(2,minmax(0,1fr))}}
