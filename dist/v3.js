@@ -257,6 +257,7 @@ async function refreshDocumentation() {
     const result = pv && projectRoot ? await pv.listDocumentation() : await fetch('./docs-manifest.json').then(response => { if (!response.ok) throw new Error('Documentation manifest unavailable.'); return response.json(); });
     if (version !== docLoadVersion) return;
     docEntries = result.entries || [];
+    window.updateProjectRoomNavCounts?.();
     docRootMissing = !!result.missing;
     docLoading = false;
     const first = docEntries.find(item => item.type === 'file');
@@ -290,6 +291,7 @@ async function refreshSpecifications() {
     specEntries = result.entries || [];
     specRoots = result.roots || [];
     specKit = result.specKit || { detected: false, features: [] };
+    window.updateProjectRoomNavCounts?.();
     specLoading = false;
     const first = specEntries.find(item => item.type === 'file');
     if (!specEntries.some(item => item.path === specSelectedPath && item.type === 'file')) specSelectedPath = first?.path || null;
@@ -315,6 +317,7 @@ function issuesPage() {
 }
 async function refreshBacklog() {
   localBacklog = pv && projectRoot ? await pv.listBacklog() : { root: projectConfig.product?.backlogRoot || 'backlog', missing: true, issues: localBacklog.issues };
+  window.updateProjectRoomNavCounts?.();
   if (state.page === 'issues' || state.page === 'dashboard') render();
 }
 function backlogModal(item = null) {

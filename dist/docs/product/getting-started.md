@@ -6,6 +6,8 @@ Open this repository in the Project Room desktop app. Project Room reads `.proje
 
 The left navigation follows the product workflow:
 
+The expanded sidebar shows counts for product content and each Run & Verify collection. These are configured entries (or discovered repository files for Requirements and Documentation), not a count of running services or passed tests. Environment counts variable names without showing their values.
+
 - **Overview** summarizes the workspace; **Project Map** shows components and connections. Switch between Map, List and Source. Source displays the exact `.projectroom/project.yaml` file read from the open repository, or the packaged YAML in the web demo. Add components from the map toolbar. Open **Files** for application source files.
 - **Product** contains Backlog, Requirements and Documentation by default. Enable Vision, Roadmap and North Star under Settings → Preferences → Additional views when they are useful; the choice is saved in `workspace.additionalViews` in `.projectroom/project.yaml`. **Run & Verify → Environment** shows required variable names and lets each developer set private values on their own Mac. Documentation browses all Markdown files in `product.docsRoot` with the same folder tree and reader layout as Requirements. Vision is a Markdown file; roadmap entries live in `.projectroom/project.yaml`. Backlog saves local Markdown issues in `product.backlogRoot` (default `backlog/`) and shows optional GitHub or Linear source locations. Live synchronization is still planned.
 

@@ -23,6 +23,7 @@ body[data-theme="dark"] .project-picker,body[data-theme="dark"] .topbar,body[dat
 body[data-theme="dark"] .project-avatar,body[data-theme="dark"] .user-avatar{background:#3a4b5e;color:#d7e4f0}
 body[data-theme="dark"] .project-picker small,body[data-theme="dark"] .breadcrumb,body[data-theme="dark"] .nav-label{color:#8fa1b3}
 body[data-theme="dark"] .nav button,body[data-theme="dark"] .sidebar-bottom button{color:#afbdca}
+body[data-theme="dark"] .nav .count{background:#405265;color:#dbe7f2}
 body[data-theme="dark"] .nav button:hover,body[data-theme="dark"] .sidebar-bottom button:hover,body[data-theme="dark"] .nav button.active,body[data-theme="dark"] .sidebar-bottom button.active{background:#344454;color:#e9f1f8}
 body[data-theme="dark"] .sidebar-bottom{border-color:#354252}
 body[data-theme="dark"] .sidebar-toggle,body[data-theme="dark"] .top-actions .branch,body[data-theme="dark"] .topbar .desktop-chip,body[data-theme="dark"] .topbar .chat-toggle{background:#2a3643;border-color:#3c4b5b;color:#b7c8d8}

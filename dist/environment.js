@@ -28,6 +28,7 @@
     }
     return [...names.values()].sort((a, b) => a.name.localeCompare(b.name));
   }
+  window.projectRoomEnvironmentCount = () => demoVariables().length;
   function load() {
     if (!pv || !projectRoot || loading) return;
     const root = projectRoot;
