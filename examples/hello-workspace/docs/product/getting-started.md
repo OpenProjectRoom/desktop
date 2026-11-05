@@ -1,6 +1,6 @@
 # Getting started
 
-This is a real, deliberately small BuildSteer workspace. It requires Node.js 20 or newer on this Mac.
+This is a real, deliberately small Project Room workspace. It requires Node.js 20 or newer on this Mac.
 
 1. In **Services**, start **Notes web service** and open its local URL.
 2. In **Tests**, run **Node endpoint tests**. Expand the suite to run its test file separately.

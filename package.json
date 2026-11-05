@@ -1,6 +1,6 @@
 {
-  "name": "buildsteer-desktop",
-  "version": "0.9.51",
+  "name": "project-room-desktop",
+  "version": "0.9.52",
   "private": true,
   "description": "Desktop workspace for product specifications, services, tests and project topology",
   "main": "desktop/main.cjs",
@@ -25,9 +25,9 @@
   },
   "build": {
     "appId": "com.openbuildroom.desktop",
-    "productName": "BuildSteer Desktop",
+    "productName": "Project Room",
     "directories": {
-      "output": "../../outputs/buildsteer-desktop"
+      "output": "../../outputs/project-room-desktop"
     },
     "files": [
       "dist/**",
@@ -38,7 +38,7 @@
       "examples/**",
       "schemas/**",
       "productview.yaml",
-      "BUILDSTEER.md",
+      "PROJECT_ROOM.md",
       "package.json"
     ],
     "extraResources": [
@@ -52,12 +52,12 @@
       "icon": "desktop/assets/icon.png",
       "identity": null,
       "extendInfo": {
-        "NSMicrophoneUsageDescription": "BuildSteer records speech only while you dictate into Product Chat.",
-        "NSSpeechRecognitionUsageDescription": "BuildSteer transcribes speech on this Mac for Product Chat."
+        "NSMicrophoneUsageDescription": "Project Room records speech only while you dictate into Product Chat.",
+        "NSSpeechRecognitionUsageDescription": "Project Room transcribes speech on this Mac for Product Chat."
       }
     },
     "dmg": {
-      "title": "BuildSteer Desktop Preview"
+      "title": "Project Room Preview"
     }
   }
 }

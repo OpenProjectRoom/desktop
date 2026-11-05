@@ -230,7 +230,7 @@ function registerIpc() {
   ipcMain.handle('project:example', event => {
     assertSender(event);
     const source = path.join(app.getAppPath(), 'examples', 'hello-workspace');
-    const root = path.join(app.getPath('documents'), 'BuildSteer Examples', 'hello-workspace');
+    const root = path.join(app.getPath('documents'), 'Project Room Examples', 'hello-workspace');
     if (!fs.existsSync(path.join(source, 'productview.yaml'))) throw new Error('The example workspace is missing from this build.');
     if (!fs.existsSync(root)) {
       fs.mkdirSync(path.dirname(root), { recursive: true });
@@ -242,7 +242,7 @@ function registerIpc() {
   });
   ipcMain.handle('project:choose', async event => {
     assertSender(event);
-    const choice = await dialog.showOpenDialog(windowRef, { title: 'Open a BuildSteer workspace', properties: ['openDirectory'] });
+    const choice = await dialog.showOpenDialog(windowRef, { title: 'Open a Project Room workspace', properties: ['openDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return null;
     const root = choice.filePaths[0];
     try {
@@ -304,7 +304,7 @@ function registerIpc() {
   });
   ipcMain.handle('project:discover', async event => {
     assertSender(event);
-    const choice = await dialog.showOpenDialog(windowRef, { title: 'Find BuildSteer workspaces', properties: ['openDirectory'] });
+    const choice = await dialog.showOpenDialog(windowRef, { title: 'Find Project Room workspaces', properties: ['openDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return [];
     return discover(choice.filePaths[0]).map(root => ({ root, name: loadConfig(path.join(root, 'productview.yaml')).config.project.name }));
   });
@@ -362,7 +362,7 @@ function registerIpc() {
   ipcMain.handle('dictation:stop', event => { assertSender(event); if (dictationChild?.exitCode === null) dictationChild.stdin.write('stop\n'); return true; });
   ipcMain.handle('agent:contract', event => {
     assertSender(event);
-    const skill = fs.readFileSync(path.join(app.getAppPath(), 'agent/buildsteer/SKILL.md'), 'utf8');
+    const skill = fs.readFileSync(path.join(app.getAppPath(), 'agent/project-room/SKILL.md'), 'utf8');
     const executable = process.execPath;
     const script = path.join(app.getAppPath(), 'mcp/server.cjs');
     return { skill, schema: fs.readFileSync(path.join(app.getAppPath(), 'schemas/productview.schema.json'), 'utf8'), example: selectedRaw, mcp: { command: executable, args: [script, selectedRoot || '<project-folder>'], env: { ELECTRON_RUN_AS_NODE: '1' } } };
@@ -554,7 +554,7 @@ function registerIpc() {
 function createWindow() {
   windowRef = new BrowserWindow({
     width: 1540, height: 980, minWidth: 950, minHeight: 650,
-    title: 'BuildSteer', backgroundColor: '#f9f9fb',
+    title: 'Project Room', backgroundColor: '#f9f9fb',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });

@@ -60,7 +60,7 @@ function previewSqlite(root, item, table) {
 async function postgres(value, table) {
   if (!value) throw new Error('Set the PostgreSQL connection variable in Environment first.');
   const { Client } = require('pg');
-  const client = new Client({ connectionString: value, connectionTimeoutMillis: 4000, query_timeout: 5000, application_name: 'BuildSteer read-only viewer' });
+  const client = new Client({ connectionString: value, connectionTimeoutMillis: 4000, query_timeout: 5000, application_name: 'Project Room read-only viewer' });
   let connected = false;
   try {
     await client.connect();

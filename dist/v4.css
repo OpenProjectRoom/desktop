@@ -1,4 +1,4 @@
-/* BuildSteer 0.5: quiet light workspace with a floating conversation panel. */
+/* Project Room 0.5: quiet light workspace with a floating conversation panel. */
 :root{--ink:#253332;--muted:#73807f;--line:#e2e7e4;--paper:#f7f8f7;--nav:#f3f5f3;--purple:#496a63;--blue:#607d7a;--green:#2d936f;--shadow:0 4px 22px rgba(28,45,40,.035)}
 body{background:var(--paper);color:var(--ink)}
 .sidebar{background:#f4f6f4;color:#667573;border-right:1px solid #e3e8e5}

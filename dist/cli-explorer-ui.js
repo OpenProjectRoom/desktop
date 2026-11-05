@@ -25,7 +25,7 @@
     const result = trialResults[id];
     const helpOnly = !candidate && item.cli?.helpCommand && JSON.stringify(item.cli.helpCommand) === JSON.stringify(command);
     const note = helpOnly ? 'This linked tool currently runs help only. Update its runtime.command in productview.yaml before testing an operational command.' :
-      'Each line is one argument. BuildSteer runs this exact command locally without a shell when you click Test command. The trial stops after 10 seconds and does not change productview.yaml.';
+      'Each line is one argument. Project Room runs this exact command locally without a shell when you click Test command. The trial stops after 10 seconds and does not change productview.yaml.';
     const help = candidate ? commandCandidateHelp[id] : commandHelp[id];
     const commands = candidate ? [] : (item.cli?.commands || []).filter(entry => !command.includes(entry.name));
     const options = candidate ? commandParsedHelp(help?.output).rows.map(row => ({ flag: row[1], description: row[2] })) : item.cli?.options || [];

@@ -2,7 +2,7 @@ schemaVersion: 1
 project:
   id: hello-workspace
   name: Hello Workspace
-  description: A real, small project for trying BuildSteer.
+  description: A real, small project for trying Project Room.
   version: 1.0.0
 product:
   vision: docs/product/vision.md

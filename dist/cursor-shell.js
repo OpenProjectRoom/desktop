@@ -1,4 +1,4 @@
-/* Minimal desktop shell around BuildSteer's workspace pages. */
+/* Minimal desktop shell around Project Room's workspace pages. */
 (() => {
   document.body.classList.add('cursor-shell');
   const app = document.querySelector('.app');

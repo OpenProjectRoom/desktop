@@ -155,7 +155,7 @@ function inspectCliHelp(root, config, id, helpArg) {
 function linkCliTool(root, id, helpArg) {
   const base = fs.realpathSync(root);
   const file = path.join(base, 'productview.yaml');
-  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('BuildSteer cannot edit a linked configuration file.');
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const item = candidate(base, current.config, id);
   if (item.linkedId) throw new Error('This CLI entry point is already linked in productview.yaml.');

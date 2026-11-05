@@ -19,7 +19,7 @@ export async function handleRequest(request, response) {
   }
   if (request.url === '/') {
     response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    response.end(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Hello Workspace</title><style>body{font:16px system-ui;max-width:680px;margin:12vh auto;padding:0 24px;color:#172435}a{color:#356282}code{background:#eef3f5;padding:3px 6px;border-radius:4px}</style><h1>Hello Workspace</h1><p>This tiny app is running from a real BuildSteer workspace.</p><p>Try <a href="/api/notes">the notes API</a> and <a href="/health">the health check</a>. In BuildSteer, stop the service, run the tests, inspect the data folder, and read the Spec Kit feature.</p><p>Source: <code>app/server.mjs</code></p></html>`);
+    response.end(`<!doctype html><html lang="en"><meta charset="utf-8"><title>Hello Workspace</title><style>body{font:16px system-ui;max-width:680px;margin:12vh auto;padding:0 24px;color:#172435}a{color:#356282}code{background:#eef3f5;padding:3px 6px;border-radius:4px}</style><h1>Hello Workspace</h1><p>This tiny app is running from a real Project Room workspace.</p><p>Try <a href="/api/notes">the notes API</a> and <a href="/health">the health check</a>. In Project Room, stop the service, run the tests, inspect the data folder, and read the Spec Kit feature.</p><p>Source: <code>app/server.mjs</code></p></html>`);
     return;
   }
   response.writeHead(404, { 'content-type': 'text/plain' });

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { renderChatMarkdown } = require('../dist/chat-markdown.js');
 
 test('agent answers render readable Markdown in a narrow chat panel', () => {
-  const result = renderChatMarkdown('BuildSteer lists **9 configured components**:\n\n| Type | Components |\n|---|---|\n| Services | API; Worker |\n\n- Check the [service guide](https://example.com/guide)\n- Run `npm test`');
+  const result = renderChatMarkdown('Project Room lists **9 configured components**:\n\n| Type | Components |\n|---|---|\n| Services | API; Worker |\n\n- Check the [service guide](https://example.com/guide)\n- Run `npm test`');
   assert.match(result, /<strong>9 configured components<\/strong>/);
   assert.match(result, /<table>.*<th scope="col">Type<\/th>.*<td>API; Worker<\/td>.*<\/table>/);
   assert.match(result, /<ul><li>Check the <a href="https:\/\/example\.com\/guide"/);

@@ -36,7 +36,7 @@ function detect(root) {
   return { components: findings, connections };
 }
 function createWorkspace(root, mode = 'auto') {
-  if (fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('This folder already has a BuildSteer workspace. Open it instead.');
+  if (fs.existsSync(path.join(root, 'productview.yaml'))) throw new Error('This folder already has a Project Room workspace. Open it instead.');
   const name = path.basename(root).replace(/[-_]/g, ' ') || 'New Product';
   const discovered = mode === 'blank' ? { components: [], connections: [] } : detect(root);
   if (!discovered.components.length) {

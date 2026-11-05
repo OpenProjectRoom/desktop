@@ -1,8 +1,8 @@
 ---
 name: openbuildroom
-description: Legacy name for the BuildSteer agent guide.
+description: Legacy name for the Project Room agent guide.
 ---
 
-# BuildSteer agent guide
+# Project Room agent guide
 
-The current guide is [agent/buildsteer/SKILL.md](../buildsteer/SKILL.md). Use that guide and the repository's `productview.yaml` schema for all new work.
+The current guide is [agent/project-room/SKILL.md](../project-room/SKILL.md). Use that guide and the repository's `productview.yaml` schema for all new work.

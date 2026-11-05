@@ -1,18 +1,20 @@
-# BuildSteer Desktop
+# Project Room
 
 **Your control room for the software your agent builds.** See the plan. Run the app. Check the tests. Know what is happening as your product grows.
 
-BuildSteer is a free, open-source macOS desktop app for local software projects. It puts the product vision, [GitHub Spec Kit](https://github.com/github/spec-kit) work, services, tests, data, API, CLI and MCP explorers, and recorded activity beside the code. A product owner can keep the direction visible while developers and coding agents work in the same repository.
+Project Room is a free, open-source macOS desktop app for local software projects. It puts the product vision, [GitHub Spec Kit](https://github.com/github/spec-kit) work, services, tests, data, API, CLI and MCP explorers, and recorded activity beside the code. A product owner can keep the direction visible while developers and coding agents work in the same repository.
 
-[![BuildSteer overview showing the running Hello Workspace service and a passed test run](assets/screenshots/overview-focused.png)](assets/screenshots/overview-readable.png)
+[Website](https://openprojectroom.com/) · [Latest Mac release](https://github.com/OpenProjectRoom/desktop/releases/latest) · [Agent guide](agent/project-room/SKILL.md)
+
+[![Project Room overview showing the running Hello Workspace service and a passed test run](assets/screenshots/overview-focused.png)](assets/screenshots/overview-readable.png)
 
 The focused screenshot shows the **real included example** after starting its service and running its tests. Click it for the full window. Performance measurements and live GitHub/Linear issue sync are not implemented yet; the app labels those gaps.
 
 ## Try it in five minutes
 
-1. Download the [Apple Silicon Mac preview (v0.9.51)](https://github.com/BuildSteer/desktop/releases/download/v0.9.51/BuildSteer-Desktop-0.9.51-arm64-mac.zip), unzip it, and move **BuildSteer Desktop.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
+1. Download the [Apple Silicon Mac preview](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications. This preview is unsigned and unnotarized, so macOS may require an explicit open in **System Settings → Privacy & Security**.
 2. Have [Node.js 20+](https://nodejs.org/) installed for the working example's service and tests. The desktop app itself does not require Node.js.
-3. Open the app and click **Try working example**. It copies a small project to `~/Documents/BuildSteer Examples/hello-workspace` and opens it without starting anything.
+3. Open the app and click **Try working example**. It copies a small project to `~/Documents/Project Room Examples/hello-workspace` and opens it without starting anything.
 4. Start **Notes web service** in Services and open its local URL. Try `GET /health` and `GET /api/notes` in **API Explorer**. Run **Node endpoint tests** in Tests, inspect `notes.json` in Data Sources, then open the linked feature in Requirements.
 
 The example is [here in the repository](examples/hello-workspace). It has a real Node service, local JSON storage, tests, a constitution, and standard Spec Kit `specs/001-notes/` artifacts. No account, database server, secret, or cloud deployment is needed.
@@ -31,9 +33,9 @@ The example is [here in the repository](examples/hello-workspace). It has a real
 
 ## Use it with your own repository
 
-Open a project folder in the desktop app. If `productview.yaml` does not exist yet, the onboarding flow inspects local project files and prepares a prompt for your installed Codex CLI or Claude Code. The agent reads the [repository contract](BUILDSTEER.md), [agent skill](agent/buildsteer/SKILL.md), and [YAML schema](schemas/productview.schema.json), then records **verified** commands and components in `productview.yaml` at the repository root.
+Open a project folder in the desktop app. If `productview.yaml` does not exist yet, the onboarding flow inspects local project files and prepares a prompt for your installed Codex CLI or Claude Code. The agent reads the [repository contract](PROJECT_ROOM.md), [agent skill](agent/project-room/SKILL.md), and [YAML schema](schemas/productview.schema.json), then records **verified** commands and components in `productview.yaml` at the repository root.
 
-Keep product specifications in Spec Kit's normal `.specify/` and `specs/` files. BuildSteer reads them and adds optional traceability links in YAML; it does not create a second specification tree. Services, tests, data sources, MCP servers, and API requests run or connect only after a manual action. Local environment **values** stay outside the repository; YAML stores their names.
+Keep product specifications in Spec Kit's normal `.specify/` and `specs/` files. Project Room reads them and adds optional traceability links in YAML; it does not create a second specification tree. Services, tests, data sources, MCP servers, and API requests run or connect only after a manual action. Local environment **values** stay outside the repository; YAML stores their names.
 
 The packaged Blackbox Agent B workspace is an **interactive simulation**. Choose **Try working example** or open your own configured repository for real local actions. See the [getting started guide](docs/product/getting-started.md) and [architecture notes](docs/product/architecture.md) for the current behavior and boundaries.
 
@@ -48,6 +50,6 @@ npm start
 
 On Apple Silicon macOS, `npm run package:mac:app` builds an app bundle. The first public releases are unsigned while Apple Developer signing and notarization are being set up. Windows and Linux packages have not been tested.
 
-We welcome focused [bug reports and feature requests](https://github.com/BuildSteer/desktop/issues), discussions about missing workflows, and pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. For sensitive reports, see [SECURITY.md](SECURITY.md).
+We welcome focused [bug reports and feature requests](https://github.com/OpenProjectRoom/desktop/issues), discussions about missing workflows, and pull requests. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. For sensitive reports, see [SECURITY.md](SECURITY.md).
 
 MIT licensed. See [LICENSE](LICENSE).

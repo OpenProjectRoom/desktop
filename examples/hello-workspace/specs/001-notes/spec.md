@@ -4,7 +4,7 @@
 
 ### User Story 1 - Inspect notes (Priority: P1)
 
-As a developer trying BuildSteer, I can open the notes API and see the same data listed in Data Sources.
+As a developer trying Project Room, I can open the notes API and see the same data listed in Data Sources.
 
 **Acceptance Scenario:** Given the service is running, when I visit `/api/notes`, then I receive the notes from `data/notes.json`.
 

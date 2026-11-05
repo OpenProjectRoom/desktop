@@ -50,7 +50,7 @@
   }
 
   function page() {
-    return `<div class="api-shell"><div class="page-head"><div><div class="eyebrow">BUILDSTEER / RUN & VERIFY</div><h1>API Explorer</h1><p>Browse project HTTP endpoints, compose a request, and inspect the real response.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add API', 'add', true, !pv || !projectRoot)}</div></div><div class="api-layout"><section class="card api-sources"><div class="api-pane-title"><strong>Project APIs</strong><span>${sources.length} found</span></div>${sourceList()}<p class="api-discovery-note">OpenAPI 3.x files are discovered locally. Add a base URL to <code>productview.yaml</code> to make requests. Tokens stay in local Environment.</p></section><section class="card api-main">${main()}</section></div>${!projectRoot ? '<p class="api-preview-note">Open a local repository in the desktop app to discover files and send real requests. The browser preview cannot access local APIs.</p>' : ''}${error ? `<div class="api-alert" role="alert">${safe(error)}</div>` : ''}</div>`;
+    return `<div class="api-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>API Explorer</h1><p>Browse project HTTP endpoints, compose a request, and inspect the real response.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add API', 'add', true, !pv || !projectRoot)}</div></div><div class="api-layout"><section class="card api-sources"><div class="api-pane-title"><strong>Project APIs</strong><span>${sources.length} found</span></div>${sourceList()}<p class="api-discovery-note">OpenAPI 3.x files are discovered locally. Add a base URL to <code>productview.yaml</code> to make requests. Tokens stay in local Environment.</p></section><section class="card api-main">${main()}</section></div>${!projectRoot ? '<p class="api-preview-note">Open a local repository in the desktop app to discover files and send real requests. The browser preview cannot access local APIs.</p>' : ''}${error ? `<div class="api-alert" role="alert">${safe(error)}</div>` : ''}</div>`;
   }
 
   const modalRoot = document.getElementById('modalRoot');
@@ -78,7 +78,7 @@
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === 'api'));
     document.querySelector('.breadcrumb').innerHTML = workspaceBreadcrumb('API Explorer');
     document.getElementById('content').innerHTML = page();
-    document.title = 'API Explorer · BuildSteer';
+    document.title = 'API Explorer · Project Room';
     renderPanel();
   };
   document.addEventListener('click', async event => {

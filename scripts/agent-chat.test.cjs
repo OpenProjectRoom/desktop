@@ -16,7 +16,7 @@ test('personal agent settings and MCP invocation stay outside the repository', (
     assert.deepEqual(saved, chat.readSettings(userData));
     assert.equal(fs.existsSync(path.join(root, 'agent-chat-settings.json')), false);
     const prompt = chat.promptFor([{ role: 'user', text: 'What tests are configured?' }], root);
-    assert.match(prompt, /BuildSteer MCP/);
+    assert.match(prompt, /Project Room MCP/);
     const codex = chat.invocation(saved, root, '/path/to/electron', '/path/to/mcp/server.cjs', prompt, base);
     assert.ok(codex.args.includes('read-only'));
     assert.ok(codex.args.some(arg => arg.includes('mcp_servers.product_view.command')));

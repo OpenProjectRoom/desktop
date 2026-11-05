@@ -13,7 +13,7 @@ function ensureHistory(root) {
   const dir = historyDir(root);
   fs.mkdirSync(path.join(dir, 'logs'), { recursive: true });
   const readme = path.join(dir, 'README.md');
-  if (!fs.existsSync(readme)) fs.writeFileSync(readme, '# BuildSteer history\n\n`events.jsonl` records app and agent activity. `logs/` contains service and test output. These files are part of this repository and can be committed for teammates. Review logs and prompts before committing; output from project commands may contain private data.\n');
+  if (!fs.existsSync(readme)) fs.writeFileSync(readme, '# Project Room history\n\n`events.jsonl` records app and agent activity. `logs/` contains service and test output. These files are part of this repository and can be committed for teammates. Review logs and prompts before committing; output from project commands may contain private data.\n');
   return dir;
 }
 function appendEvent(root, type, details = {}) {

@@ -19,8 +19,8 @@ const tools = [
   { name: 'get_product_context', description: 'Read the product vision, roadmap, local backlog, and Markdown documentation.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'list_components', description: 'List the project components and their connections.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } },
   { name: 'read_project_file', description: 'Read a UTF-8 project file such as a specification. Paths must stay inside the workspace.', inputSchema: { type: 'object', properties: { path: { type: 'string' } }, required: ['path'], additionalProperties: false } },
-  { name: 'get_product_history', description: 'Read recent BuildSteer events, including agent sessions, commands, tests, prompts, and file changes.', inputSchema: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 100 } }, additionalProperties: false } },
-  { name: 'get_spec_kit', description: 'Detect Spec Kit feature artifacts and read their BuildSteer links and recorded test evidence. Runtime process state is not observed through this MCP server.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } }
+  { name: 'get_product_history', description: 'Read recent Project Room events, including agent sessions, commands, tests, prompts, and file changes.', inputSchema: { type: 'object', properties: { limit: { type: 'integer', minimum: 1, maximum: 100 } }, additionalProperties: false } },
+  { name: 'get_spec_kit', description: 'Detect Spec Kit feature artifacts and read their Project Room links and recorded test evidence. Runtime process state is not observed through this MCP server.', inputSchema: { type: 'object', properties: {}, additionalProperties: false } }
 ];
 let client = 'unknown-client';
 let connected = false;
@@ -68,7 +68,7 @@ readline.createInterface({ input: process.stdin, crlfDelay: Infinity }).on('line
       client = String(params.clientInfo?.name || 'unknown-client').slice(0, 100);
       connected = true;
       appendEvent(root, 'agent.connected', { client, clientVersion: params.clientInfo?.version || null, transport: 'stdio' });
-      result(id, { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'buildsteer', version: require('../package.json').version }, instructions: 'Read productview.yaml, get_product_context, and the BuildSteer skill before changing product behavior. This MCP endpoint is read-only; edit repository files with your coding tools, then validate.' });
+      result(id, { protocolVersion: '2025-11-25', capabilities: { tools: {} }, serverInfo: { name: 'project-room', version: require('../package.json').version }, instructions: 'Read productview.yaml, get_product_context, and the Project Room skill before changing product behavior. This MCP endpoint is read-only; edit repository files with your coding tools, then validate.' });
     } else if (method === 'ping') result(id, {});
     else if (method === 'tools/list') result(id, { tools });
     else if (method === 'tools/call') result(id, callTool(params.name, params.arguments || {}));

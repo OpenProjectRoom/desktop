@@ -2,7 +2,7 @@
 
 Make software product development visible and understandable in one shared workspace.
 
-BuildSteer connects product intent with the code, services, tests, data and history in a repository. A product manager can shape the vision and roadmap, while coding agents and developers can read the same source of truth before making changes.
+Project Room connects product intent with the code, services, tests, data and history in a repository. A product manager can shape the vision and roadmap, while coding agents and developers can read the same source of truth before making changes.
 
 ## For whom
 

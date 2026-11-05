@@ -1,6 +1,6 @@
-# BuildSteer instructions for coding agents
+# Project Room instructions for coding agents
 
-Read `BUILDSTEER.md` and `productview.yaml` before changing the product's architecture or development workflow. Keep the BuildSteer map in sync with code: add or update a component when introducing a service, command tool, database, test suite, specification, storage system, or issue source. Add connections that explain dependencies. Keep IDs stable across renames. Validate with `npm run validate:config`.
+Read `PROJECT_ROOM.md` and `productview.yaml` before changing the product's architecture or development workflow. Keep the Project Room map in sync with code: add or update a component when introducing a service, command tool, database, test suite, specification, storage system, or issue source. Add connections that explain dependencies. Keep IDs stable across renames. Validate with `npm run validate:config`.
 
 Before proposing or implementing product behavior, read `product.vision`, `product.roadmap`, and the relevant `product.documentation` files in `productview.yaml`. Treat `draft` and `planned` roadmap entries as intent, not implemented behavior. Update the roadmap status and documentation when delivery changes the product, and preserve stable roadmap and document IDs.
 

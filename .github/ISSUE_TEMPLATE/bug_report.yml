@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible BuildSteer Desktop problem.
+description: Report a reproducible Project Room problem.
 title: "[Bug] "
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
     id: version
     attributes:
       label: Desktop version and macOS version
-      placeholder: BuildSteer 0.9.44, macOS 15.x
+      placeholder: Project Room 0.9.44, macOS 15.x
     validations:
       required: true
   - type: textarea

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://productview.local/schemas/productview.schema.json",
-  "title": "BuildSteer project configuration",
+  "title": "Project Room project configuration",
   "type": "object",
   "required": ["schemaVersion", "project", "components", "connections"],
   "properties": {
