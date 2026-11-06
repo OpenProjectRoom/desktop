@@ -25,7 +25,7 @@ Use this in the coding agent already working in your repository. Spec Kit is opt
 <details><summary>Show the copyable existing-repository prompt</summary>
 
 ```text
-Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Inspect the project without changing files. Summarize what you found, whether it uses GitHub Spec Kit, what Project Room could show, and what is uncertain. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide.
+Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Inspect the project without changing files. Summarize what you found, whether it uses GitHub Spec Kit, what Project Room could show, and what is uncertain. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide. Finish with the Mac download and installation steps, the exact folder to open in Project Room, and what I should verify there first.
 ```
 
 </details>
@@ -41,7 +41,7 @@ Build [my app idea] for [my audience] in this folder with Git, the official GitH
 
 Read the Project Room guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) and schema (https://github.com/OpenProjectRoom/desktop/blob/main/schemas/projectroom.schema.json). Keep the constitution, specs, plans, and tasks in Spec Kit's standard files. Create .projectroom/project.yaml from real code and commands as they appear; no parallel spec tree, invented components, or secrets. Use manual startup and validate the YAML.
 
-Finish by telling me which folder to open in Project Room, what you configured, what remains uncertain, and what I should check there first.
+Finish with the Mac download and installation steps, the exact folder to open in Project Room, what you configured, what remains uncertain, and what I should verify there first.
 ```
 
 </details>
