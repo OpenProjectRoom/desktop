@@ -133,7 +133,7 @@ The optional `product.northStar` has a metric `name`, a clear counting `descript
 
 ## Local backlog
 
-**Backlog** works without GitHub or Linear. Its default repository folder is `backlog/`; optional `product.backlogRoot` selects another folder. Project Room creates the folder when the first issue is saved. Each issue is one Markdown file with YAML frontmatter: stable `id`, `title`, `status`, `priority`, `type`, dates, and an optional `spec` link. The Markdown body holds the problem, outcome and acceptance criteria. The page lists local entries beside Spec Kit feature, bug and idea artifacts, with type filters and a detail reader. Local entries can be created or edited. Changing status updates frontmatter without moving the file. Review and commit the issue files with the project.
+**Backlog** works without GitHub or Linear. Its default repository folder is `backlog/`; optional `product.backlogRoot` selects another folder. Project Room creates the folder when the first issue is saved. Each issue is one Markdown file with YAML frontmatter: stable `id`, `title`, `status`, `priority`, `type`, dates, and an optional `spec` link. The Markdown body holds the problem, outcome and acceptance criteria. The page lists local entries beside Spec Kit feature, bug and idea artifacts, with All, Ideas, Features and Bugs filters and a detail reader. Spec Kit `tasks.md` progress belongs to its feature, not a separate Backlog filter. Existing local entries of type `task` remain visible under All. Local entries can be created or edited. Changing status updates frontmatter without moving the file. Review and commit the issue files with the project.
 
 A typical issue file is `backlog/pv-001-improve-onboarding.md`:
 

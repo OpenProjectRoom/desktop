@@ -1,6 +1,6 @@
 {
   "name": "project-room-desktop",
-  "version": "0.9.77",
+  "version": "0.9.78",
   "private": true,
   "description": "Desktop workspace for product specifications, services, tests and project topology",
   "main": "desktop/main.cjs",
