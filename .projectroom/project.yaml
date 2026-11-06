@@ -48,7 +48,7 @@ product:
       relatedComponents: [product-spec, web, api]
     - id: desktop-security-baseline
       title: Desktop security baseline
-      summary: Restrict packaged scripts and IPC to the app frame, reject linked history paths, ignore local logs by default, and bound project YAML input.
+      summary: Restrict packaged scripts and IPC to the app frame, reject linked history paths, ignore local logs by default, bound project YAML input, and pin CI actions.
       status: done
       relatedComponents: [web]
     - id: local-agent-chat
