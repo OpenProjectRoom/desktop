@@ -11,7 +11,8 @@ test('personal agent settings and MCP invocation stay outside the repository', (
     const userData = path.join(base, 'user-data');
     const root = path.join(base, 'project');
     fs.mkdirSync(root);
-    fs.writeFileSync(path.join(root, 'productview.yaml'), 'schemaVersion: 1\n');
+    fs.mkdirSync(path.join(root, '.projectroom'));
+    fs.writeFileSync(path.join(root, '.projectroom/project.yaml'), 'schemaVersion: 1\n');
     const saved = chat.saveSettings(userData, { provider: 'codex', mode: 'inspect' });
     assert.deepEqual(saved, chat.readSettings(userData));
     assert.equal(fs.existsSync(path.join(root, 'agent-chat-settings.json')), false);

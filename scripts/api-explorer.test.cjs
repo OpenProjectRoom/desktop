@@ -23,10 +23,11 @@ test('OpenAPI parameter fields produce a concrete request while unsupported uplo
 });
 
 function fixture(t) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'openbuildroom-api-'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-api-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   fs.mkdirSync(path.join(root, 'specs', '001-orders', 'contracts'), { recursive: true });
-  fs.writeFileSync(path.join(root, 'productview.yaml'), 'schemaVersion: 1\nproject: {id: api-test, name: API Test}\ncomponents:\n  - {id: web, kind: service, name: Web, position: {x: 1, y: 1}, runtime: {command: [node, app.js], startup: manual}}\nconnections: []\n');
+  fs.mkdirSync(path.join(root, '.projectroom'));
+  fs.writeFileSync(path.join(root, '.projectroom/project.yaml'), 'schemaVersion: 1\nproject: {id: api-test, name: API Test}\ncomponents:\n  - {id: web, kind: service, name: Web, position: {x: 1, y: 1}, runtime: {command: [node, app.js], startup: manual}}\nconnections: []\n');
   fs.writeFileSync(path.join(root, 'specs', '001-orders', 'contracts', 'openapi.yaml'), 'openapi: 3.0.3\ninfo: {title: Orders API, version: 1.2.0}\npaths:\n  /orders:\n    get: {summary: List orders, responses: {"200": {description: OK}}}\n  /orders/{id}:\n    post: {summary: Update order, responses: {"200": {description: OK}}}\n');
   return root;
 }
@@ -40,7 +41,7 @@ test('discovers real OpenAPI operations and manages multiple YAML sources', t =>
   const second = addApiSource(root, { name: 'Analytics API', baseUrl: 'https://api.example.test' });
   assert.equal(listApiSources(root, second.config).filter(item => item.linked).length, 2);
   assert.equal(listApiSources(root, second.config).filter(item => !item.linked).length, 0);
-  assert.match(fs.readFileSync(path.join(root, 'productview.yaml'), 'utf8'), /authEnv: ORDERS_TOKEN/);
+  assert.match(fs.readFileSync(path.join(root, '.projectroom/project.yaml'), 'utf8'), /authEnv: ORDERS_TOKEN/);
   const after = removeApiSource(root, first.id);
   assert.deepEqual(after.config.workspace.apiSources.map(item => item.id), [second.id]);
   assert.equal(discoverSpecs(root).length, 1);
@@ -76,7 +77,7 @@ test('rejects credentials in YAML URLs and files outside the repository', t => {
   assert.throws(() => addApiSource(root, { name: 'Bad', baseUrl: 'https://user:secret@example.com' }), /credentials/);
   assert.throws(() => addApiSource(root, { name: 'Bad', baseUrl: 'http://example.com' }), /HTTPS/);
   assert.throws(() => addApiSource(root, { name: 'Bad', baseUrl: 'https://example.com', spec: '../outside.yaml' }), /relative/);
-  assert.equal(loadConfig(path.join(root, 'productview.yaml')).config.workspace, undefined);
+  assert.equal(loadConfig(path.join(root, '.projectroom/project.yaml')).config.workspace, undefined);
 });
 
 test('sends explicit request, uses local Bearer token and redacts echoed secrets', async t => {

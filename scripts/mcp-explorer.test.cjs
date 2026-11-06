@@ -25,7 +25,8 @@ test('MCP discovery stays read-only and the built-in server can be inspected and
   const appPath = path.resolve(__dirname, '..');
   const events = [];
   try {
-    fs.copyFileSync(path.join(appPath, '.projectroom/project.yaml'), path.join(root, 'productview.yaml'));
+    fs.mkdirSync(path.join(root, '.projectroom'));
+    fs.copyFileSync(path.join(appPath, '.projectroom/project.yaml'), path.join(root, '.projectroom/project.yaml'));
     fs.writeFileSync(path.join(root, '.mcp.json'), JSON.stringify({ mcpServers: {
       local: { command: process.execPath, args: [path.join(appPath, 'mcp/server.cjs'), root], env: { LOCAL_TOKEN: 'private-value' } }
     } }));

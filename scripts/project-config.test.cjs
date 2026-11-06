@@ -16,22 +16,21 @@ test('new workspaces use a hidden, Git-trackable project configuration', t => {
   assert.equal(created.root, root);
   assert.equal(created.file, path.join(root, CONFIG_RELATIVE));
   assert.equal(hasConfig(root), true);
-  assert.equal(fs.existsSync(path.join(root, 'productview.yaml')), false);
   assert.deepEqual(discover(base), [root]);
   addWorkspace(userData, root);
   assert.deepEqual(readRegistry(userData), [fs.realpathSync(root)]);
 });
 
-test('legacy project configuration still opens and remains the file being edited', t => {
-  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-legacy-'));
+test('only the canonical project configuration opens as a workspace', t => {
+  const base = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-config-only-'));
   t.after(() => fs.rmSync(base, { recursive: true, force: true }));
-  const root = path.join(base, 'legacy');
-  const userData = path.join(base, 'app-data');
+  const root = path.join(base, 'project');
   fs.mkdirSync(root);
   fs.copyFileSync(path.join(__dirname, '..', CONFIG_RELATIVE), path.join(root, 'productview.yaml'));
-  assert.equal(configPath(root), path.join(root, 'productview.yaml'));
-  assert.equal(loadConfig(configPath(root)).root, root);
-  addWorkspace(userData, root);
-  assert.deepEqual(readRegistry(userData), [fs.realpathSync(root)]);
-  assert.throws(() => createWorkspace(root), /already has/);
+  assert.equal(configPath(root), path.join(root, CONFIG_RELATIVE));
+  assert.equal(hasConfig(root), false);
+  assert.deepEqual(discover(base), []);
+  const created = createWorkspace(root, 'blank');
+  assert.equal(created.file, configPath(root));
+  assert.equal(loadConfig(created.file).root, root);
 });

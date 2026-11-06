@@ -9,7 +9,6 @@ fs.copyFileSync(path.resolve(__dirname, '../agent/project-room/SKILL.md'), path.
 fs.copyFileSync(path.resolve(__dirname, '../schemas/projectroom.schema.json'), path.resolve(__dirname, '../dist/projectroom.schema.json'));
 fs.mkdirSync(path.resolve(__dirname, '../dist/.projectroom'), { recursive: true });
 fs.copyFileSync(path.resolve(__dirname, '../.projectroom/project.yaml'), path.resolve(__dirname, '../dist/.projectroom/project.yaml'));
-fs.rmSync(path.resolve(__dirname, '../dist/productview.yaml'), { force: true });
 for (const relative of [config.product?.vision].filter(Boolean)) {
   const destination = path.resolve(__dirname, '../dist', relative);
   fs.mkdirSync(path.dirname(destination), { recursive: true });

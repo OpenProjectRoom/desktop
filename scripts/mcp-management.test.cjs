@@ -8,8 +8,9 @@ const { McpExplorer } = require('../desktop/mcp-explorer.cjs');
 const { loadConfig } = require('./config.cjs');
 
 function fixture() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-mcp-management-'));
-  fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), path.join(root, 'productview.yaml'));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-mcp-management-'));
+  fs.mkdirSync(path.join(root, '.projectroom'));
+  fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), path.join(root, '.projectroom/project.yaml'));
   return root;
 }
 
@@ -29,13 +30,13 @@ test('multiple manual and discovered MCP servers persist independently in YAML',
     assert.deepEqual(new Set(configured.map(item => item.id)), new Set([first.id, second.id, manual.id, remote.id]));
     assert.deepEqual(configured.find(item => item.id === first.id).environment, ['PRIVATE_TOKEN']);
     assert.equal(configured.find(item => item.id === first.id).linkedFrom, '.mcp.json:alpha');
-    assert.equal(fs.readFileSync(path.join(root, 'productview.yaml'), 'utf8').includes('literal-secret'), false);
+    assert.equal(fs.readFileSync(path.join(root, '.projectroom/project.yaml'), 'utf8').includes('literal-secret'), false);
     assert.throws(() => linkMcpServer(root, '.mcp.json:alpha'), /already linked/);
-    const explorer = new McpExplorer({ getRoot: () => root, getConfig: () => loadConfig(path.join(root, 'productview.yaml')).config,
+    const explorer = new McpExplorer({ getRoot: () => root, getConfig: () => loadConfig(path.join(root, '.projectroom/project.yaml')).config,
       getEnvironment: () => null });
     assert.equal(explorer.list().find(item => item.id === '.mcp.json:alpha').linkedId, first.id);
     removeMcpServer(root, first.id);
-    const after = loadConfig(path.join(root, 'productview.yaml')).config.workspace.mcpServers;
+    const after = loadConfig(path.join(root, '.projectroom/project.yaml')).config.workspace.mcpServers;
     assert.equal(after.length, 3);
     assert.equal(after.some(item => item.id === second.id), true);
     assert.equal(fs.existsSync(path.join(root, '.mcp.json')), true);
@@ -48,7 +49,7 @@ test('two MCP server sessions can stay connected and disconnect separately', asy
   try {
     for (const name of ['First test server', 'Second test server']) addMcpServer(root, { name, transport: 'stdio', command: process.execPath,
       args: `${path.join(appPath, 'mcp/server.cjs')}\n${root}`, cwd: '.' });
-    const explorer = new McpExplorer({ getRoot: () => root, getConfig: () => loadConfig(path.join(root, 'productview.yaml')).config,
+    const explorer = new McpExplorer({ getRoot: () => root, getConfig: () => loadConfig(path.join(root, '.projectroom/project.yaml')).config,
       getEnvironment: () => null, record: () => {} });
     try {
       const ids = explorer.list().filter(item => item.id.startsWith('yaml:')).map(item => item.id);
@@ -68,7 +69,7 @@ test('two MCP server sessions can stay connected and disconnect separately', asy
 test('invalid MCP registrations do not change YAML', () => {
   const root = fixture();
   try {
-    const file = path.join(root, 'productview.yaml');
+    const file = path.join(root, '.projectroom/project.yaml');
     const original = fs.readFileSync(file, 'utf8');
     assert.throws(() => addMcpServer(root, { name: 'Bad', transport: 'http', url: 'https://example.com/mcp?token=private' }), /clean endpoint/);
     assert.throws(() => addMcpServer(root, { name: 'Bad', transport: 'stdio', command: 'node', cwd: '../outside' }), /relative project path/);

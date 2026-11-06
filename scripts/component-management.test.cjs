@@ -11,7 +11,8 @@ const { loadConfig } = require('./config.cjs');
 test('manual CLI and data sources persist in YAML and removal clears references only', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-component-management-'));
   try {
-    const file = path.join(root, 'productview.yaml');
+    const file = path.join(root, '.projectroom/project.yaml');
+    fs.mkdirSync(path.dirname(file));
     fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
     const first = addCliTool(root, { name: 'Inspector', executable: 'node', args: 'tools/inspect.cjs\nscan', cwd: '.', mode: 'task', summary: 'Inspects project state', usage: 'node tools/inspect.cjs scan', helpArg: '--help' });
     const second = addCliTool(root, { name: 'Inspector', executable: 'node', args: 'tools/other.cjs', mode: 'server', summary: 'Runs another tool', usage: 'node tools/other.cjs' });
@@ -41,7 +42,8 @@ test('manual CLI and data sources persist in YAML and removal clears references 
 test('invalid CLI input never changes repository YAML', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-component-management-'));
   try {
-    const file = path.join(root, 'productview.yaml');
+    const file = path.join(root, '.projectroom/project.yaml');
+    fs.mkdirSync(path.dirname(file));
     fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
     const original = fs.readFileSync(file, 'utf8');
     assert.throws(() => addCliTool(root, { name: 'Bad', executable: 'node', args: 'x', mode: 'task', summary: 'Bad', usage: 'bad', cwd: '../other' }), /relative project path/);

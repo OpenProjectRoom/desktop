@@ -8,4 +8,4 @@
 
 ## Product context
 
-Which Spec Kit artifact, roadmap item, or documentation page describes this change? If component behavior changed, was `productview.yaml` updated?
+Which Spec Kit artifact, roadmap item, or documentation page describes this change? If component behavior changed, was `.projectroom/project.yaml` updated?

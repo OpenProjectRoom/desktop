@@ -1,6 +1,6 @@
 # Project Room · repository contract (prototype 0.9.65)
 
-Project Room is an installable desktop workspace for a software repository. It reads `.projectroom/project.yaml` from the selected project folder and renders a connected map of runtime services, databases, storage, and long-running command servers. Specifications, tests, issue sources, and external links have their own views. The YAML belongs in the project repository so other developers see the same product model.
+Project Room is an installable desktop workspace for a software repository. It reads only `.projectroom/project.yaml` from the selected project folder and renders a connected map of runtime services, databases, storage, and long-running command servers. Specifications, tests, issue sources, and external links have their own views. The YAML belongs in the project repository so other developers see the same product model.
 
 The **Overview** page summarizes service state, recorded test runs, issue sources, performance availability and specifications. In the interactive demo it shows clearly labeled sample results. In a local workspace it uses recorded data and marks integrations that are not connected. The **Project Map** remains a separate architecture view. Set `workspace.startPage: overview` to open the summary first, or `workspace.startPage: map` to open the map. Other page names in the schema are also valid start pages.
 

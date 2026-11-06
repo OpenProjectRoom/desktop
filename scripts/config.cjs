@@ -7,16 +7,13 @@ const schema = require('../schemas/projectroom.schema.json');
 const ajv = new Ajv({ allErrors: true, strict: false });
 const validate = ajv.compile(schema);
 const CONFIG_RELATIVE = '.projectroom/project.yaml';
-const LEGACY_CONFIG_RELATIVE = 'productview.yaml';
 
 function configPath(root) {
   const current = path.join(root, CONFIG_RELATIVE);
-  const legacy = path.join(root, LEGACY_CONFIG_RELATIVE);
   const folder = path.dirname(current);
   if (fs.existsSync(folder) && fs.lstatSync(folder).isSymbolicLink()) throw new Error('Project Room configuration folder cannot be a symbolic link.');
   if (fs.existsSync(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error('Project Room configuration file cannot be a symbolic link.');
-  if (fs.existsSync(legacy) && fs.lstatSync(legacy).isSymbolicLink()) throw new Error('Legacy configuration file cannot be a symbolic link.');
-  return fs.existsSync(current) ? current : fs.existsSync(legacy) ? legacy : current;
+  return current;
 }
 
 function hasConfig(root) {
@@ -113,4 +110,4 @@ function loadConfig(filePath) {
   return { config, raw, root, file: filePath };
 }
 
-module.exports = { loadConfig, parseConfig, configPath, hasConfig, CONFIG_RELATIVE, LEGACY_CONFIG_RELATIVE };
+module.exports = { loadConfig, parseConfig, configPath, hasConfig, CONFIG_RELATIVE };
