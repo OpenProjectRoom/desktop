@@ -4,17 +4,61 @@
 
 Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens the **same local repository** and gives you one window to run the app, check tests, inspect data, and follow the product plan. It is a free, open-source macOS desktop app for people building software with coding agents and the teammates who need to understand that software later.
 
-[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Watch the 52-second walkthrough](#see-the-workflow-in-52-seconds) · [Explore the website tour](https://openprojectroom.com/#live-tour) · [Read the agent guide](agent/project-room/SKILL.md)
+[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 52-second demo](#see-the-workflow-in-52-seconds)
 
-[![Project Room Overview in a real Order Desk project: running services, test result, backlog, build details, and local CPU history](assets/screenshots/order-desk-overview.png)](assets/screenshots/order-desk-overview.png)
+[![Illustration: Project Room opens the same repository as your coding agent and lets you inspect and run local services, tests, and data](assets/hero/control-surface.png)](https://openprojectroom.com/#control-surface)
 
-*A real local Order Desk project opened in Project Room. The two services were started manually, the test result came from an actual run, and the CPU history was sampled during this app session. Click any screenshot in this README for its full size.*
+*Illustrative workspace. Your coding agent edits the repository; Project Room opens that same folder and gives you controls for the running app. [Explore the interactive tour](https://openprojectroom.com/#live-tour).*
+
+## Get from download to your own workspace
+
+1. **Download and open** the free [Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip). Move **Project Room.app** to Applications.
+2. **Open your project folder in Codex, Claude Code, Cursor, or your usual coding agent.** Paste the prompt for an [existing repository](#connect-an-existing-repository) or a [new app](#start-a-new-app). The agent inspects the real project and prepares its shared `.projectroom/project.yaml` configuration.
+3. **Open that same folder in Project Room.** Review **Onboarding** and **Project Map**, then start one configured service and run one test. Nothing starts just because you opened the folder.
+
+### Connect an existing repository
+
+Use this in the coding agent already working in your repository. Existing code and Spec Kit files stay where they are.
+
+<details><summary>Show the copyable existing-repository prompt</summary>
+
+```text
+Add Project Room to this existing repository. Read its guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) and schema (https://github.com/OpenProjectRoom/desktop/blob/main/schemas/projectroom.schema.json). Inspect the actual code, scripts, docs, tests, data sources, APIs, MCP and CLI tools, environment variable names, and any existing .specify/ and specs/ files.
+
+Keep the existing Spec Kit files and project structure. Create or update .projectroom/project.yaml from verified findings only. Do not create a second spec tree, put secrets in YAML, or start services and call external tools during setup. Validate the YAML and referenced paths.
+
+Finish with the exact folder to open in Project Room, what you linked, what is missing or uncertain, and the first service, test, and data source I should check manually.
+```
+
+</details>
+
+### Start a new app
+
+Use this in the folder where you want your new app. Replace the two bracketed placeholders with your idea and audience.
+
+<details><summary>Show the copyable new-project prompt</summary>
+
+```text
+Build [my app idea] for [my audience] in this folder with Git, the official GitHub Spec Kit (https://github.com/github/spec-kit), and Project Room. First ask me who it is for, what problem it solves, and what the first useful release should do.
+
+Read the Project Room guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) and schema (https://github.com/OpenProjectRoom/desktop/blob/main/schemas/projectroom.schema.json). Keep the constitution, specs, plans, and tasks in Spec Kit's standard files. Create .projectroom/project.yaml from real code and commands as they appear; no parallel spec tree, invented components, or secrets. Use manual startup and validate the YAML.
+
+Finish by telling me which folder to open in Project Room, what you configured, what remains uncertain, and what I should check there first.
+```
+
+</details>
+
+The [agent guide](agent/project-room/SKILL.md) and [YAML schema](schemas/projectroom.schema.json) describe the shared format. The [website](https://openprojectroom.com/#get-started) has copy buttons for both prompts.
 
 ## See the workflow in 52 seconds
 
 https://github.com/user-attachments/assets/30ce2404-241a-4be4-b93e-d768e6e78b8b
 
 [Download the MP4](assets/demo/project-room-walkthrough.mp4). The green outline follows the app element discussed in each scene. This silent walkthrough uses captured screens from **Order Desk**, a separate sample application built to exercise Project Room's Spec Kit, service, API, PostgreSQL, CLI, MCP, and test views. The film animates those captures; the website's [interactive tour](https://openprojectroom.com/#live-tour) is a labeled simulation. Neither is a recording of unattended agent actions.
+
+[![Project Room Overview in a real Order Desk project: running services, test result, backlog, build details, and local CPU history](assets/screenshots/order-desk-overview.png)](assets/screenshots/order-desk-overview.png)
+
+*Real Order Desk workspace: two services started manually, an actual test result, and CPU history sampled during that app session. Click for the full-size screenshot.*
 
 ## One repository, two ways to work
 
@@ -84,25 +128,9 @@ Test Explorer runs a configured suite or a supported individual Node/Rust test e
 
 The [included example](examples/hello-workspace) has a real service, tests, local JSON storage, a constitution, and Spec Kit feature files. It needs no account, database server, or cloud deployment. The separate **Order Desk** screenshots above show a richer project with PostgreSQL, CLI, and MCP interfaces; Order Desk is not bundled with the desktop download.
 
-## Open your own repository
+## What the setup adds
 
-Project Room's shared configuration is <code>.projectroom/project.yaml</code>, committed with your code. It points to **real** commands and resources; each developer keeps secret values in the project's ignored <code>.env</code>. Project Room scans an existing folder for clues, and a coding agent can prepare the YAML after inspecting the repository. Open **Onboarding** to see what was found, then verify service, test, and data connections yourself. Configured does not mean running or tested.
-
-There are two short prompts on the [Get started page](https://openprojectroom.com/#get-started): one for a new Git + Spec Kit + Project Room project, and one for adding Project Room to a repository you already have. Paste the matching prompt into the coding agent **working in that project folder**. Both point to the [agent guide](agent/project-room/SKILL.md) and [YAML schema](schemas/projectroom.schema.json).
-
-<details><summary>New project: the short path</summary>
-
-Ask your agent to build your app with Git, the [official GitHub Spec Kit](https://github.com/github/spec-kit), and Project Room. Have it ask who the app is for and what the first useful release should do. Tell it to read the [guide](agent/project-room/SKILL.md) and [schema](schemas/projectroom.schema.json), keep Spec Kit artifacts in their standard files, and create <code>.projectroom/project.yaml</code> only from verified code and commands. Ask for the exact folder to open and the first service, test, and data source to check.
-
-</details>
-
-<details><summary>Existing project: the short path</summary>
-
-Ask the agent already working in your repository to read the [guide](agent/project-room/SKILL.md) and [schema](schemas/projectroom.schema.json), inspect the actual code, scripts, specs, tests, APIs, data sources, MCP/CLI tools, and environment variable **names**, then create or update <code>.projectroom/project.yaml</code>. Keep the current project and Spec Kit structure. Validate the YAML; do not invent components, put secrets in Git, or start services during setup. Open the reported folder in Project Room and check the configured entries.
-
-</details>
-
-Existing root-level <code>productview.yaml</code> files still open for migration. New projects use <code>.projectroom/project.yaml</code> and should keep only one configuration file. See the [repository contract](PROJECT_ROOM.md) for the full configuration and current behavior.
+Project Room's shared `.projectroom/project.yaml` belongs in your repository alongside the code. It points to verified services, tests, data sources, tools, and product documents. Secret values stay in the project's ignored `.env`. The app scans a folder for clues, while your coding agent can create or refine the YAML after inspecting the repository. **Configured does not mean running or tested**: check the entries in Project Room and run what you need. See the [repository contract](PROJECT_ROOM.md) for the full format and behavior.
 
 ## Current boundaries
 
