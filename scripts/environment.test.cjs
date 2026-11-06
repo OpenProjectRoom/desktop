@@ -74,6 +74,19 @@ test('older encrypted values migrate once without replacing existing .env values
   } finally { fs.rmSync(base, { recursive: true, force: true }); }
 });
 
+test('a stored value can be read exactly for explicit clipboard copying without appearing in the variable list', () => {
+  const project = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-env-copy-'));
+  try {
+    const value = 'postgres://reader:p%40ss@localhost:5432/orders?sslmode=disable';
+    fs.writeFileSync(path.join(project, '.env'), `DATABASE_URL="${value}"\n`);
+    assert.equal(readEnvironment(project, project, config, encryption, 'DATABASE_URL'), value);
+    const listed = listEnvironment(project, project, config, encryption);
+    assert.equal(listed.variables.find(item => item.name === 'DATABASE_URL').status, 'stored');
+    assert.equal(JSON.stringify(listed).includes(value), false);
+    assert.equal(readEnvironment(project, project, config, encryption, 'API_TOKEN'), null);
+  } finally { fs.rmSync(project, { recursive: true, force: true }); }
+});
+
 test('environment editor refuses a tracked or linked .env', () => {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-env-safety-'));
   const project = path.join(base, 'project');

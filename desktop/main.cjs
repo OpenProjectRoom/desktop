@@ -398,6 +398,13 @@ function registerIpc() {
   ipcMain.handle('product:read', event => { assertSender(event); return readProduct(requireProject()); });
   ipcMain.handle('environment:list', event => { assertSender(event); return listEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage); });
   ipcMain.handle('environment:reveal', (event, name) => { assertSender(event); return readEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name); });
+  ipcMain.handle('environment:copy', (event, name) => {
+    assertSender(event);
+    const value = readEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name);
+    if (value === null) throw new Error('This variable has no value in the project .env file.');
+    clipboard.writeText(value);
+    return true;
+  });
   ipcMain.handle('environment:save', (event, name, value) => { assertSender(event); return saveEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name, value); });
   ipcMain.handle('environment:delete', (event, name) => { assertSender(event); return deleteEnvironment(app.getPath('userData'), requireProject(), environmentConfig(), safeStorage, name); });
   ipcMain.handle('workspace:additional-view', (event, page, enabled) => { assertSender(event); const result = updatedProject(setAdditionalView(requireProject(), page, enabled)); appendEvent(selectedRoot, 'workspace.view-updated', { page, enabled }); return result; });

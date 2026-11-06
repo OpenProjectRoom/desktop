@@ -51,7 +51,7 @@
     const variables = pv && projectRoot ? snapshot?.variables || [] : demoVariables();
     const canEdit = Boolean(pv && projectRoot && snapshot?.storageAvailable);
     const status = item => item.status === 'stored' ? '<span class="env-local-state stored">Set in .env</span>' : item.status === 'inherited' ? '<span class="env-local-state inherited">Inherited from app launch</span>' : '<span class="env-local-state missing">Not set</span>';
-    const rows = variables.map(item => `<div class="environment-row"><div class="environment-variable"><strong><code>${escapeHtml(item.name)}</code></strong><span>${escapeHtml(item.description || item.sources.join(', '))}</span><small>Used by ${escapeHtml(item.sources.join(', '))}</small></div>${status(item)}<div class="environment-actions"><button type="button" class="btn small" data-env="edit:${escapeHtml(item.name)}" ${canEdit ? '' : 'disabled'}>${item.status === 'stored' ? 'Change' : 'Set value'}</button>${item.status === 'stored' && canEdit ? `<button type="button" class="btn small" data-env="remove:${escapeHtml(item.name)}">Remove</button>` : ''}</div></div>`).join('');
+    const rows = variables.map(item => `<div class="environment-row"><div class="environment-variable"><strong><code>${escapeHtml(item.name)}</code></strong><span>${escapeHtml(item.description || item.sources.join(', '))}</span><small>Used by ${escapeHtml(item.sources.join(', '))}</small></div>${status(item)}<div class="environment-actions">${item.status === 'stored' && pv && projectRoot ? `<button type="button" class="btn small" data-env="copy:${escapeHtml(item.name)}" aria-label="Copy value of ${escapeHtml(item.name)}">Copy value</button>` : ''}<button type="button" class="btn small" data-env="edit:${escapeHtml(item.name)}" ${canEdit ? '' : 'disabled'}>${item.status === 'stored' ? 'Change' : 'Set value'}</button>${item.status === 'stored' && canEdit ? `<button type="button" class="btn small" data-env="remove:${escapeHtml(item.name)}">Remove</button>` : ''}</div></div>`).join('');
     return `<div class="environment-shell">${pageHead('Environment', 'Read and edit this project’s .env file. Variable names come from project configuration.')}
       <section class="card environment-intro"><div class="environment-intro-icon">${icon('settings')}</div><div><strong>One .env file for your local project.</strong><p>Project Room reads and updates the existing .env in the project folder. It keeps the file out of Git and never adds values to project YAML, Product Chat or its MCP server. Local commands you start here receive the variables they need.</p></div></section>
       <section class="card environment-list"><div class="card-head"><div><h2>Project variables</h2><p>${variables.length} declared · ${variables.filter(item => item.status !== 'missing').length} available locally</p></div><button type="button" class="btn small" data-env="refresh" ${pv && projectRoot ? '' : 'disabled'}>Refresh</button></div>
@@ -77,6 +77,10 @@
     const [action, name] = target.dataset.env.split(':');
     if (action === 'refresh') refresh();
     else if (action === 'edit') openEdit(name);
+    else if (action === 'copy') {
+      try { await pv.copyEnvironmentValue(name); toast('Value copied to clipboard.'); }
+      catch (cause) { toast(cause.message); }
+    }
     else if (action === 'remove') openRemove(name);
     else if (action === 'close') modalRoot.innerHTML = '';
     else if (action === 'reveal') {

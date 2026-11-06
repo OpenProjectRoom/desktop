@@ -54,6 +54,7 @@ contextBridge.exposeInMainWorld('productView', {
   readMcpResource: (id, uri) => ipcRenderer.invoke('mcp:read-resource', String(id), String(uri)),
   getMcpPrompt: (id, name, args) => ipcRenderer.invoke('mcp:get-prompt', String(id), String(name), args),
   revealEnvironment: name => ipcRenderer.invoke('environment:reveal', String(name)),
+  copyEnvironmentValue: name => ipcRenderer.invoke('environment:copy', String(name)),
   saveEnvironment: (name, value) => ipcRenderer.invoke('environment:save', String(name), String(value)),
   deleteEnvironment: name => ipcRenderer.invoke('environment:delete', String(name)),
   setAdditionalView: (page, enabled) => ipcRenderer.invoke('workspace:additional-view', String(page), enabled),
