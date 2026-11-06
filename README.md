@@ -15,21 +15,17 @@ If this is the control window you've been missing, click **Star** in the GitHub 
 ## Get from download to your own workspace
 
 1. **Download and open** the free [Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip). Move **Project Room.app** to Applications.
-2. **Open your project folder in Codex, Claude Code, Cursor, or your usual coding agent.** Paste the prompt for an [existing repository](#connect-an-existing-repository) or a [new app](#start-a-new-app). The agent inspects the real project and prepares its shared `.projectroom/project.yaml` configuration.
+2. **Open your project folder in Codex, Claude Code, Cursor, or your usual coding agent.** Paste the prompt for an [existing repository](#connect-an-existing-repository) or a [new app](#start-a-new-app). For an existing repository, the agent first summarizes what it found and waits for your answer before preparing `.projectroom/project.yaml`.
 3. **Open that same folder in Project Room.** Review **Onboarding** and **Project Map**, then start one configured service and run one test. Nothing starts just because you opened the folder.
 
 ### Connect an existing repository
 
-Use this in the coding agent already working in your repository. Existing code and Spec Kit files stay where they are.
+Use this in the coding agent already working in your repository. Spec Kit is optional here; your existing code, docs, and specs stay where they are.
 
 <details><summary>Show the copyable existing-repository prompt</summary>
 
 ```text
-Add Project Room to this existing repository. Read its guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) and schema (https://github.com/OpenProjectRoom/desktop/blob/main/schemas/projectroom.schema.json). Inspect the actual code, scripts, docs, tests, data sources, APIs, MCP and CLI tools, environment variable names, and any existing .specify/ and specs/ files.
-
-Keep the existing Spec Kit files and project structure. Create or update .projectroom/project.yaml from verified findings only. Do not create a second spec tree, put secrets in YAML, or start services and call external tools during setup. Validate the YAML and referenced paths.
-
-Finish with the exact folder to open in Project Room, what you linked, what is missing or uncertain, and the first service, test, and data source I should check manually.
+Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Inspect the project without changing files. Summarize what you found, whether it uses GitHub Spec Kit, what Project Room could show, and what is uncertain. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide.
 ```
 
 </details>
