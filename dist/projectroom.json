@@ -53,6 +53,16 @@
         ]
       },
       {
+        "id": "source-audited-setup",
+        "title": "Source-audited project setup",
+        "summary": "Have the coding agent trace source entry points for services, HTTP APIs, stdio MCP servers, CLI tools, tests and data before creating Project Room configuration; report code evidence and uncertainty.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web"
+        ]
+      },
+      {
         "id": "detached-service-lifecycle",
         "title": "Detached service lifecycle",
         "summary": "Support explicit start, status and stop commands for detached stacks, confirm state after actions, and avoid treating an observer as the service itself.",

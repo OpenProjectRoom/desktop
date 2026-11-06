@@ -46,7 +46,7 @@
       '<div><strong>Documentation</strong><div class="onboarding-chips">' + list(item.docs, 'None found') + '</div></div>' +
       '<div><strong>Runtime clues</strong><div class="onboarding-chips">' + list(item.compose, 'No Compose file found') + '</div></div>' +
       '<div><strong>Package scripts</strong><div class="onboarding-chips">' + list(item.scripts, 'None found') + '</div></div><div><strong>Data candidates</strong><div class="onboarding-chips">' + list(item.dataCandidates || [], 'None found') + '</div></div></div>' +
-      '<div class="onboarding-prompt-head"><strong>1 · Paste into your coding agent</strong><button type="button" class="btn" data-onboard="copy">Copy agent prompt</button></div>' +
+      '<div class="onboarding-prompt-head"><strong>1 · Ask your coding agent to audit the source</strong><button type="button" class="btn" data-onboard="copy">Copy agent prompt</button></div>' +
       '<textarea id="onboardingPrompt" readonly aria-label="Agent setup prompt"></textarea>' +
       '<div class="onboarding-review-head"><strong>2 · Review the result</strong><button type="button" class="btn" data-onboard="check">Check now</button></div>' +
       '<div id="onboardingReview" class="onboarding-review" role="status"></div><p class="onboarding-finish"><strong>3 · Open and verify.</strong> When YAML is valid, open this folder and use Onboarding to check the real commands and connections.</p></div>' +

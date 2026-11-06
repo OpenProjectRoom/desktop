@@ -43,3 +43,21 @@ test('onboarding asks for inspection before edits and flags mismatched Compose l
   assert.equal(review.state, 'ready');
   assert.ok(review.warnings.some(message => message.includes('Compose startup needs detached lifecycle')));
 });
+
+test('setup prompt requires a source audit even when a stdio MCP CLI has no client config', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-source-audit-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(root, 'scripts'));
+  fs.writeFileSync(path.join(root, 'blackbox'), '#!/bin/sh\nexec python3 scripts/host_cli.py "$@"\n', { mode: 0o755 });
+  fs.writeFileSync(path.join(root, 'scripts/host_cli.py'), "if command == 'mcp':\n    run_stdio_server()\n");
+  const inventory = inspectFolder(root);
+  assert.equal(inventory.mcpServers.length, 0);
+  assert.ok(inventory.cliTools.some(item => item.name === 'blackbox'));
+  const prompt = agentPrompt(inventory, { skill: '/guide.md', schema: '/schema.json' });
+  assert.match(prompt, /Trace wrappers into their delegated code/);
+  assert.match(prompt, /MCP servers \(including stdio CLI subcommands without an MCP client file\)/);
+  assert.match(prompt, /HTTP APIs \(including routes without OpenAPI\)/);
+  assert.match(prompt, /source audit still required/);
+  assert.match(prompt, /Register verified MCP servers in workspace\.mcpServers/);
+  assert.match(prompt, /do not substitute an owner or admin key/);
+});

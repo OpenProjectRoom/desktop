@@ -25,7 +25,7 @@ Use this in the coding agent already working in your repository. Spec Kit is opt
 <details><summary>Show the copyable existing-repository prompt</summary>
 
 ```text
-Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Inspect the project without changing files. Summarize what you found, whether it uses GitHub Spec Kit, what Project Room could show, and what is uncertain. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide. Finish with the Mac download and installation steps, the exact folder to open in Project Room, and what I should verify there first.
+Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Audit the source code without changing files: trace scripts and CLI wrappers into services, HTTP APIs, MCP servers (including stdio subcommands), tools, tests and data sources, even when no client configuration lists them. Cite the files that prove each finding and separate uncertainties from verified implementations. Summarize whether GitHub Spec Kit is present and what Project Room could show. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide. Finish with the Mac download and installation steps, the exact folder to open in Project Room, and what I should verify there first.
 ```
 
 </details>

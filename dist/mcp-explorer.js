@@ -103,7 +103,7 @@
     if (active?.connectedAt) parts.push(`Connected ${when(active.connectedAt)}`);
     return `<div class="build-identity">${safe(parts.join(' · '))}</div>`;
   };
-  const listing = () => servers.length ? servers.map(item => `<button type="button" class="mcp-server${selectedId === item.id ? ' selected' : ''}" data-mcp="select:${safe(item.id)}"><span class="mcp-server-mark">${icon('cube')}</span><span class="mcp-server-copy"><strong>${safe(item.name)}</strong><small>${safe(item.source)}${item.linkedId ? ' · Linked in YAML' : ''}</small></span>${item.connected ? '<i class="mcp-online" title="Connected"></i>' : ''}</button>`).join('') : '<p class="mcp-muted">No project MCP servers found. Add a server to <code>workspace.mcpServers</code> or a project MCP config file.</p>';
+  const listing = () => servers.length ? servers.map(item => `<button type="button" class="mcp-server${selectedId === item.id ? ' selected' : ''}" data-mcp="select:${safe(item.id)}"><span class="mcp-server-mark">${icon('cube')}</span><span class="mcp-server-copy"><strong>${safe(item.name)}</strong><small>${safe(item.source)}${item.linkedId ? ' · Linked in YAML' : ''}</small></span>${item.connected ? '<i class="mcp-online" title="Connected"></i>' : ''}</button>`).join('') : '<p class="mcp-muted">No MCP server configured here. A coding agent can inspect source for servers behind CLI commands, then add verified ones to <code>workspace.mcpServers</code>.</p>';
   function catalog() {
     if (!detail) return '';
     const counts = [['tools', 'Tools', detail.tools?.length || 0], ['resources', 'Resources', detail.resources?.length || 0], ['templates', 'Templates', detail.resourceTemplates?.length || 0], ['prompts', 'Prompts', detail.prompts?.length || 0]];
