@@ -8,8 +8,8 @@
     <div class="cursor-traffic" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="cursor-title"></div>
     <div class="cursor-titlebar-spacer"></div>
-    <div class="cursor-open-wrap"><button type="button" id="cursorOpenToggle" class="cursor-titlebar-action" title="Open a workspace view" aria-label="Open a workspace view" aria-haspopup="menu" aria-expanded="false">${icon('grid')}<span>Open</span>${icon('chevron')}</button>
-      <div id="cursorOpenMenu" class="cursor-open-menu" role="menu" aria-label="Open workspace view" hidden>
+    <div class="cursor-open-wrap"><button type="button" id="cursorOpenToggle" class="cursor-titlebar-action" title="Open a project view" aria-label="Open a project view" aria-haspopup="menu" aria-expanded="false">${icon('grid')}<span>Open</span>${icon('chevron')}</button>
+      <div id="cursorOpenMenu" class="cursor-open-menu" role="menu" aria-label="Open project view" hidden>
         <div class="cursor-open-group">Project</div>
         <button type="button" role="menuitem" data-page="dashboard">${icon('grid')}<span>Overview</span></button>
         <button type="button" role="menuitem" data-page="overview">${icon('cube')}<span>Project Map</span></button>
@@ -109,7 +109,7 @@
   function updateOutput() {
     const live = typeof projectRoot !== 'undefined' && !!projectRoot;
     const history = live && typeof pvHistory !== 'undefined' ? pvHistory.slice(0, 8) : typeof demoEvents !== 'undefined' ? demoEvents.slice(0, 8) : [];
-    document.getElementById('cursorBottomContext').textContent = live ? 'Recorded workspace events' : 'Interactive demo · sample events';
+    document.getElementById('cursorBottomContext').textContent = live ? 'Recorded project events' : 'Interactive demo · sample events';
     document.getElementById('cursorBottomBody').innerHTML = history.length ? history.map(event => `<div class="cursor-output-row"><span>${escapeHtml(new Date(event.at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }))}</span><span>${escapeHtml(event.type)} ${escapeHtml(event.component || event.client || '')}${event.demo ? ' · demo' : ''}</span></div>`).join('') : '<div class="cursor-output-empty">No recorded events yet. Start a service, run a command tool or run tests to create a record.</div>';
   }
   const originalRender = render;
@@ -169,7 +169,7 @@
     const relative = file.dataset.cursorFile;
     try {
       selectedFilePath = relative;
-      selectedFileText = relative === activeConfigPath ? (files[relative] || '') : window.productView && projectRoot ? await window.productView.readFile(relative) : (files[relative] || 'Open this file in a local workspace.');
+      selectedFileText = relative === activeConfigPath ? (files[relative] || '') : window.productView && projectRoot ? await window.productView.readFile(relative) : (files[relative] || 'Open this file in a local project.');
       state.page = 'files';
       render();
     } catch (error) { toast(error.message); }
