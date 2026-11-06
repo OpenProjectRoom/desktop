@@ -50,7 +50,7 @@ The [agent guide](agent/project-room/SKILL.md) and [YAML schema](schemas/project
 
 ## See a real project in 90 seconds
 
-[![Watch the Project Room walkthrough: a real Order Desk workspace with running services, test results, and performance history](assets/demo/project-room-from-repo-to-runtime-poster.png)](https://openprojectroom.com/#real-demo)
+https://github.com/user-attachments/assets/e925b75b-cb8a-48d2-99a7-e47ad899bf63
 
 **[Play the walkthrough on the website](https://openprojectroom.com/#real-demo)** · [Download the MP4](assets/demo/project-room-from-repo-to-runtime.mp4)
 
