@@ -45,7 +45,17 @@
       {
         "id": "evidence-based-onboarding",
         "title": "Evidence-based onboarding progress",
-        "summary": "Detect configured workspace capabilities from YAML and repository files, keep hands-on verification separate, and offer the agent prompt without making it a setup requirement.",
+        "summary": "Count only detected sections, keep configured entries separate from hands-on verification, review paths, commands and environment names, and make the agent inspect before writing.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web"
+        ]
+      },
+      {
+        "id": "detached-service-lifecycle",
+        "title": "Detached service lifecycle",
+        "summary": "Support explicit start, status and stop commands for detached stacks, confirm state after actions, and avoid treating an observer as the service itself.",
         "status": "done",
         "relatedComponents": [
           "product-spec",
@@ -56,6 +66,16 @@
         "id": "two-entry-setup",
         "title": "Clear setup paths for new and existing projects",
         "summary": "Offer short website prompts for both starting points, align the agent handoff with the desktop setup dialog, and lead users to verify the same repository in Project Room.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web"
+        ]
+      },
+      {
+        "id": "project-folder-language",
+        "title": "Open project folders without workspace jargon",
+        "summary": "Present a project as its ordinary repository folder, use one clear Open project folder action, and keep specialized setup actions secondary.",
         "status": "done",
         "relatedComponents": [
           "product-spec",

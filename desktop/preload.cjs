@@ -82,6 +82,7 @@ contextBridge.exposeInMainWorld('productView', {
   },
   getAgentContract: () => ipcRenderer.invoke('agent:contract'),
   startComponent: id => ipcRenderer.invoke('component:start', String(id)),
+  checkComponentStatus: id => ipcRenderer.invoke('component:status', String(id)),
   stopComponent: id => ipcRenderer.invoke('component:stop', String(id)),
   runTestSuite: id => ipcRenderer.invoke('tests:run', String(id)),
   listTestCases: id => ipcRenderer.invoke('tests:cases', String(id)),

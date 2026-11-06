@@ -28,7 +28,12 @@ product:
       relatedComponents: [product-spec, web]
     - id: evidence-based-onboarding
       title: Evidence-based onboarding progress
-      summary: Detect configured workspace capabilities from YAML and repository files, keep hands-on verification separate, and offer the agent prompt without making it a setup requirement.
+      summary: Count only detected sections, keep configured entries separate from hands-on verification, review paths, commands and environment names, and make the agent inspect before writing.
+      status: done
+      relatedComponents: [product-spec, web]
+    - id: detached-service-lifecycle
+      title: Detached service lifecycle
+      summary: Support explicit start, status and stop commands for detached stacks, confirm state after actions, and avoid treating an observer as the service itself.
       status: done
       relatedComponents: [product-spec, web]
     - id: two-entry-setup

@@ -34,3 +34,15 @@ test('only the canonical project configuration opens as a workspace', t => {
   assert.equal(created.file, configPath(root));
   assert.equal(loadConfig(created.file).root, root);
 });
+
+test('auto setup keeps an existing repository intact and does not model detached scripts as foreground', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-auto-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { dev: 'docker compose up -d', test: 'node --test' } }));
+  fs.writeFileSync(path.join(root, 'README.md'), '# Existing project\n');
+  const before = fs.readdirSync(root).sort();
+  const { config } = createWorkspace(root, 'auto');
+  assert.deepEqual(config.components.map(item => item.kind), ['testSuite']);
+  assert.equal(config.product, undefined);
+  assert.deepEqual(fs.readdirSync(root).filter(name => name !== '.projectroom').sort(), before);
+});

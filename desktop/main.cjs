@@ -28,6 +28,7 @@ const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
 const { readBuildIdentity, listBuildIdentities, sourceRevision } = require('./build-identity.cjs');
 const { ProcessMetrics } = require('./process-metrics.cjs');
+const detachedService = require('./detached-service.cjs');
 const { autoUpdater } = require('electron-updater');
 const { createUpdates } = require('./updates.cjs');
 
@@ -36,6 +37,9 @@ let selectedRoot = null;
 let selectedConfig = null;
 let selectedRaw = null;
 const processes = new Map();
+const detachedStates = new Map();
+const detachedPending = new Set();
+const detachedTimers = new Map();
 const launchedBuilds = new Map();
 const processMetrics = new ProcessMetrics({ onSample: notify });
 const updates = createUpdates({ app, updater: autoUpdater, send: value => {
@@ -56,7 +60,10 @@ function assertSender(event) {
   if (!windowRef || event.sender !== windowRef.webContents || event.senderFrame !== windowRef.webContents.mainFrame) throw new Error('Unauthorized call.');
 }
 function status() {
-  return Object.fromEntries([...processes].map(([id, child]) => [id, child.exitCode === null ? 'running' : 'stopped']));
+  return {
+    ...Object.fromEntries((selectedConfig?.components || []).filter(item => item.kind === 'service' && item.runtime?.lifecycle === 'detached').map(item => [item.id, detachedStates.get(item.id) || 'unknown'])),
+    ...Object.fromEntries([...processes].map(([id, child]) => [id, child.exitCode === null ? 'running' : 'stopped']))
+  };
 }
 function readSelected(root) {
   const loaded = loadConfig(configPath(root));
@@ -64,6 +71,9 @@ function readSelected(root) {
   if (selectedRoot && selectedRoot !== root) { stopAll(); if (chatChild) stopChild(chatChild); }
   if (projectWatcher) { projectWatcher.close(); projectWatcher = null; }
   selectedRoot = root;
+  for (const timer of detachedTimers.values()) clearInterval(timer);
+  detachedTimers.clear();
+  detachedStates.clear();
   discoveredTestCases.clear();
   selectedConfig = loaded.config;
   selectedRaw = loaded.raw;
@@ -149,7 +159,56 @@ function stopChild(child) {
     else child.kill('SIGTERM');
   } catch (error) { /* Process may already have exited. */ }
 }
-function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); launchedBuilds.clear(); processMetrics.reset(); }
+function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); for (const timer of detachedTimers.values()) clearInterval(timer); detachedTimers.clear(); launchedBuilds.clear(); processMetrics.reset(); }
+function observeDetached(item, root, options) {
+  const id = item.id;
+  if (detachedTimers.has(id)) clearInterval(detachedTimers.get(id));
+  if (detachedStates.get(id) !== 'running') { detachedTimers.delete(id); return; }
+  const timer = setInterval(async () => {
+    if (selectedRoot !== root || detachedPending.has(id)) return;
+    detachedPending.add(id);
+    try {
+      const next = await detachedService.inspect(item.runtime, options);
+      if (selectedRoot === root && detachedStates.get(id) !== next) {
+        detachedStates.set(id, next);
+        notify({ type: 'status', id, status: next });
+      }
+      if (next !== 'running') { clearInterval(timer); detachedTimers.delete(id); }
+    } catch {
+      if (selectedRoot === root) { detachedStates.set(id, 'unknown'); notify({ type: 'status', id, status: 'unknown' }); }
+      clearInterval(timer); detachedTimers.delete(id);
+    } finally { detachedPending.delete(id); }
+  }, 5000);
+  timer.unref();
+  detachedTimers.set(id, timer);
+}
+async function detachedAction(item, operation) {
+  const id = item.id;
+  if (detachedPending.has(id)) throw new Error('This service command is already running.');
+  detachedPending.add(id);
+  const root = selectedRoot;
+  try {
+    const env = runtimeEnvironment(app.getPath('userData'), root, selectedConfig, safeStorage, item);
+    const options = { cwd: cwdWithinProject(item.runtime.cwd), env };
+    const result = operation === 'status'
+      ? { status: await detachedService.inspect(item.runtime, options) }
+      : await detachedService.change(item.runtime, operation, options);
+    if (selectedRoot === root) {
+      detachedStates.set(id, result.status);
+      notify({ type: 'status', id, status: result.status });
+      observeDetached(item, root, options);
+      appendEvent(root, `service.${operation}-confirmed`, { component: id, status: result.status });
+    }
+    return result;
+  } catch (error) {
+    if (selectedRoot === root) {
+      detachedStates.set(id, 'unknown');
+      notify({ type: 'status', id, status: 'unknown' });
+      appendEvent(root, `service.${operation}-error`, { component: id, message: error.message });
+    }
+    throw error;
+  } finally { detachedPending.delete(id); }
+}
 function prepareOnboarding(root) {
   const inventory = inspectFolder(root);
   pendingOnboardingRoot = inventory.root;
@@ -391,15 +450,23 @@ function registerIpc() {
     const script = path.join(app.getAppPath(), 'mcp/server.cjs');
     return { skill, schema: fs.readFileSync(path.join(app.getAppPath(), 'schemas/projectroom.schema.json'), 'utf8'), example: selectedRaw, mcp: { command: executable, args: [script, selectedRoot || '<project-folder>'], env: { ELECTRON_RUN_AS_NODE: '1' } } };
   });
+  ipcMain.handle('component:status', (event, id) => {
+    assertSender(event);
+    const item = component(id, 'service');
+    if (item.runtime.lifecycle !== 'detached') return { status: status()[id] || 'stopped' };
+    return detachedAction(item, 'status');
+  });
   ipcMain.handle('component:start', (event, id) => {
     assertSender(event);
     const item = component(id, 'service');
+    if (item.runtime.lifecycle === 'detached') return detachedAction(item, 'start');
     if (processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
     return runCommand(id, item.runtime.command, item.runtime.cwd, 'service');
   });
   ipcMain.handle('component:stop', (event, id) => {
     assertSender(event);
-    component(id, 'service');
+    const item = component(id, 'service');
+    if (item.runtime.lifecycle === 'detached') return detachedAction(item, 'stop');
     const child = processes.get(id);
     if (!child) return { status: 'stopped' };
     stopChild(child);

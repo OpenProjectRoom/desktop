@@ -78,7 +78,6 @@ function removeComponent(root, id) {
   const record = openDocument(root);
   const component = record.current.config.components.find(item => item.id === id);
   if (!component || !['commandTool', 'database', 'storage', 'external'].includes(component.kind)) throw new Error('This component cannot be removed here.');
-  if (record.current.config.components.length < 2) throw new Error('The project needs at least one component.');
   const components = record.document.get('components', true);
   components.items = components.items.filter(item => item.get('id') !== id);
   const connections = record.document.get('connections', true);

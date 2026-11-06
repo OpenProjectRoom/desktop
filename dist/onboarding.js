@@ -16,9 +16,9 @@
       target.innerHTML = '<strong>Configuration needs a fix</strong><pre>' + escapeHtml(review.message) + '</pre>';
     } else {
       target.innerHTML = '<strong>Valid YAML · ' + review.components.length + ' components · ' + review.connections + ' connections</strong>' +
-        '<p>' + escapeHtml(review.name) + ' is ready to open. Check its map, services, tests and data in Onboarding.</p>' +
+        '<p>' + escapeHtml(review.name) + ' is ready to open. Project Room checked ' + (review.checked?.paths || 0) + ' paths, ' + (review.checked?.commands || 0) + ' commands and ' + (review.checked?.environment || 0) + ' environment names without running them. Check real behavior in Onboarding.</p>' +
         '<div class="onboarding-chips">' + review.components.map(item => '<span class="onboarding-chip">' + escapeHtml(item.name) + ' · ' + escapeHtml(item.kind) + '</span>').join('') + '</div>' +
-        (review.warnings.length ? '<div class="onboarding-warning"><strong>Check these paths</strong><ul>' + review.warnings.map(item => '<li>' + escapeHtml(item) + '</li>').join('') + '</ul></div>' : '') +
+        (review.warnings.length ? '<div class="onboarding-warning"><strong>Review before running</strong><ul>' + review.warnings.map(item => '<li>' + escapeHtml(item) + '</li>').join('') + '</ul></div>' : '') +
         '<details><summary>Inspect YAML source</summary><pre>' + escapeHtml(review.raw) + '</pre></details>';
     }
   }
@@ -40,7 +40,7 @@
     const item = data.inventory;
     root.innerHTML = '<div class="modal-backdrop"><section class="modal onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">' +
       '<div class="modal-head"><div><small>LOCAL PROJECT SETUP</small><h2 id="onboardingTitle">Set up with a coding agent</h2></div><button type="button" class="icon-btn" data-onboard="close" aria-label="Close">×</button></div>' +
-      '<div class="onboarding-body"><p>Project Room inspected this folder without changing it. Paste the prompt into the coding agent already working here. It creates the shared YAML; Project Room then opens the same folder for review.</p>' +
+      '<div class="onboarding-body"><p>Project Room inspected this folder without changing it. Paste the prompt into your coding agent. It first reports what it found and waits for your reply; then it creates the shared YAML for review here.</p>' +
       '<div class="onboarding-path">' + escapeHtml(item.root) + '</div>' +
       '<div class="onboarding-inventory"><div><strong>Specifications</strong><div class="onboarding-chips">' + list(item.specs, 'None found') + '</div></div>' +
       '<div><strong>Documentation</strong><div class="onboarding-chips">' + list(item.docs, 'None found') + '</div></div>' +

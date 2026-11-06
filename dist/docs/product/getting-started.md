@@ -3,15 +3,15 @@
 Choose one starting point:
 
 - **New app:** In the project folder, give your coding agent the new-project prompt on [openprojectroom.com](https://openprojectroom.com/#get-started). It asks for the first useful release, initializes Git and the official GitHub Spec Kit workflow, and creates `.projectroom/project.yaml` alongside real code and commands.
-- **Existing repository:** In the repository folder, give your current coding agent the existing-project prompt from the same page. It inspects actual code, scripts and any Spec Kit files, then creates or updates `.projectroom/project.yaml` without moving the specifications. You can also open the folder in Project Room first and use the project-specific prompt in its setup dialog.
+- **Existing repository:** In the repository folder, give your current coding agent the existing-project prompt from the same page. It first reports what it found and waits for your reply, then creates or updates `.projectroom/project.yaml` without moving the specifications. You can also open the folder in Project Room first and use the project-specific prompt in its setup dialog.
 
 In both cases, wait for the agent's handoff: exact folder, configured findings, uncertainties, and the first service, test and data source to check. Open that folder in Project Room. If it was already open, select **Refresh analysis** in Onboarding. Then inspect the configured entries and run commands deliberately.
 
-For a first real run, choose **Try working example** from the Overview or Workspaces menu. Project Room copies it into `~/Documents/Project Room Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
+For a first real run, choose **Try working example** from the Overview or Projects menu. Project Room copies it into `~/Documents/Project Room Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
 
 Open this repository in the Project Room desktop app. Project Room reads `.projectroom/project.yaml` and opens the Overview.
 
-Onboarding distinguishes setup found in the repository from hands-on verification. Green **Configured** states come from the project YAML, Spec Kit and documentation files. The optional **Mark as verified** buttons stay on this Mac per workspace; use them after actually opening the map, running a service or test, or inspecting a data source. The expandable coding-agent help provides the Project Room prompt without adding a setup requirement. **Refresh analysis** rescans the repository after an agent changes the files.
+Onboarding distinguishes detected project sections, configured entries and hands-on verification. Undetected optional integrations do not lower setup progress. Green **Configured** states come from the project YAML and repository files. The optional **Mark as verified** buttons stay on this Mac per project; use them after actually opening the map, running a service or test, or inspecting a data source. The read-only review checks paths, commands and missing environment names without running project commands. **Refresh analysis** rescans the repository after an agent changes the files. The advanced automatic setup writes only a minimal YAML from clear repository evidence; it does not create placeholder vision or documentation files.
 
 The left navigation follows the product workflow:
 

@@ -1,5 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const { parseEnv } = require('node:util');
+const { declarations } = require('./environment.cjs');
 const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 const { discoverMcpServers, publicCandidate } = require('./mcp-explorer.cjs');
 const { discoverCliTools } = require('./cli-explorer.cjs');
@@ -73,25 +75,25 @@ function exportContract(appPath, userData) {
 
 function agentPrompt(inventory, contract) {
   return [
-    'Set up this existing repository for Project Room. Work in ' + inventory.root + '.',
+    `Set up this existing repository for Project Room: ${inventory.root}`,
+    `Read the Project Room guide at ${contract.skill} and validate against ${contract.schema}. Read the repository instructions, code, runtime, tests, data, APIs, MCP and existing specifications before deciding what belongs in the map.`,
     '',
-    'Read the repository\'s AGENTS.md or CLAUDE.md if present, its README, current specifications, documentation, package scripts, and runtime configuration. Read the Project Room agent guide at ' + contract.skill + ' and validate against ' + contract.schema + '.',
+    'Phase 1 — inspect only. Summarize the real components and commands, whether GitHub Spec Kit is present, what Project Room can show, and what remains uncertain. For each service, distinguish a foreground process from a detached stack and identify its real start, status and stop operations. Ask only decisions that cannot be inferred safely. Wait for my reply before writing files, even if no question is needed.',
     '',
-    'Create or improve .projectroom/project.yaml in the repository. Use the existing specification and documentation folders directly; do not duplicate their content or introduce a parallel Spec Kit structure. If Spec Kit feature folders exist, map verified feature requirements to real components and test suites with views.specifications.links; do not infer coverage or completion from file names alone. Represent only real components and commands supported by the repository. Set workspace.additionalViews only for useful optional pages supported by actual content: vision, roadmap, north-star, commands. The four pages stay hidden by default. If you choose one as workspace.startPage, include it in additionalViews too. Inspect project MCP configurations (.mcp.json, .cursor/mcp.json, .vscode/mcp.json, mcp.json). Register verified MCP endpoints in workspace.mcpServers only when no existing project config already describes them; use environment variable names and authEnv for Bearer credentials, or public OAuth metadata without tokens. Never connect to or invoke MCP tools during setup. For HTTP APIs, inspect code and OpenAPI 3.x files. Register only verified base URLs and optional local spec paths in workspace.apiSources. For API authentication, declare only variable names for Bearer or API-key credentials, or public OAuth authorization metadata. Never put tokens or client secrets in YAML. Do not send API requests during setup. Detect real data sources from code, migrations, compose files and existing files: declare PostgreSQL/MySQL/MariaDB databases with data.engine and a data.connectionEnv name, SQLite with data.path, and local file stores with data.path. Do not invent a running database from a dependency name alone. Declare required environment variable names, and optional descriptions, in workspace.environment, component environment lists or data.connectionEnv. Never put values in YAML or ask the user to paste them into the agent chat; tell them to set values in the ignored project .env through Project Room\'s Environment page. Distinguish foreground processes from detached Docker Compose stacks: a command that starts and exits does not prove the service is stopped, and Project Room\'s current service runner cannot monitor Compose state correctly. Do not invent metrics, test results, integration connections, roadmap completion, CLI parameters, or a working chat model. Keep credentials out of the YAML. Register commands as manual and do not start services or tests for this setup task.',
+    'Phase 2 — after my reply, create or improve .projectroom/project.yaml from verified repository evidence. Reuse the existing specs and docs. Never fabricate progress, service state, tests, APIs or environment values. For a detached service, configure lifecycle: detached only when start, status and stop commands are all real and safe: status exits 0 when running, 1 when stopped, and 2 or higher on error. Otherwise leave it as a manual CLI task, explain the limitation, and never use a foreground observer as a substitute for stop control. Keep startup manual, secrets outside YAML, and do not run services or tests just to initialize.',
     '',
-    'Inspect likely sources of truth, draft a small useful map, and validate the YAML against the schema and the files it references. For CLI programs, inspect package bin metadata and real executable entry files; add commandTool components only for verified tools. CLI Explorer can discover candidates without running them, read help after a user click, and link a candidate as a help-only commandTool for further documentation. Do not assume every package script is a user-facing CLI. Preserve existing AGENTS.md and CLAUDE.md. Do not copy the Project Room guide into the repository unless the user wants a reusable local skill. Finish with the exact repository folder to open in Project Room, the configured components and evidence, missing prerequisites or uncertain findings, and the first service, test and data source to check manually. Do not commit automatically.',
+    'Validate the YAML and referenced paths. Finish with the exact project folder to open in Project Room; list configured, uncertain, and unsupported items; tell me what to check in Onboarding, including the first real service, test and data source. Do not commit automatically.',
     '',
-    'Read-only initial hints from Project Room:',
-    '- Specification folders: ' + (inventory.specs.join(', ') || 'none found'),
-    '- Documentation folders: ' + (inventory.docs.join(', ') || 'none found'),
-    '- Compose files: ' + (inventory.compose.join(', ') || 'none found'),
-    '- Data source candidates: ' + (inventory.dataCandidates.join(', ') || 'none found'),
-    '- Package scripts: ' + (inventory.scripts.join(', ') || 'none found'),
-    '- Repository guidance: ' + (inventory.instructions.join(', ') || 'none found'),
-    '- MCP servers: ' + (inventory.mcpServers.map(item => `${item.name} (${item.source})`).join(', ') || 'none found'),
-    '- CLI entry points: ' + (inventory.cliTools.map(item => `${item.name} (${item.path})`).join(', ') || 'none found'),
-    '- OpenAPI files: ' + (inventory.apiSpecs.map(item => `${item.name} (${item.path}, ${item.endpoints} endpoints)`).join(', ') || 'none found'),
-    'These hints are incomplete; inspect the repository before deciding.'
+    'Read-only clues (verify them in the repository):',
+    `- Specifications: ${inventory.specs.join(', ') || 'none found'}`,
+    `- Documentation: ${inventory.docs.join(', ') || 'none found'}`,
+    `- Compose: ${inventory.compose.join(', ') || 'none found'}`,
+    `- Data candidates: ${inventory.dataCandidates.join(', ') || 'none found'}`,
+    `- Package scripts: ${inventory.scripts.join(', ') || 'none found'}`,
+    `- Instructions: ${inventory.instructions.join(', ') || 'none found'}`,
+    `- MCP: ${inventory.mcpServers.map(item => item.name).join(', ') || 'none found'}`,
+    `- CLI: ${inventory.cliTools.map(item => item.name).join(', ') || 'none found'}`,
+    `- OpenAPI: ${inventory.apiSpecs.map(item => item.path).join(', ') || 'none found'}`
   ].join('\n');
 }
 
@@ -101,8 +103,10 @@ function reviewConfig(root) {
   try {
     const { config, raw } = loadConfig(file);
     const warnings = [];
+    const checked = { paths: 0, commands: 0, environment: 0 };
     const check = (relative, label) => {
       if (!relative || path.isAbsolute(relative) || relative.split(/[\\/]/).includes('..')) { warnings.push(label + ': invalid relative path'); return; }
+      checked.paths++;
       if (!fs.existsSync(path.join(root, relative))) warnings.push(label + ': ' + relative + ' does not exist');
     };
     if (config.product?.vision) check(config.product.vision, 'Vision');
@@ -110,15 +114,49 @@ function reviewConfig(root) {
     for (const folder of config.views?.specifications?.roots || []) check(folder, 'Specification folder');
     for (const item of config.components) if (item.kind === 'specification') check(item.path, item.name);
     for (const item of config.product?.documentation || []) check(item.path, item.title);
-    for (const item of config.components) {
-      if (item.kind !== 'service') continue;
-      const command = item.runtime?.command || [];
-      const joined = command.join(' ');
-      if (/\b(?:docker\s+compose|docker-compose)\s+up\b/.test(joined) && /(?:\s-d\b|--detach\b)/.test(joined) || /^\.\/blackbox up\b/.test(joined)) {
-        warnings.push(item.name + ': this may start a detached stack; Project Room currently tracks only the command process.');
+    const inspectCommand = (command, cwd, label) => {
+      checked.commands++;
+      const folder = path.resolve(root, cwd || '.');
+      if ((!folder.startsWith(root + path.sep) && folder !== root) || !fs.existsSync(folder)) { warnings.push(label + ': working directory does not exist inside the project'); return; }
+      const actualFolder = fs.realpathSync(folder);
+      if (actualFolder !== root && !actualFolder.startsWith(root + path.sep)) { warnings.push(label + ': working directory resolves outside the project'); return; }
+      const executable = command?.[0];
+      if (executable?.includes('/')) {
+        if (!fs.existsSync(path.resolve(folder, executable))) warnings.push(label + ': executable ' + executable + ' does not exist');
+      } else if (executable && !(process.env.PATH || '').split(path.delimiter).some(directory => directory && fs.existsSync(path.join(directory, executable)))) {
+        warnings.push(label + ': executable ' + executable + ' is not on Project Room’s PATH');
       }
+      const script = command?.[1];
+      if (script && /^(?:\.\/|scripts\/|src\/)/.test(script) && !fs.existsSync(path.resolve(folder, script))) warnings.push(label + ': script ' + script + ' does not exist');
+    };
+    for (const item of config.components) {
+      if (item.runtime) {
+        inspectCommand(item.runtime.command, item.runtime.cwd, item.name + ' start');
+        if (item.runtime.lifecycle === 'detached') {
+          inspectCommand(item.runtime.statusCommand, item.runtime.cwd, item.name + ' status');
+          inspectCommand(item.runtime.stopCommand, item.runtime.cwd, item.name + ' stop');
+        } else if (item.kind === 'service' && /\b(?:docker\s+compose|docker-compose)\s+up\b/.test(item.runtime.command.join(' '))) {
+          warnings.push(item.name + ': Compose startup needs detached lifecycle with real status and stop commands.');
+        }
+      }
+      if (item.tests) inspectCommand(item.tests.command, item.tests.cwd, item.name + ' tests');
     }
-    return { state: 'ready', root, raw, name: config.project.name, components: config.components.map(item => ({ name: item.name, kind: item.kind })), connections: config.connections.length, warnings };
+    if (inspectFolder(root).compose.length) for (const item of config.components.filter(entry => entry.kind === 'service' && entry.runtime?.lifecycle !== 'detached')) {
+      warnings.push(item.name + ': Compose detected; confirm Stop really stops this service.');
+    }
+    let env = {};
+    try {
+      const envPath = path.join(root, '.env');
+      if (fs.existsSync(envPath)) {
+        if (!fs.lstatSync(envPath).isFile()) throw new Error('The project .env is not a regular file.');
+        env = parseEnv(fs.readFileSync(envPath, 'utf8'));
+      }
+    } catch { warnings.push('Environment: the project .env could not be inspected.'); }
+    for (const item of declarations(config)) {
+      checked.environment++;
+      if (!Object.hasOwn(env, item.name) && !Object.hasOwn(process.env, item.name)) warnings.push('Environment: ' + item.name + ' is not set on this Mac.');
+    }
+    return { state: 'ready', root, raw, name: config.project.name, components: config.components.map(item => ({ name: item.name, kind: item.kind })), connections: config.connections.length, checked, warnings };
   } catch (error) { return { state: 'invalid', message: String(error.message).slice(0, 3000) }; }
 }
 
