@@ -52,7 +52,7 @@ The [agent guide](agent/project-room/SKILL.md) and [YAML schema](schemas/project
 
 https://github.com/user-attachments/assets/8047f400-c1cb-4be7-8fe4-6177e5bdecf1
 
-**[Play the walkthrough on the website](https://openprojectroom.com/#real-demo)** · [Download the MP4](assets/demo/project-room-60s.mp4)
+[Download the MP4](assets/demo/project-room-60s.mp4)
 
 The film follows **download → open a repository → review the agent's findings → run and inspect the app**. Short English captions and closer views show the service changing state, its memory history, an MCP result, an API response, data, and passing tests. Setup scenes illustrate the recommended workflow. The app panels use captured screens from **Order Desk**, a separate local sample project. Camera moves and transitions are illustrated; this is not a recording of unattended agent activity. The website's [interactive tour](https://openprojectroom.com/#live-tour) is a separate labeled simulation.
 
