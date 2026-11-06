@@ -4,7 +4,7 @@
 
 Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens the **same local repository** and gives you one window to run the app, check tests, inspect data, and follow the product plan. It is a free, open-source macOS desktop app for people building software with coding agents and the teammates who need to understand that software later.
 
-[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 90-second demo](#see-a-real-project-in-90-seconds)
+[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 60-second demo](#see-a-real-project-in-60-seconds)
 
 If this is the control window you've been missing, click **Star** in the GitHub repository header. It saves Project Room for later and helps other builders discover it.
 
@@ -48,13 +48,13 @@ Finish with the Mac download and installation steps, the exact folder to open in
 
 The [agent guide](agent/project-room/SKILL.md) and [YAML schema](schemas/projectroom.schema.json) describe the shared format. The [website](https://openprojectroom.com/#get-started) has copy buttons for both prompts.
 
-## See a real project in 90 seconds
+## See a real project in 60 seconds
 
-https://github.com/user-attachments/assets/e925b75b-cb8a-48d2-99a7-e47ad899bf63
+https://github.com/user-attachments/assets/8047f400-c1cb-4be7-8fe4-6177e5bdecf1
 
-**[Play the walkthrough on the website](https://openprojectroom.com/#real-demo)** · [Download the MP4](assets/demo/project-room-from-repo-to-runtime.mp4)
+**[Play the walkthrough on the website](https://openprojectroom.com/#real-demo)** · [Download the MP4](assets/demo/project-room-60s.mp4)
 
-The film follows **download → open a repository → review the agent's findings → configure Project Room → run and inspect the app**. Setup scenes illustrate the recommended workflow. The Overview, Services, MCP, API, Test, and Data panels use captured screens from **Order Desk**, a separate local sample project. Actions and transitions are illustrated; this is not a recording of unattended agent activity. The website's [interactive tour](https://openprojectroom.com/#live-tour) is a separate labeled simulation.
+The film follows **download → open a repository → review the agent's findings → run and inspect the app**. Short English captions and closer views show the service changing state, its memory history, an MCP result, an API response, data, and passing tests. Setup scenes illustrate the recommended workflow. The app panels use captured screens from **Order Desk**, a separate local sample project. Camera moves and transitions are illustrated; this is not a recording of unattended agent activity. The website's [interactive tour](https://openprojectroom.com/#live-tour) is a separate labeled simulation.
 
 [![Project Room Overview in a real Order Desk project: running services, test result, backlog, build details, and local CPU history](assets/screenshots/order-desk-overview.png)](assets/screenshots/order-desk-overview.png)
 
