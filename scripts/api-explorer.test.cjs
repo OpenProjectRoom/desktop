@@ -4,7 +4,8 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { loadConfig } = require('./config.cjs');
-const { readSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('../desktop/api-explorer.cjs');
+const Ajv = require('ajv/dist/2020');
+const { readSpec, loadApiSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest } = require('../desktop/api-explorer.cjs');
 const { apiRequestFromDraft } = require('../dist/api-request.js');
 
 test('OpenAPI parameter fields produce a concrete request while unsupported uploads stay blocked', () => {
@@ -45,6 +46,29 @@ test('discovers real OpenAPI operations and manages multiple YAML sources', t =>
   const after = removeApiSource(root, first.id);
   assert.deepEqual(after.config.workspace.apiSources.map(item => item.id), [second.id]);
   assert.equal(discoverSpecs(root).length, 1);
+});
+
+test('loads a live OpenAPI document only on request and only from the configured API origin', async t => {
+  const root = fixture(t);
+  const saved = addApiSource(root, { name: 'Live API', baseUrl: 'http://127.0.0.1:43179/rest', specPath: '/open-api/core' });
+  assert.deepEqual(listApiSources(root, saved.config).find(item => item.id === `yaml:${saved.id}`).operations, []);
+  let requested = false;
+  const result = await loadApiSpec(saved.config, saved.id, async (url, options) => {
+    requested = true;
+    assert.equal(url.href, 'http://127.0.0.1:43179/open-api/core');
+    assert.equal(options.redirect, 'error');
+    return new Response(JSON.stringify({ openapi: '3.1.0', info: { title: 'Live API', version: '1' }, paths: { '/orders': { get: { responses: { '200': { description: 'OK' } } } } } }), { headers: { 'content-type': 'application/json' } });
+  });
+  assert.equal(requested, true);
+  assert.deepEqual(result.operations.map(item => `${item.method} ${item.path}`), ['GET /orders']);
+  assert.equal(result.source, '/open-api/core');
+  assert.throws(() => addApiSource(root, { name: 'Unsafe', baseUrl: 'https://example.com', specPath: '//evil.example/spec' }), /plain OpenAPI path/);
+  assert.throws(() => addApiSource(root, { name: 'Ambiguous', baseUrl: 'https://example.com', spec: 'specs/001-orders/contracts/openapi.yaml', specPath: '/open-api/core' }), /either/);
+  const validate = new Ajv().compile(require('../schemas/projectroom.schema.json'));
+  const ambiguous = structuredClone(saved.config);
+  ambiguous.workspace.apiSources[0].spec = 'docs/openapi.yaml';
+  assert.equal(validate(ambiguous), false);
+  await assert.rejects(loadApiSpec(saved.config, saved.id, async () => new Response('{}', { headers: { 'content-length': '2000001' } })), /2 MB/);
 });
 
 test('keeps common OpenAPI request and response details, including local references', t => {

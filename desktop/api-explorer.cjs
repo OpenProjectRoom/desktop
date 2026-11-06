@@ -17,6 +17,13 @@ function cleanUrl(raw) {
   }
   return url.toString().replace(/\/$/, '');
 }
+function cleanSpecPath(raw) {
+  const value = String(raw || '').trim();
+  if (!value || value.length > 300 || !value.startsWith('/') || value.startsWith('//') || /[?#%\\\s]/.test(value) || value.split('/').includes('..') || value.split('/').includes('.')) {
+    throw new Error('Use a plain OpenAPI path on this API, such as /open-api/core.');
+  }
+  return value;
+}
 function validateAuth(auth) {
   if (!auth || typeof auth !== 'object') return null;
   if (auth.type === 'none') return { type: 'none' };
@@ -81,11 +88,7 @@ function mediaDetails(document, content) {
       example: media?.example ?? localReference(document, firstExample)?.value ?? undefined };
   });
 }
-function readSpec(root, relative) {
-  const file = cleanSpec(root, relative);
-  if (!file) return null;
-  const raw = fs.readFileSync(file, 'utf8');
-  const spec = /\.json$/i.test(file) ? JSON.parse(raw) : YAML.parse(raw, { uniqueKeys: true });
+function describeSpec(spec) {
   if (!spec || typeof spec !== 'object' || !/^3\./.test(String(spec.openapi || ''))) throw new Error('Only OpenAPI 3.x documents are supported.');
   const operations = [];
   for (const [route, rawPathItem] of Object.entries(spec.paths || {})) {
@@ -118,6 +121,32 @@ function readSpec(root, relative) {
     if (operations.length >= 300) break;
   }
   return { title: String(spec.info?.title || 'OpenAPI'), version: String(spec.info?.version || ''), operations, suggestedUrl: Array.isArray(spec.servers) && typeof spec.servers[0]?.url === 'string' ? spec.servers[0].url : '' };
+}
+function readSpec(root, relative) {
+  const file = cleanSpec(root, relative);
+  if (!file) return null;
+  const raw = fs.readFileSync(file, 'utf8');
+  return describeSpec(/\.json$/i.test(file) ? JSON.parse(raw) : YAML.parse(raw, { uniqueKeys: true }));
+}
+async function loadApiSpec(config, id, fetcher = fetch) {
+  const source = (config.workspace?.apiSources || []).find(item => item.id === id);
+  if (!source?.specPath) throw new Error('This API has no live OpenAPI path configured.');
+  const base = new URL(cleanUrl(source.baseUrl));
+  const target = new URL(cleanSpecPath(source.specPath), base.origin);
+  const response = await fetcher(target, { method: 'GET', redirect: 'error', signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error(`OpenAPI endpoint returned HTTP ${response.status}.`);
+  if (Number(response.headers.get('content-length') || 0) > 2_000_000) throw new Error('OpenAPI document exceeds 2 MB.');
+  const chunks = [];
+  let size = 0;
+  for await (const chunk of response.body || []) {
+    size += chunk.length;
+    if (size > 2_000_000) { await response.body?.cancel(); throw new Error('OpenAPI document exceeds 2 MB.'); }
+    chunks.push(Buffer.from(chunk));
+  }
+  const raw = Buffer.concat(chunks).toString('utf8');
+  const document = /json/i.test(response.headers.get('content-type') || '') || raw.trimStart().startsWith('{')
+    ? JSON.parse(raw) : YAML.parse(raw, { uniqueKeys: true });
+  return { ...describeSpec(document), source: source.specPath };
 }
 function discoverSpecs(root) {
   const found = [];
@@ -180,7 +209,9 @@ function addApiSource(root, input) {
   const description = String(input.description || '').trim();
   if (description.length > 240) throw new Error('Description is too long.');
   if (description) item.description = description;
+  if (input.spec && input.specPath) throw new Error('Choose either a project OpenAPI file or a live endpoint path.');
   if (input.spec) { readSpec(root, input.spec); item.spec = input.spec; }
+  if (input.specPath) item.specPath = cleanSpecPath(input.specPath);
   const authEnv = String(input.authEnv || '').trim();
   if (authEnv && !/^[A-Z][A-Z0-9_]*$/.test(authEnv)) throw new Error('Use an environment name such as API_TOKEN, never a value.');
   if (authEnv) item.authEnv = authEnv;
@@ -253,4 +284,4 @@ async function sendApiRequest(root, config, input, getSecret, fetcher = fetch, g
   return { status: response.status, statusText: response.statusText, durationMs: Date.now() - started, contentType: response.headers.get('content-type') || '', body: text.slice(0, 200_000), truncated: text.length > 200_000, method, path: target.pathname };
 }
 
-module.exports = { cleanUrl, validateAuth, readSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest };
+module.exports = { cleanUrl, cleanSpecPath, validateAuth, readSpec, loadApiSpec, discoverSpecs, listApiSources, addApiSource, removeApiSource, sendApiRequest };

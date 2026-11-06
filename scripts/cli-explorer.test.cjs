@@ -65,6 +65,28 @@ test('CLI discovery identifies Cargo and Python entry metadata without executing
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
 
+test('CLI discovery keeps Go examples, shell wrappers and unbuilt package bins distinct', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-cli-audit-'));
+  try {
+    fs.writeFileSync(path.join(root, 'go.mod'), 'module example.test/pilot\n\ngo 1.23\n');
+    fs.mkdirSync(path.join(root, 'examples', 'base'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'examples/base/main.go'), 'package main\nfunc main() {}\n');
+    fs.mkdirSync(path.join(root, 'scripts'));
+    fs.writeFileSync(path.join(root, 'scripts/pilot'), '#!/bin/sh\necho ready\n', { mode: 0o755 });
+    fs.writeFileSync(path.join(root, 'scripts/build.sh'), '#!/bin/sh\necho build\n', { mode: 0o755 });
+    fs.mkdirSync(path.join(root, 'packages', 'pilot', 'src'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'packages/pilot/package.json'), JSON.stringify({ name: 'pilot', bin: 'dist/cli.cjs' }));
+    fs.writeFileSync(path.join(root, 'packages/pilot/src/cli.ts'), 'export {};\n');
+    const found = discoverCliTools(root);
+    assert.ok(found.some(item => item.path === 'examples/base/main.go' && item.available));
+    assert.ok(found.some(item => item.path === 'scripts/pilot' && item.available));
+    assert.equal(found.some(item => item.path === 'scripts/build.sh'), false);
+    const unbuilt = found.find(item => item.path === 'packages/pilot/dist/cli.cjs');
+    assert.equal(unbuilt?.available, false);
+    assert.throws(() => inspectCliHelp(root, {}, unbuilt.id, '--help'), /Build this CLI/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
 test('CLI trial passes separate arguments, bounds input and redacts local secret output', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-cli-trial-'));
   try {

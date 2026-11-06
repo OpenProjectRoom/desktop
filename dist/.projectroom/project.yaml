@@ -33,7 +33,7 @@ product:
       relatedComponents: [product-spec, web]
     - id: source-audited-setup
       title: Source-audited project setup
-      summary: Require a second-pass source audit across every Project Room capability, reconcile findings with YAML, and report evidence, uncertainty and unsupported techniques before configuring the project.
+      summary: Require a second-pass source audit across every Project Room capability, distinguish launch profiles and external clients from project servers, reconcile findings with YAML, and report evidence, uncertainty and unsupported techniques before configuring the project.
       status: done
       relatedComponents: [product-spec, web]
     - id: detached-service-lifecycle
@@ -123,12 +123,12 @@ product:
       relatedComponents: [product-spec, tests]
     - id: mcp-explorer
       title: MCP Explorer
-      summary: Discover project MCP servers, connect on request with local Bearer or remote OAuth when configured, inspect tools, resources and prompts, and render structured and media results.
+      summary: Show project registrations separately from coding-tool client settings; connect on request with local Bearer or remote OAuth when configured, inspect tools, resources and prompts, and render structured and media results.
       status: done
       relatedComponents: [product-spec, web]
     - id: api-explorer
       title: API Explorer
-      summary: Discover OpenAPI files, show request and response schemas, register HTTP APIs with Bearer, API key or public-client OAuth, and send explicit local requests.
+      summary: Discover OpenAPI files or load a configured live OpenAPI path on request, show schemas, register HTTP APIs with Bearer, API key or public-client OAuth, and send explicit requests.
       status: done
       relatedComponents: [product-spec, web, api]
     - id: test-case-explorer

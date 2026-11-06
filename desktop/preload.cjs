@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('productView', {
   listEnvironment: () => ipcRenderer.invoke('environment:list'),
   listMcpServers: () => ipcRenderer.invoke('mcp:list'),
   listApiSources: () => ipcRenderer.invoke('api:list'),
+  loadApiSpec: id => ipcRenderer.invoke('api:load-spec', String(id)),
   addApiSource: input => ipcRenderer.invoke('api:add', input),
   removeApiSource: id => ipcRenderer.invoke('api:remove', String(id)),
   sendApiRequest: input => ipcRenderer.invoke('api:request', input),

@@ -36,6 +36,8 @@ test('MCP discovery stays read-only and the built-in server can be inspected and
     const found = explorer.list();
     assert.equal(found.length, 2);
     assert.equal(found[1].source, '.mcp.json');
+    assert.equal(found[0].origin, 'built-in');
+    assert.equal(found[1].origin, 'client-config');
     assert.deepEqual(found[1].environment, [{ name: 'LOCAL_TOKEN', available: true }]);
     assert.equal(JSON.stringify(found).includes('private-value'), false);
     assert.deepEqual(events, []);
@@ -57,6 +59,7 @@ test('YAML MCP metadata exposes connection targets and environment names', () =>
     const found = discoverMcpServers(root, config);
     assert.equal(found.length, 1);
     const visible = publicCandidate(found[0]);
+    assert.equal(visible.origin, 'project-registration');
     assert.equal(visible.endpoint, 'https://example.com/mcp');
     assert.deepEqual(visible.environment, [{ name: 'MCP_TOKEN', available: false }]);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }

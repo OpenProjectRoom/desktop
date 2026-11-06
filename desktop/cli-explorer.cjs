@@ -6,6 +6,7 @@ const { readCommandHelp } = require('./command-tools.cjs');
 
 const SKIP = new Set(['.git', '.productview', 'node_modules', 'dist', 'build', 'target', '.next', 'reports', 'coverage']);
 const HELP_ARGS = new Set(['--help', '-h', 'help']);
+const SCAN_FIRST = ['package.json', 'scripts', 'bin', 'cli', 'cmd', 'examples', 'packages', 'apps', 'crates', 'tools', 'src'];
 
 function discoverCliTools(root, config = {}) {
   if (!root) return [];
@@ -47,7 +48,15 @@ function discoverCliTools(root, config = {}) {
     if (candidates.has(id)) return;
     const linked = (config.components || []).find(item => item.kind === 'commandTool' &&
       (item.cli?.source === relative || command.every((part, index) => item.runtime?.command?.[index] === part)));
-    candidates.set(id, { id, name, source, path: relative, command, cwd: '.', linkedId: linked?.id || null });
+    candidates.set(id, { id, name, source, path: relative, command, cwd: '.', available: true, linkedId: linked?.id || null });
+  }
+
+  function addUnbuilt(name, relative, source) {
+    if (candidates.size >= 80 || path.isAbsolute(relative) || relative.split(/[\\/]/).includes('..') || !path.resolve(base, relative).startsWith(base + path.sep)) return;
+    const command = commandFor(relative, { mode: 0 });
+    if (!command) return;
+    const id = `package:${name}:${relative}`;
+    if (!candidates.has(id)) candidates.set(id, { id, name, source, path: relative, command, cwd: '.', available: false, linkedId: null });
   }
 
   function inspectPackage(relative) {
@@ -60,7 +69,13 @@ function discoverCliTools(root, config = {}) {
       const bins = typeof pkg.bin === 'string' ? { [pkg.name?.split('/').pop() || path.basename(path.dirname(relative))]: pkg.bin } : pkg.bin;
       if (!bins || typeof bins !== 'object' || Array.isArray(bins)) return;
       for (const [name, target] of Object.entries(bins)) {
-        if (typeof target === 'string') add(name, path.normalize(path.join(path.dirname(relative), target)), `${relative} · bin`, 'package');
+        if (typeof target !== 'string') continue;
+        const location = path.normalize(path.join(path.dirname(relative), target));
+        if (file(location)) add(name, location, `${relative} · bin`, 'package');
+        else if (/^(?:dist|build)\//.test(target.replace(/^\.\//, '')) && !target.split(/[\\/]/).includes('..') &&
+          (file(path.join(path.dirname(relative), 'src', 'cli.ts')) || file(path.join(path.dirname(relative), 'src', 'index.ts')))) {
+          addUnbuilt(name, location, `${relative} · bin`);
+        }
       }
     } catch { /* Invalid metadata is only a missing discovery hint. */ }
   }
@@ -108,12 +123,16 @@ function discoverCliTools(root, config = {}) {
     if (depth > 3 || visited >= 700 || candidates.size >= 80) return;
     let entries;
     try { entries = fs.readdirSync(path.join(base, relative), { withFileTypes: true }); } catch { return; }
+    entries.sort((a, b) => {
+      const rank = entry => { const index = SCAN_FIRST.indexOf(entry.name); return index < 0 ? SCAN_FIRST.length : index; };
+      return rank(a) - rank(b) || a.name.localeCompare(b.name);
+    });
     for (const entry of entries) {
       if (++visited > 700 || candidates.size >= 80) break;
       if (entry.isSymbolicLink() || SKIP.has(entry.name) || entry.name.startsWith('.')) continue;
       const next = path.normalize(path.join(relative, entry.name));
       if (entry.isDirectory()) {
-        if (depth < 3 && (depth === 0 || ['bin', 'cli', 'cmd', 'scripts', 'packages', 'apps', 'crates', 'tools', 'src'].includes(entry.name) || /(^|[/\\])(packages|apps|crates|tools|cmd)$/.test(relative))) walk(next, depth + 1);
+        if (depth < 3 && (depth === 0 || ['bin', 'cli', 'cmd', 'scripts', 'packages', 'apps', 'crates', 'tools', 'src'].includes(entry.name) || /(^|[/\\])(packages|apps|crates|tools|cmd|examples)$/.test(relative))) walk(next, depth + 1);
         continue;
       }
       if (!entry.isFile()) continue;
@@ -124,7 +143,13 @@ function discoverCliTools(root, config = {}) {
         const name = path.basename(relative);
         add(name, next, `${next} · Go command`, 'go', ['go', 'run', './' + relative.split(path.sep).join('/')]);
       }
-      else if (relative === '.' || /(^|[/\\])(bin|cli)([/\\]|$)/.test(relative) || /(?:^|[-_])(cli|command|tool)(?:[-_.]|$)/i.test(entry.name)) {
+      else if (entry.name === 'main.go' && /(^|[/\\])examples[/\\][^/\\]+$/.test(relative) && file('go.mod')) {
+        const name = path.basename(relative);
+        add(name, next, `${next} · Go example command`, 'go', ['go', 'run', './' + relative.split(path.sep).join('/')]);
+      }
+      else if (relative === '.' || /(^|[/\\])(bin|cli)([/\\]|$)/.test(relative) ||
+        (/(^|[/\\])scripts([/\\]|$)/.test(relative) && (!path.extname(entry.name) || /(?:^|[-_])(cli|command|tool)(?:[-_.]|$)/i.test(entry.name))) ||
+        /(?:^|[-_])(cli|command|tool)(?:[-_.]|$)/i.test(entry.name)) {
         const found = file(next);
         if (!found || !(found.stat.mode & 0o111)) continue;
         const first = fs.readFileSync(found.location, { encoding: 'utf8', flag: 'r' }).slice(0, 180);
@@ -148,6 +173,7 @@ function helpArgument(value) {
 }
 function inspectCliHelp(root, config, id, helpArg) {
   const item = candidate(root, config, id);
+  if (!item.available) throw new Error('Build this CLI before reading its help.');
   const environment = Object.fromEntries(['PATH', 'HOME', 'USER', 'TMPDIR', 'LANG', 'LC_ALL'].filter(name => process.env[name]).map(name => [name, process.env[name]]));
   return readCommandHelp(root, id, [...item.command, helpArgument(helpArg)], fs.realpathSync(root), environment, [], ['cargo', 'go'].includes(item.command[0]) ? 45000 : 8000);
 }
@@ -158,6 +184,7 @@ function linkCliTool(root, id, helpArg) {
   if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
   const current = loadConfig(file);
   const item = candidate(base, current.config, id);
+  if (!item.available) throw new Error('Build this CLI before linking it as a runnable tool.');
   if (item.linkedId) throw new Error('This CLI entry point is already linked in .projectroom/project.yaml.');
   const argument = helpArgument(helpArg);
   const stem = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cli';

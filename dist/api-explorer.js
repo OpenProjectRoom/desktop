@@ -4,6 +4,7 @@
   labels.api = 'API Explorer';
   let loadedRoot;
   let sources = [];
+  let remoteSpecs = {};
   let selectedId = null;
   let selectedOperation = null;
   let result = null;
@@ -65,7 +66,7 @@
     if (!pv || !projectRoot) { sources = []; render(); return; }
     busy = true; error = '';
     try {
-      sources = await pv.listApiSources();
+      sources = (await pv.listApiSources()).map(item => remoteSpecs[item.id]?.path === item.specPath && remoteSpecs[item.id]?.baseUrl === item.baseUrl ? { ...item, ...remoteSpecs[item.id].detail } : item);
       if (!sources.some(item => item.id === selectedId)) {
         selectedId = sources[0]?.id || null;
         selectedOperation = null;
@@ -78,12 +79,12 @@
   }
 
   function operationList(item) {
-    if (!item.operations?.length) return `<div class="api-empty-list">${item.spec ? 'No operations found in this OpenAPI file.' : 'No OpenAPI file linked. Enter any relative endpoint path below.'}</div>`;
+    if (!item.operations?.length) return `<div class="api-empty-list">${item.specPath ? 'Load the live OpenAPI document to browse its operations.' : item.spec ? 'No operations found in this OpenAPI file.' : 'No OpenAPI file linked. Enter any relative endpoint path below.'}</div>`;
     return item.operations.map((operation, index) => `<button type="button" class="api-operation${selectedOperation === index ? ' active' : ''}" data-api="operation:${index}"><span class="api-method ${safe(operation.method.toLowerCase())}">${safe(operation.method)}</span><span><strong>${safe(operation.path)}</strong><small>${safe(operation.summary || operation.description || 'No summary')}</small></span></button>`).join('');
   }
 
   function sourceList() {
-    return sources.length ? sources.map(item => `<button type="button" class="api-source${selectedId === item.id ? ' selected' : ''}" data-api="select:${safe(item.id)}"><span class="api-source-icon">⌁</span><span><strong>${safe(item.name)}</strong><small>${safe(item.linked ? item.baseUrl : item.source)} · ${item.operations?.length || 0} endpoints</small></span>${item.linked ? '<i title="Registered in YAML"></i>' : ''}</button>`).join('') : '<p class="api-empty-list">No API sources found. Add one by URL, or keep an OpenAPI file in the project.</p>';
+    return sources.length ? sources.map(item => `<button type="button" class="api-source${selectedId === item.id ? ' selected' : ''}" data-api="select:${safe(item.id)}"><span class="api-source-icon">⌁</span><span><strong>${safe(item.name)}</strong><small>${safe(item.linked ? item.baseUrl : item.source)} · ${item.specPath && !item.operations?.length ? 'OpenAPI ready to load' : `${item.operations?.length || 0} endpoints`}</small></span>${item.linked ? '<i title="Registered in YAML"></i>' : ''}</button>`).join('') : '<p class="api-empty-list">No API sources found. Add one by URL, or keep an OpenAPI file in the project.</p>';
   }
 
   function main() {
@@ -94,7 +95,7 @@
     const draft = requestDraft || { method: op?.method || 'GET', path: op?.path || '/', headers: '{}', body: exampleBody(media), contentType: media?.type || '', params: {} };
     const auth = item.auth || (item.authEnv ? { type: 'bearer', env: item.authEnv } : { type: 'none' });
     const authLabel = auth.type === 'apiKey' ? `API key in ${auth.in} from local ${auth.env}` : auth.type === 'bearer' ? `Bearer token from local ${auth.env}` : auth.type === 'oauth2' ? `OAuth · ${authStatus?.signedIn ? 'signed in' : 'sign in required'}` : 'No auth configured';
-    return `<div class="api-main-head"><div><span class="api-kicker">${item.linked ? 'REGISTERED API' : 'DISCOVERED OPENAPI FILE'}</span><h2>${safe(item.name)}</h2><p>${safe(item.description || item.specTitle || item.source)}</p><code>${safe(item.baseUrl || item.source)}</code>${item.specVersion ? `<small>OpenAPI document version ${safe(item.specVersion)}</small>` : ''}</div><div class="api-head-actions">${item.linked && auth.type === 'oauth2' ? `${button(authStatus?.signedIn ? 'Sign in again' : 'Sign in with OAuth', 'sign-in', false, busy)}${authStatus?.signedIn ? button('Forget sign-in', 'sign-out', false, busy) : ''}` : ''}${item.linked ? button('Remove from YAML', 'remove') : button('Add to project YAML', 'link', true)}</div></div>
+    return `<div class="api-main-head"><div><span class="api-kicker">${item.linked ? 'REGISTERED API' : 'DISCOVERED OPENAPI FILE'}</span><h2>${safe(item.name)}</h2><p>${safe(item.description || item.specTitle || item.source)}</p><code>${safe(item.baseUrl || item.source)}</code>${item.specVersion ? `<small>OpenAPI document version ${safe(item.specVersion)}</small>` : ''}</div><div class="api-head-actions">${item.linked && item.specPath ? button(busy ? 'Loading…' : 'Load OpenAPI', 'load-spec', false, busy) : ''}${item.linked && auth.type === 'oauth2' ? `${button(authStatus?.signedIn ? 'Sign in again' : 'Sign in with OAuth', 'sign-in', false, busy)}${authStatus?.signedIn ? button('Forget sign-in', 'sign-out', false, busy) : ''}` : ''}${item.linked ? button('Remove from YAML', 'remove') : button('Add to project YAML', 'link', true)}</div></div>
       ${item.error ? `<p class="api-alert">${safe(item.error)}</p>` : ''}
       <div class="api-explorer-body"><div class="api-operations"><div class="api-pane-title"><strong>Endpoints</strong><span>${item.operations?.length || 0}</span></div>${operationList(item)}</div>
       <div class="api-request"><div class="api-pane-title"><strong>Request</strong><span>Runs only when you click</span></div>
@@ -122,7 +123,7 @@
   function openAdd(item = null) {
     let suggested = '';
     try { if (item?.suggestedUrl) { const url = new URL(item.suggestedUrl); if (url.protocol === 'https:' || (url.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(url.hostname))) suggested = url.href; } } catch { /* Relative servers require manual input. */ }
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal api-editor-modal" role="dialog" aria-modal="true" aria-label="Add API"><div class="modal-head"><h2>Add API</h2><button type="button" class="icon-btn" data-api-modal="close" aria-label="Close">×</button></div><form id="apiAddForm"><div class="modal-body"><p>The URL and optional OpenAPI path are saved in this repository's <code>.projectroom/project.yaml</code>. Set secret values in local Environment; OAuth tokens use macOS encryption.</p><label>Name<input name="name" required maxlength="100" value="${safe(item?.name || '')}" placeholder="Orders API"></label><label>Base URL<input name="baseUrl" type="url" required value="${safe(suggested)}" placeholder="http://localhost:4000"></label><label>OpenAPI file <small>optional, relative to project root</small><input name="spec" value="${safe(item?.spec || '')}" placeholder="docs/openapi.yaml"></label><label>Authentication<select name="authType" id="apiAuthType"><option value="none">None</option><option value="bearer">Bearer token</option><option value="apiKey">API key</option><option value="oauth2">OAuth browser sign-in</option></select></label><div id="apiAuthFields"></div><label>Description <small>optional</small><input name="description" maxlength="240" placeholder="Local order lookup endpoints"></label></div><div class="modal-actions"><button type="button" class="btn" data-api-modal="close">Cancel</button><button type="submit" class="btn primary">Add to repository</button></div></form></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal component-editor-modal api-editor-modal" role="dialog" aria-modal="true" aria-label="Add API"><div class="modal-head"><h2>Add API</h2><button type="button" class="icon-btn" data-api-modal="close" aria-label="Close">×</button></div><form id="apiAddForm"><div class="modal-body"><p>The URL and optional OpenAPI source are saved in this repository's <code>.projectroom/project.yaml</code>. Set secret values in local Environment; OAuth tokens use macOS encryption.</p><label>Name<input name="name" required maxlength="100" value="${safe(item?.name || '')}" placeholder="Orders API"></label><label>Base URL<input name="baseUrl" type="url" required value="${safe(suggested)}" placeholder="http://localhost:4000"></label><label>OpenAPI file <small>optional, relative to project root</small><input name="spec" value="${safe(item?.spec || '')}" placeholder="docs/openapi.yaml"></label><label>Live OpenAPI path <small>optional, on this same API; use either file or path</small><input name="specPath" value="${safe(item?.specPath || '')}" placeholder="/open-api/core"></label><label>Authentication<select name="authType" id="apiAuthType"><option value="none">None</option><option value="bearer">Bearer token</option><option value="apiKey">API key</option><option value="oauth2">OAuth browser sign-in</option></select></label><div id="apiAuthFields"></div><label>Description <small>optional</small><input name="description" maxlength="240" placeholder="Local order lookup endpoints"></label></div><div class="modal-actions"><button type="button" class="btn" data-api-modal="close">Cancel</button><button type="submit" class="btn primary">Add to repository</button></div></form></div></div>`;
     const updateAuth = () => {
       const type = document.getElementById('apiAuthType').value;
       document.getElementById('apiAuthFields').innerHTML = type === 'bearer' ? `<label>Bearer token variable <small>name only</small><input name="authEnv" required pattern="[A-Z][A-Z0-9_]*" placeholder="ORDERS_API_TOKEN"></label>` :
@@ -144,7 +145,7 @@
   const previousRender = render;
   render = function () {
     if (state.page !== 'api') return previousRender();
-    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; sources = []; selectedId = null; selectedOperation = null; requestDraft = null; result = null; queueMicrotask(reload); }
+    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; sources = []; remoteSpecs = {}; selectedId = null; selectedOperation = null; requestDraft = null; result = null; queueMicrotask(reload); }
     document.body.classList.add('dashboard-page');
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === 'api'));
     document.querySelector('.breadcrumb').innerHTML = workspaceBreadcrumb('API Explorer');
@@ -172,6 +173,19 @@
     if (action === 'add' && pv && projectRoot) openAdd();
     if (action === 'link' && pv && projectRoot) openAdd(selected());
     if (action === 'remove') openRemove();
+    if (action === 'load-spec' && pv?.loadApiSpec && selected()?.specPath) {
+      const sourceId = selectedId;
+      const specPath = selected().specPath;
+      const baseUrl = selected().baseUrl;
+      busy = true; error = ''; render();
+      try {
+        const detail = await pv.loadApiSpec(sourceId.slice(5));
+        remoteSpecs[sourceId] = { path: specPath, baseUrl, detail: { operations: detail.operations, specTitle: detail.title, specVersion: detail.version } };
+        if (selectedId === sourceId) { selectedOperation = null; requestDraft = null; result = null; }
+        await reload();
+      } catch (cause) { error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
+      finally { busy = false; render(); }
+    }
     if ((action === 'sign-in' || action === 'sign-out') && pv && selectedId) {
       busy = true; error = ''; render();
       try { authStatus = action === 'sign-in' ? await pv.signInApi(selectedId) : await pv.signOutApi(selectedId); toast(action === 'sign-in' ? 'API OAuth sign-in completed.' : 'API OAuth session removed.'); }

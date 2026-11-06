@@ -61,8 +61,9 @@ function publicCandidate(item, hasEnvironment = () => false) {
     catch { endpoint = 'Invalid URL'; }
   } else endpoint = item.builtIn ? 'Bundled local server' : item.command || 'Command missing';
   const names = item.builtIn ? [] : referencedNames(item);
+  const origin = item.builtIn ? 'built-in' : item.source === '.projectroom/project.yaml' ? 'project-registration' : 'client-config';
   return { id: item.id, name: item.name, description: item.description, source: item.source, transport: item.transport,
-    endpoint, builtIn: !!item.builtIn, authType: item.auth?.type || (item.authEnv ? 'bearer' : 'none'), environment: names.map(name => ({ name, available: hasEnvironment(name) || !!item.env?.[name] })) };
+    endpoint, builtIn: !!item.builtIn, origin, authType: item.auth?.type || (item.authEnv ? 'bearer' : 'none'), environment: names.map(name => ({ name, available: hasEnvironment(name) || !!item.env?.[name] })) };
 }
 
 function substitute(value, environment) {

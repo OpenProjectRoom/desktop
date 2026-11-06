@@ -69,6 +69,7 @@
           "description": { "type": "string", "maxLength": 240 },
           "baseUrl": { "type": "string", "minLength": 1, "maxLength": 500 },
           "spec": { "$ref": "#/$defs/relativePath" },
+          "specPath": { "type": "string", "pattern": "^/[A-Za-z0-9._~/-]{1,299}$" },
           "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
           "auth": { "type": "object", "required": ["type"], "properties": {
             "type": { "enum": ["none", "bearer", "apiKey", "oauth2"] },
@@ -81,7 +82,7 @@
             "clientId": { "type": "string", "minLength": 1, "maxLength": 240 },
             "scopes": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true }
           }, "additionalProperties": false }
-        }, "additionalProperties": false } },
+        }, "not": { "required": ["spec", "specPath"] }, "additionalProperties": false } },
         "environment": { "type": "array", "items": { "type": "object", "required": ["name"], "properties": {
           "name": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
           "description": { "type": "string", "maxLength": 240 }
