@@ -21,6 +21,12 @@ for (const item of specs.entries.filter(entry => entry.type === 'file' && entry.
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.copyFileSync(path.resolve(__dirname, '..', item.path), destination);
 }
+for (const record of [...specs.specKit.bugs, ...specs.specKit.ideas]) for (const name of record.artifacts) {
+  const relative = `${record.directory}/${name}`;
+  const destination = path.resolve(__dirname, '../dist', relative);
+  fs.mkdirSync(path.dirname(destination), { recursive: true });
+  fs.copyFileSync(path.resolve(__dirname, '..', relative), destination);
+}
 const docs = listDocumentation(path.resolve(__dirname, '..'), config);
 fs.writeFileSync(path.resolve(__dirname, '../dist/docs-manifest.json'), JSON.stringify(docs, null, 2) + '\n');
 for (const item of docs.entries.filter(entry => entry.type === 'file')) {

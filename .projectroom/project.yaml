@@ -56,6 +56,11 @@ product:
       summary: Keep Vision, Roadmap, North Star and Command-line Tools out of the default navigation, with shared YAML switches in Preferences.
       status: done
       relatedComponents: [product-spec, web]
+    - id: unified-product-work
+      title: One backlog for product work and Spec Kit artifacts
+      summary: Show local ideas, features and bugs with Spec Kit feature, bug and assessment files in one Backlog view; keep Roadmap optional and remove duplicate Requirements navigation.
+      status: done
+      relatedComponents: [product-spec, web]
     - id: local-environment-values
       title: Local environment values
       summary: Show declared variable names and local availability; read and edit the ignored project .env, copy a stored value on request, and pass values only to explicitly started processes.

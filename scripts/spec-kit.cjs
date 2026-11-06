@@ -43,6 +43,19 @@ function activeFeature(root) {
     return typeof value === 'string' ? slash(value.replace(/\/$/, '')) : null;
   } catch { return null; }
 }
+function processRecords(root, folder, names) {
+  const base = path.join(root, '.specify', folder);
+  let children;
+  try { if (!fs.lstatSync(base).isDirectory() || fs.lstatSync(base).isSymbolicLink()) return []; children = fs.readdirSync(base, { withFileTypes: true }); } catch { return []; }
+  return children.filter(child => child.isDirectory() && !child.isSymbolicLink()).slice(0, 300).map(child => {
+    const directory = slash(path.join('.specify', folder, child.name));
+    const available = names.filter(name => regularFile(root, `${directory}/${name}`));
+    if (!available.length) return null;
+    const first = `${directory}/${available[0]}`;
+    const title = read(root, first).match(/^#\s+(.+)$/m)?.[1]?.trim() || child.name.replace(/[-_]/g, ' ');
+    return { directory, title, main: first, artifacts: available };
+  }).filter(Boolean).sort((a, b) => a.directory.localeCompare(b.directory));
+}
 function inspectSpecKit(root, config, roots, context = {}) {
   let initialized = false;
   try { initialized = fs.statSync(path.join(root, '.specify')).isDirectory() && !fs.lstatSync(path.join(root, '.specify')).isSymbolicLink(); } catch { /* Not initialized. */ }
@@ -102,7 +115,9 @@ function inspectSpecKit(root, config, roots, context = {}) {
       features.push({ directory: dir, spec, title, active: active === dir || active?.endsWith(`/${child.name}`), stage, artifacts: available, contracts, tasks, checklists, requirementIds, successIds, clarifications, components, tests, linkedRequirements, trace, checks });
     }
   }
-  return { detected: Boolean(initialized || features.length || active), constitution, activeFeature: active, features: features.sort((a, b) => a.directory.localeCompare(b.directory)) };
+  const bugs = processRecords(root, 'bugs', ['assessment.md', 'fix.md', 'test.md', 'validation.md']);
+  const ideas = processRecords(root, 'assessments', ['intake.md', 'research.md', 'problem.md', 'concept.md', 'decision.md']);
+  return { detected: Boolean(initialized || features.length || bugs.length || ideas.length || active), constitution, activeFeature: active, features: features.sort((a, b) => a.directory.localeCompare(b.directory)), bugs, ideas };
 }
 
 module.exports = { inspectSpecKit };

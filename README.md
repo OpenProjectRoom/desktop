@@ -74,7 +74,7 @@ Your coding agent edits the code and [GitHub Spec Kit](https://github.com/github
 | --- | --- | --- |
 | Get your bearings | **Overview**, **Files**, **Onboarding** | Current services, recorded test runs, backlog, repository files, and which setup entries were actually found. |
 | Keep the product direction visible | **Vision**, **Roadmap**, **North Star**, **Backlog**, **Documentation** | Markdown product context and repository-backed work. Vision, Roadmap, and North Star are optional navigation views. |
-| Follow a Spec Kit feature | **Requirements** | Constitution, spec, plan, tasks, task checkboxes, requirement IDs, and links to configured components and recorded tests. |
+| Follow product work | **Backlog** | Ideas, features and bugs from local Markdown and Spec Kit, with original files and feature task progress at each item. |
 | Understand and run the local stack | **Project Map**, **Services** | Services, databases, storage, dependencies, start/stop controls, logs, build identity, and CPU/memory history. |
 | Explore interfaces | **API Explorer**, **MCP Explorer**, **CLI Explorer** | OpenAPI operations and responses; MCP tools, resources, and prompts; command help, arguments, and local output. |
 | Inspect and verify | **Data Explorer**, **Test Explorer**, **Activity** | Read-only data previews, test suites and individual supported cases, plus recorded workspace events. |
@@ -88,9 +88,7 @@ Project Room keeps the *why* visible beside the running software. The product ow
 
 [![Vision document for the Order Desk sample project](assets/screenshots/order-desk-vision.png)](assets/screenshots/order-desk-vision.png)
 
-**Spec Kit stays in its standard files.** Project Room reads <code>.specify/</code> and <code>specs/</code> rather than creating a parallel specification tree. Requirements shows the feature artifacts and task progress; optional YAML links connect requirement IDs to real components and test suites. A checked task is not treated as proof that a service is running or a requirement passes.
-
-[![Requirements view with Order Desk Spec Kit tasks and linked test evidence](assets/screenshots/order-desk-requirements.png)](assets/screenshots/order-desk-requirements.png)
+**Spec Kit stays in its standard files.** Project Room reads <code>.specify/</code> and <code>specs/</code> rather than creating a parallel specification tree. Backlog shows feature specs and task progress alongside Spec Kit bug reports and idea assessments; optional YAML links connect feature requirement IDs to real components and test suites. A checked task is not treated as proof that a service is running or a requirement passes.
 
 ## See and operate the local system
 
@@ -124,7 +122,7 @@ Test Explorer runs a configured suite or a supported individual Node/Rust test e
 
 1. Download the [signed and notarized Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications.
 2. Open Project Room and choose **Try working example**. It copies a small project to <code>~/Documents/Project Room Examples/hello-workspace</code> and opens it without starting a process.
-3. With [Node.js 20+](https://nodejs.org/) installed, start **Notes web service**, inspect its API and JSON storage, run **Node endpoint tests**, and open the linked Spec Kit feature in **Requirements**. Node is needed for this example's commands, not for the desktop app itself.
+3. With [Node.js 20+](https://nodejs.org/) installed, start **Notes web service**, inspect its API and JSON storage, run **Node endpoint tests**, and open the linked Spec Kit feature in **Backlog**. Node is needed for this example's commands, not for the desktop app itself.
 
 The [included example](examples/hello-workspace) has a real service, tests, local JSON storage, a constitution, and Spec Kit feature files. It needs no account, database server, or cloud deployment. The separate **Order Desk** screenshots above show a richer project with PostgreSQL, CLI, and MCP interfaces; Order Desk is not bundled with the desktop download.
 

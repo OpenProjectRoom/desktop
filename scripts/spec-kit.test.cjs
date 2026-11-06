@@ -42,3 +42,18 @@ test('ordinary flat specification folders remain ordinary folders', () => {
     assert.ok(found.entries.some(item => item.path === 'specs/PILOT.md'));
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+test('Spec Kit bug and idea artifacts are discovered without moving their files', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-spec-work-'));
+  const write = (relative, content) => { const target = path.join(root, relative); fs.mkdirSync(path.dirname(target), { recursive: true }); fs.writeFileSync(target, content); };
+  try {
+    write('.specify/bugs/login-crash/assessment.md', '# Login crash\n');
+    write('.specify/bugs/login-crash/fix.md', '# Fix\n');
+    write('.specify/assessments/offline-mode/intake.md', '# Offline mode\n');
+    write('.specify/assessments/offline-mode/decision.md', '# Decision\n');
+    const found = listSpecifications(root, { components: [], connections: [], views: {} });
+    assert.equal(found.specKit.detected, true);
+    assert.deepEqual(found.specKit.bugs.map(item => [item.title, item.artifacts]), [['Login crash', ['assessment.md', 'fix.md']]]);
+    assert.deepEqual(found.specKit.ideas.map(item => [item.title, item.artifacts]), [['Offline mode', ['intake.md', 'decision.md']]]);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});

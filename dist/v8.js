@@ -140,7 +140,6 @@
     ${navButton('north-star', 'clock', 'North Star')}
     ${navButton('roadmap', 'activity', 'Roadmap')}
     ${navButton('issues', 'list', 'Backlog')}
-    ${navButton('spec', 'doc', 'Requirements')}
     ${navButton('docs', 'folder', 'Documentation')}
     <div class="nav-section-label">RUN & VERIFY</div>
     ${navButton('runtime', 'play', 'Services', '<span class="count" id="runningCount">0</span>')}

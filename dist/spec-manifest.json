@@ -38,6 +38,8 @@
     "detected": false,
     "constitution": null,
     "activeFeature": null,
-    "features": []
+    "features": [],
+    "bugs": [],
+    "ideas": []
   }
 }

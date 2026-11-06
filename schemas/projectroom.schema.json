@@ -42,7 +42,7 @@
     }, "additionalProperties": false },
     "workspace": {
       "type": "object", "properties": {
-        "startPage": { "enum": ["overview", "product", "vision", "north-star", "roadmap", "docs", "map", "spec", "runtime", "commands", "mcp", "api", "tests", "data", "environment", "files", "issues", "activity"] },
+        "startPage": { "enum": ["overview", "product", "vision", "north-star", "roadmap", "docs", "map", "runtime", "commands", "mcp", "api", "tests", "data", "environment", "files", "issues", "activity"] },
         "additionalViews": { "type": "array", "items": { "enum": ["vision", "roadmap", "north-star", "commands"] }, "uniqueItems": true },
         "mcpServers": { "type": "array", "items": { "type": "object", "required": ["id", "name"], "properties": {
           "id": { "$ref": "#/$defs/id" },

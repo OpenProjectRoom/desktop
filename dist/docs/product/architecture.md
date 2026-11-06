@@ -22,7 +22,7 @@ Product Chat can run the locally installed Codex CLI or Claude Code from the des
 
 Personal appearance and sidebar preferences stay local to the app or browser. Project connections are shared metadata in `.projectroom/project.yaml`: GitHub uses `integration.repository`, Linear uses `integration.teamId`, and either may include a display `integration.url`. The Settings UI can edit these locations in a desktop workspace. It does not yet authenticate or fetch issues; credentials must not be committed to the repository.
 
-The local backlog is repository-backed: each issue is a Markdown file in `product.backlogRoot` (default `backlog/`). Stable IDs and frontmatter carry workflow state; an optional `spec` path links an issue to a Spec Kit feature. The desktop app can create and edit these files without connecting an external tracker.
+The Backlog combines repository-backed local issues with Spec Kit features, bug reports and idea assessments. Local issues remain Markdown files in `product.backlogRoot` (default `backlog/`), with stable IDs and frontmatter. An optional `spec` path links one to `specs/<feature>/`, `.specify/bugs/` or `.specify/assessments/`; linked work appears once. Project Room reads Spec Kit artifacts in place and does not copy or edit them. Roadmap is a separate optional product milestone view, not a duplicate list of implementation tasks.
 
 ## MCP Explorer
 

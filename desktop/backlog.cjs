@@ -60,7 +60,7 @@ function saveIssue(root, input) {
   const description = typeof input.description === 'string' ? input.description.trim() : '';
   if (Buffer.byteLength(description) > 100_000) throw new Error('Issue description is too long.');
   const spec = typeof input.spec === 'string' ? input.spec.trim() : '';
-  if (spec && (spec.length > 240 || path.isAbsolute(spec) || spec.split(/[\\/]/).includes('..') || !/^specs\//.test(spec))) throw new Error('Spec link must be a path below specs/.');
+  if (spec && (spec.length > 240 || path.isAbsolute(spec) || spec.split(/[\\/]/).includes('..') || !/^(?:specs\/|\.specify\/(?:bugs|assessments)\/).+\.md$/.test(spec))) throw new Error('Artifact link must be a Markdown file below specs/, .specify/bugs/ or .specify/assessments/.');
   const current = listIssues(root);
   const existing = input.id ? current.issues.find(issue => issue.id === input.id) : null;
   if (input.id && !existing) throw new Error('Unknown backlog issue.');

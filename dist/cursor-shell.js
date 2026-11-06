@@ -20,7 +20,6 @@
         <button type="button" role="menuitem" data-page="north-star">${icon('clock')}<span>North Star</span></button>
         <button type="button" role="menuitem" data-page="roadmap">${icon('activity')}<span>Roadmap</span></button>
         <button type="button" role="menuitem" data-page="issues">${icon('list')}<span>Backlog</span></button>
-        <button type="button" role="menuitem" data-page="spec">${icon('doc')}<span>Requirements</span></button>
         <button type="button" role="menuitem" data-page="docs">${icon('folder')}<span>Documentation</span></button>
         <div class="cursor-open-group">Run &amp; Verify</div>
         <button type="button" role="menuitem" data-page="runtime">${icon('play')}<span>Services</span></button>
