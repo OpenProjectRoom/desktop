@@ -84,6 +84,15 @@
         ]
       },
       {
+        "id": "desktop-security-baseline",
+        "title": "Desktop security baseline",
+        "summary": "Restrict packaged scripts and IPC to the app frame, reject linked history paths, ignore local logs by default, bound project YAML input, and pin CI actions.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "local-agent-chat",
         "title": "Local coding agent in Product Chat",
         "summary": "Connect Codex CLI or Claude Code on this Mac, expose the Project Room MCP context, and dictate into chat with on-device speech recognition.",
