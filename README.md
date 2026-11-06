@@ -10,13 +10,13 @@ If this is the control window you've been missing, click **Star** in the GitHub 
 
 [![Illustration: Project Room opens the same repository as your coding agent and lets you inspect and run local services, tests, and data](assets/hero/control-surface.png)](https://openprojectroom.com/#control-surface)
 
-*Illustrative workspace. Your coding agent edits the repository; Project Room opens that same folder and gives you controls for the running app. [Explore the interactive tour](https://openprojectroom.com/#live-tour).*
+*Illustrative project. Your coding agent edits the repository; Project Room opens that same folder and gives you controls for the running app. [Explore the interactive tour](https://openprojectroom.com/#live-tour).*
 
-## Get from download to your own workspace
+## Get from download to your own project
 
 1. **Download and open** the free [Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip). Move **Project Room.app** to Applications.
 2. **Open your project folder in Codex, Claude Code, Cursor, or your usual coding agent.** Paste the prompt for an [existing repository](#connect-an-existing-repository) or a [new app](#start-a-new-app). For an existing repository, the agent first summarizes what it found and waits for your answer before preparing `.projectroom/project.yaml`.
-3. **Open that same folder in Project Room.** Review **Onboarding** and **Project Map**, then start one configured service and run one test. Nothing starts just because you opened the folder.
+3. **Choose Open project folder in Project Room and select that same folder.** Review **Onboarding** and **Project Map**, then start one configured service and run one test. Nothing starts just because you opened the folder.
 
 ### Connect an existing repository
 
@@ -122,7 +122,7 @@ Test Explorer runs a configured suite or a supported individual Node/Rust test e
 
 ## Start with the included working example
 
-1. Download the [Apple Silicon Mac preview](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications. The preview is unsigned and unnotarized; macOS may require an explicit open in **System Settings → Privacy & Security**.
+1. Download the [signed and notarized Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications.
 2. Open Project Room and choose **Try working example**. It copies a small project to <code>~/Documents/Project Room Examples/hello-workspace</code> and opens it without starting a process.
 3. With [Node.js 20+](https://nodejs.org/) installed, start **Notes web service**, inspect its API and JSON storage, run **Node endpoint tests**, and open the linked Spec Kit feature in **Requirements**. Node is needed for this example's commands, not for the desktop app itself.
 
@@ -134,7 +134,7 @@ Project Room's shared `.projectroom/project.yaml` belongs in your repository alo
 
 ## Current boundaries
 
-Project Room is a **local development workspace**, not a cloud deployment platform. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. The first public macOS builds are unsigned; Windows and Linux packages have not been tested.
+Project Room opens a **local project folder**. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. Windows and Linux packages have not been tested.
 
 ## Develop and contribute
 

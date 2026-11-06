@@ -7,7 +7,7 @@ Choose one starting point:
 
 In both cases, wait for the agent's handoff: exact folder, configured findings, uncertainties, and the first service, test and data source to check. Open that folder in Project Room. If it was already open, select **Refresh analysis** in Onboarding. Then inspect the configured entries and run commands deliberately.
 
-For a first real run, choose **Try working example** from the Overview or Workspaces menu. Project Room copies it into `~/Documents/Project Room Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
+For a first real run, choose **Try working example** from the Overview or Projects menu. Project Room copies it into `~/Documents/Project Room Examples/hello-workspace` and opens it. Node.js 20+ is needed for its service and tests. Start its Notes web service manually, run the endpoint tests, inspect the JSON storage, and open the linked Spec Kit feature. The Blackbox Agent B packaged demo uses simulated results.
 
 Open this repository in the Project Room desktop app. Project Room reads `.projectroom/project.yaml` and opens the Overview.
 

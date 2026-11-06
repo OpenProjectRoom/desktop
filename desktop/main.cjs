@@ -266,7 +266,7 @@ function registerIpc() {
   });
   ipcMain.handle('project:choose', async event => {
     assertSender(event);
-    const choice = await dialog.showOpenDialog(windowRef, { title: 'Open a Project Room workspace', properties: ['openDirectory'] });
+    const choice = await dialog.showOpenDialog(windowRef, { title: 'Open a project folder', properties: ['openDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return null;
     const root = choice.filePaths[0];
     try {
@@ -315,10 +315,10 @@ function registerIpc() {
     return readSelected(root);
   });
   ipcMain.handle('project:list', event => { assertSender(event); return readRegistry(app.getPath('userData')).map(root => { try { return { root, name: loadConfig(configPath(root)).config.project.name }; } catch { return { root, name: path.basename(root) }; } }); });
-  ipcMain.handle('project:open', (event, root) => { assertSender(event); if (!readRegistry(app.getPath('userData')).includes(root)) throw new Error('Unknown workspace.'); addWorkspace(app.getPath('userData'), root); return readSelected(root); });
+  ipcMain.handle('project:open', (event, root) => { assertSender(event); if (!readRegistry(app.getPath('userData')).includes(root)) throw new Error('Unknown project.'); addWorkspace(app.getPath('userData'), root); return readSelected(root); });
   ipcMain.handle('project:create', async (event, mode) => {
     assertSender(event);
-    const choice = await dialog.showOpenDialog(windowRef, { title: 'Choose a folder for the new workspace', properties: ['openDirectory', 'createDirectory'] });
+    const choice = await dialog.showOpenDialog(windowRef, { title: 'Choose a project folder', properties: ['openDirectory', 'createDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return null;
     const root = choice.filePaths[0];
     createWorkspace(root, mode === 'blank' ? 'blank' : 'auto');
@@ -328,7 +328,7 @@ function registerIpc() {
   });
   ipcMain.handle('project:discover', async event => {
     assertSender(event);
-    const choice = await dialog.showOpenDialog(windowRef, { title: 'Find Project Room workspaces', properties: ['openDirectory'] });
+    const choice = await dialog.showOpenDialog(windowRef, { title: 'Find Project Room projects', properties: ['openDirectory'] });
     if (choice.canceled || !choice.filePaths[0]) return [];
     return discover(choice.filePaths[0]).map(root => ({ root, name: loadConfig(configPath(root)).config.project.name }));
   });

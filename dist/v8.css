@@ -66,6 +66,9 @@ body[data-theme="dark"] .table th,body[data-theme="dark"] .data-node b{backgroun
 body[data-theme="dark"] .table td,body[data-theme="dark"] .data-node span,body[data-theme="dark"] .test-latest{border-color:#394a5b;color:#c8d8e6}
 body[data-theme="dark"] .workspace-menu,body[data-theme="dark"] .workspace-menu button{background:#263340;color:#d5e1ed;border-color:#405063}
 body[data-theme="dark"] .workspace-menu button:hover{background:#35495c}
+body[data-theme="dark"] .workspace-menu-more{border-color:#405063}
+body[data-theme="dark"] .workspace-menu-more summary{color:#a9bed0}
+body[data-theme="dark"] .workspace-menu-more summary:hover{background:#35495c}
 body[data-theme="dark"] .settings-tabs button.active,body[data-theme="dark"] .settings-tabs button:hover,body[data-theme="dark"] .card-head .link,body[data-theme="dark"] .spec-card button,body[data-theme="dark"] .product-doc-toolbar button{color:#b8d1e8}
 body[data-theme="dark"] .panel-empty strong,body[data-theme="dark"] .panel-empty h2,body[data-theme="dark"] .panel-empty h3{color:#e8eff6}
 body[data-theme="dark"] .panel-empty p,body[data-theme="dark"] .panel-body p,body[data-theme="dark"] .chat-composer-footer,body[data-theme="dark"] .panel-foot{color:#a7b8c8}

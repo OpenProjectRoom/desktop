@@ -36,6 +36,11 @@ product:
       summary: Offer short website prompts for both starting points, align the agent handoff with the desktop setup dialog, and lead users to verify the same repository in Project Room.
       status: done
       relatedComponents: [product-spec, web]
+    - id: project-folder-language
+      title: Open project folders without workspace jargon
+      summary: Present a project as its ordinary repository folder, use one clear Open project folder action, and keep specialized setup actions secondary.
+      status: done
+      relatedComponents: [product-spec, web]
     - id: optional-specialist-views
       title: Optional specialist views
       summary: Keep Vision, Roadmap, North Star and Command-line Tools out of the default navigation, with shared YAML switches in Preferences.

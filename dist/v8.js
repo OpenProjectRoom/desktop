@@ -130,7 +130,7 @@
   const nav = document.getElementById('nav');
   const navButton = (page, symbol, label, extra = '') => `<button type="button" data-page="${page}" title="${label}">${icon(symbol)}<span>${label}</span>${extra}</button>`;
   nav.innerHTML = `
-    <div class="nav-section-label">WORKSPACE</div>
+    <div class="nav-section-label">PROJECT</div>
     ${navButton('dashboard', 'grid', 'Overview')}
     ${navButton('overview', 'cube', 'Project Map')}
     ${navButton('files', 'folder', 'Files')}

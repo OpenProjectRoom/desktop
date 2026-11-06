@@ -4,13 +4,13 @@
   const app = document.querySelector('.app');
   const main = document.querySelector('.main');
   const sidebar = document.querySelector('.sidebar');
-  app.insertAdjacentHTML('afterbegin', `<div class="cursor-titlebar" role="toolbar" aria-label="Workspace controls">
+  app.insertAdjacentHTML('afterbegin', `<div class="cursor-titlebar" role="toolbar" aria-label="Project controls">
     <div class="cursor-traffic" aria-hidden="true"><i></i><i></i><i></i></div>
     <div class="cursor-title"></div>
     <div class="cursor-titlebar-spacer"></div>
     <div class="cursor-open-wrap"><button type="button" id="cursorOpenToggle" class="cursor-titlebar-action" title="Open a workspace view" aria-label="Open a workspace view" aria-haspopup="menu" aria-expanded="false">${icon('grid')}<span>Open</span>${icon('chevron')}</button>
       <div id="cursorOpenMenu" class="cursor-open-menu" role="menu" aria-label="Open workspace view" hidden>
-        <div class="cursor-open-group">Workspace</div>
+        <div class="cursor-open-group">Project</div>
         <button type="button" role="menuitem" data-page="dashboard">${icon('grid')}<span>Overview</span></button>
         <button type="button" role="menuitem" data-page="overview">${icon('cube')}<span>Project Map</span></button>
         <button type="button" role="menuitem" data-page="files">${icon('folder')}<span>Files</span><kbd>⌘B</kbd></button>
@@ -47,7 +47,7 @@
   titlebar.append(topActions);
   topbar.remove();
   sidebar.insertAdjacentHTML('afterend', `<aside class="cursor-explorer" id="cursorExplorer" aria-label="Project files"><div class="cursor-explorer-head"><span>EXPLORER</span><button type="button" id="cursorExplorerClose" aria-label="Close file explorer">×</button></div><div class="cursor-explorer-project" id="cursorExplorerProject">PROJECT</div><div class="cursor-explorer-tree" id="cursorExplorerTree"></div><div class="cursor-explorer-foot">Repository files · select to inspect</div></aside>`);
-  main.insertAdjacentHTML('beforeend', `<section class="cursor-bottom" id="cursorBottom" aria-label="Workspace event panel"><div class="cursor-bottom-head"><strong>Activity</strong><span id="cursorBottomContext">Workspace events</span><button type="button" id="cursorBottomClose" aria-label="Close event panel">×</button></div><div class="cursor-bottom-body" id="cursorBottomBody"></div></section>`);
+  main.insertAdjacentHTML('beforeend', `<section class="cursor-bottom" id="cursorBottom" aria-label="Project event panel"><div class="cursor-bottom-head"><strong>Activity</strong><span id="cursorBottomContext">Project events</span><button type="button" id="cursorBottomClose" aria-label="Close event panel">×</button></div><div class="cursor-bottom-body" id="cursorBottomBody"></div></section>`);
 
   const openButton = document.getElementById('cursorOpenToggle');
   const openMenu = document.getElementById('cursorOpenMenu');

@@ -5,6 +5,12 @@
 .workspace-menu button strong{display:block}.workspace-menu button small{display:block;font-size:10px;color:#98a2af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:295px}
 .workspace-menu button:has(small){display:block}.workspace-menu button svg{width:15px;height:15px}
 .workspace-menu-divider{border-top:1px solid #e9ebf0;margin:7px 0}
+.workspace-menu-more{border-top:1px solid #e9ebf0;margin-top:7px;padding-top:4px}
+.workspace-menu-more summary{list-style:none;cursor:pointer;color:#66788b;font-size:11px;font-weight:700;padding:9px 10px;border-radius:7px}
+.workspace-menu-more summary::-webkit-details-marker{display:none}
+.workspace-menu-more summary::after{content:'⌄';float:right;font-size:14px;line-height:12px}
+.workspace-menu-more[open] summary::after{transform:rotate(180deg)}
+.workspace-menu-more summary:hover{background:#edf2f7}
 .guide-tabs{display:flex;gap:4px;border-bottom:1px solid #e8ebf0;padding:11px 17px;overflow:auto}
 .guide-tabs button{border:0;background:transparent;color:#8490a0;border-radius:6px;padding:7px 11px;font-size:11px;font-weight:700;white-space:nowrap}
 .guide-tabs button.active{background:#eeeaff;color:#6654bd}
