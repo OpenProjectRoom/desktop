@@ -53,7 +53,7 @@ function notify(value) {
   if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('process:event', value);
 }
 function assertSender(event) {
-  if (!windowRef || event.sender !== windowRef.webContents) throw new Error('Unauthorized call.');
+  if (!windowRef || event.sender !== windowRef.webContents || event.senderFrame !== windowRef.webContents.mainFrame) throw new Error('Unauthorized call.');
 }
 function status() {
   return Object.fromEntries([...processes].map(([id, child]) => [id, child.exitCode === null ? 'running' : 'stopped']));
@@ -167,7 +167,7 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   return new Promise((resolve, reject) => {
     const root = selectedRoot;
     const outputFile = logPath(root, id, kind);
-    const output = fs.createWriteStream(outputFile, { flags: 'a' });
+    const output = fs.createWriteStream(outputFile, { fd: fs.openSync(outputFile, 'ax', 0o600), autoClose: true });
     const relativeLog = path.relative(root, outputFile);
     appendEvent(root, `${kind}.started`, { component: id, ...details, command, log: relativeLog, startedAt, ...(buildIdentity ? { buildIdentity } : {}) });
     const child = spawn(command[0], command.slice(1), { cwd, env: localEnv, shell: false, detached: process.platform !== 'win32', stdio: [keepStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] });

@@ -9,18 +9,47 @@ function clean(value) {
   return value;
 }
 function historyDir(root) { return path.join(root, '.productview'); }
+function regularDirectory(directory) {
+  try {
+    if (!fs.lstatSync(directory).isDirectory()) throw new Error(`History path is not a regular directory: ${directory}`);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    fs.mkdirSync(directory);
+  }
+}
+function regularFileOrMissing(file) {
+  try {
+    if (!fs.lstatSync(file).isFile()) throw new Error(`History path is not a regular file: ${file}`);
+    return true;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    return false;
+  }
+}
 function ensureHistory(root) {
   const dir = historyDir(root);
-  fs.mkdirSync(path.join(dir, 'logs'), { recursive: true });
+  regularDirectory(dir);
+  regularDirectory(path.join(dir, 'logs'));
   const readme = path.join(dir, 'README.md');
-  if (!fs.existsSync(readme)) fs.writeFileSync(readme, '# Project Room history\n\n`events.jsonl` records app and agent activity. `logs/` contains service and test output. These files are part of this repository and can be committed for teammates. Review logs and prompts before committing; output from project commands may contain private data.\n');
+  if (!regularFileOrMissing(readme)) fs.writeFileSync(readme, '# Project Room local history\n\n`events.jsonl` records app and agent activity. `logs/` contains service and test output. They are ignored by Git because commands and prompts may contain private data. Share selected evidence only after reviewing it.\n', { flag: 'wx' });
+  const ignore = path.join(dir, '.gitignore');
+  if (!regularFileOrMissing(ignore)) fs.writeFileSync(ignore, 'events.jsonl\nlogs/\n', { flag: 'wx' });
+  else {
+    const content = fs.readFileSync(ignore, 'utf8');
+    const missing = ['events.jsonl', 'logs/'].filter(pattern => !content.split(/\r?\n/).includes(pattern));
+    if (missing.length) fs.appendFileSync(ignore, `${content.endsWith('\n') ? '' : '\n'}${missing.join('\n')}\n`);
+  }
+  regularFileOrMissing(path.join(dir, 'events.jsonl'));
   return dir;
 }
 function appendEvent(root, type, details = {}) {
   if (!root) return null;
   const dir = ensureHistory(root);
   const event = { at: new Date().toISOString(), type, ...clean(details) };
-  fs.appendFileSync(path.join(dir, 'events.jsonl'), JSON.stringify(event) + '\n');
+  const file = path.join(dir, 'events.jsonl');
+  const fd = fs.openSync(file, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_APPEND | (fs.constants.O_NOFOLLOW || 0), 0o600);
+  try { fs.writeSync(fd, JSON.stringify(event) + '\n'); }
+  finally { fs.closeSync(fd); }
   return event;
 }
 function logPath(root, id, kind) {
@@ -30,8 +59,11 @@ function logPath(root, id, kind) {
 }
 function readEvents(root, limit = 100) {
   if (!root) return [];
+  try { if (!fs.lstatSync(historyDir(root)).isDirectory()) throw new Error('History folder is not a regular directory.'); }
+  catch (error) { if (error.code === 'ENOENT') return []; throw error; }
   const file = path.join(historyDir(root), 'events.jsonl');
-  if (!fs.existsSync(file)) return [];
+  if (!regularFileOrMissing(file)) return [];
+  if (fs.statSync(file).size > 20_000_000) throw new Error('Local history is too large to read.');
   return fs.readFileSync(file, 'utf8').trim().split('\n').slice(-limit).reverse().flatMap(line => { try { return [JSON.parse(line)]; } catch { return []; } });
 }
 module.exports = { appendEvent, ensureHistory, logPath, readEvents };

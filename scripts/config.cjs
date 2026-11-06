@@ -7,6 +7,7 @@ const schema = require('../schemas/projectroom.schema.json');
 const ajv = new Ajv({ allErrors: true, strict: false });
 const validate = ajv.compile(schema);
 const CONFIG_RELATIVE = '.projectroom/project.yaml';
+const MAX_CONFIG_BYTES = 5_000_000;
 
 function configPath(root) {
   const current = path.join(root, CONFIG_RELATIVE);
@@ -21,6 +22,7 @@ function hasConfig(root) {
 }
 
 function parseConfig(raw) {
+  if (typeof raw !== 'string' || Buffer.byteLength(raw) > MAX_CONFIG_BYTES) throw new Error(`${CONFIG_RELATIVE} exceeds the 5 MB limit.`);
   const config = YAML.parse(raw, { uniqueKeys: true });
   if (!validate(config)) {
     throw new Error(`${CONFIG_RELATIVE} is invalid:\n` + validate.errors.map(e => `${e.instancePath || '/'} ${e.message}`).join('\n'));
@@ -103,6 +105,7 @@ function parseConfig(raw) {
   return config;
 }
 function loadConfig(filePath) {
+  if (fs.statSync(filePath).size > MAX_CONFIG_BYTES) throw new Error(`${CONFIG_RELATIVE} exceeds the 5 MB limit.`);
   const raw = fs.readFileSync(filePath, 'utf8');
   const config = parseConfig(raw);
   const directory = path.dirname(filePath);

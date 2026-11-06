@@ -6,7 +6,7 @@
   "main": "desktop/main.cjs",
   "scripts": {
     "start": "electron .",
-    "test": "node --test scripts/project-config.test.cjs scripts/spec-kit.test.cjs scripts/environment.test.cjs scripts/agent-chat.test.cjs scripts/mcp-explorer.test.cjs scripts/mcp-management.test.cjs scripts/api-explorer.test.cjs scripts/oauth.test.cjs scripts/test-explorer.test.cjs scripts/process-metrics.test.cjs scripts/data-viewer.test.cjs scripts/chat-markdown.test.cjs scripts/cli-explorer.test.cjs scripts/component-management.test.cjs scripts/build-identity.test.cjs scripts/updates.test.cjs",
+    "test": "node --test scripts/project-config.test.cjs scripts/spec-kit.test.cjs scripts/environment.test.cjs scripts/agent-chat.test.cjs scripts/mcp-explorer.test.cjs scripts/mcp-management.test.cjs scripts/api-explorer.test.cjs scripts/oauth.test.cjs scripts/test-explorer.test.cjs scripts/process-metrics.test.cjs scripts/data-viewer.test.cjs scripts/chat-markdown.test.cjs scripts/cli-explorer.test.cjs scripts/component-management.test.cjs scripts/build-identity.test.cjs scripts/updates.test.cjs scripts/security.test.cjs",
     "validate:config": "node scripts/validate-config.cjs .projectroom/project.yaml",
     "build:demo": "node scripts/build-demo.cjs",
     "package:mac": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dmg zip --arm64 --publish never --config.electronDist=node_modules/electron/dist",
