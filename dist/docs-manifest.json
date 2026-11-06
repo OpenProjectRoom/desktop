@@ -25,6 +25,12 @@
       "type": "file",
       "depth": 1,
       "previewable": true
+    },
+    {
+      "path": "docs/product/mac-releases.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
     }
   ]
 }

@@ -1,0 +1,9 @@
+.update-banner{position:fixed;z-index:80;bottom:18px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #c5d7d4;border-radius:12px;background:#eff7f5;color:#203b43;box-shadow:0 12px 36px #172d3240;font-size:12px}
+.update-banner[hidden]{display:none}
+.update-banner-copy{flex:1;min-width:0}.update-banner-copy strong,.update-banner-copy span{display:block}.update-banner-copy span{color:#5d7580;margin-top:2px}
+.update-banner button{background:#315c67;color:#fff;border:0;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:700;white-space:nowrap}
+.update-banner button:focus-visible{outline:3px solid #77bbc0;outline-offset:2px}
+body[data-theme="dark"] .update-banner{background:#263945;border-color:#47616a;color:#e6f2f3;box-shadow:0 14px 42px #07121b80}
+body[data-theme="dark"] .update-banner-copy span{color:#b7cbd0}
+body[data-theme="dark"] .update-banner button{background:#8cbdc7;color:#12242c}
+@media(max-width:520px){.update-banner{align-items:flex-start;flex-direction:column}.update-banner button{align-self:flex-end}}

@@ -244,6 +244,15 @@
           "web",
           "tests"
         ]
+      },
+      {
+        "id": "signed-mac-updates",
+        "title": "Signed in-app Mac updates",
+        "summary": "Check GitHub Releases for new versions, download them in the background and offer a restart from the desktop app. Signed and notarized release automation is prepared; Apple credentials and an end-to-end release test are still required.",
+        "status": "in-progress",
+        "relatedComponents": [
+          "web"
+        ]
       }
     ],
     "documentation": [
@@ -264,6 +273,12 @@
         "title": "Command tools",
         "path": "docs/product/command-tools.md",
         "summary": "How CLI tools and servers appear in Project Room."
+      },
+      {
+        "id": "mac-releases",
+        "title": "Mac releases and updates",
+        "path": "docs/product/mac-releases.md",
+        "summary": "Signing, notarization, GitHub release and in-app update workflow."
       }
     ]
   },

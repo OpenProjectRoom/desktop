@@ -28,6 +28,8 @@ const dataViewer = require('./data-viewer.cjs');
 const agentChat = require('./agent-chat.cjs');
 const { readBuildIdentity, listBuildIdentities, sourceRevision } = require('./build-identity.cjs');
 const { ProcessMetrics } = require('./process-metrics.cjs');
+const { autoUpdater } = require('electron-updater');
+const { createUpdates } = require('./updates.cjs');
 
 let windowRef;
 let selectedRoot = null;
@@ -36,6 +38,9 @@ let selectedRaw = null;
 const processes = new Map();
 const launchedBuilds = new Map();
 const processMetrics = new ProcessMetrics({ onSample: notify });
+const updates = createUpdates({ app, updater: autoUpdater, send: value => {
+  if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('updates:state', value);
+} });
 let projectWatcher;
 let pendingOnboardingRoot = null;
 let chatChild = null;
@@ -198,6 +203,8 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   });
 }
 function registerIpc() {
+  ipcMain.handle('updates:status', event => { assertSender(event); return { enabled: updates.enabled, ...updates.snapshot() }; });
+  ipcMain.handle('updates:install', event => { assertSender(event); return updates.install(); });
   ipcMain.handle('metrics:list', event => { assertSender(event); return processMetrics.snapshot(); });
   const oauthStore = (root, kind, id) => new SecureOAuthStore(app.getPath('userData'), safeStorage, root, kind, id);
   const apiOAuth = source => new ApiOAuth(oauthStore(requireProject(), 'api', `${source.id}\0${source.baseUrl}\0${source.auth?.authorizationUrl}\0${source.auth?.tokenUrl}\0${source.auth?.clientId}\0${(source.auth?.scopes || []).join(' ')}`), url => shell.openExternal(url));
@@ -581,8 +588,8 @@ function createWindow() {
 }
 app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  registerIpc(); createWindow();
+  registerIpc(); createWindow(); updates.start();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
-app.on('before-quit', () => { stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); if (projectWatcher) projectWatcher.close(); });
+app.on('before-quit', () => { updates.stop(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); if (projectWatcher) projectWatcher.close(); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

@@ -1,5 +1,9 @@
 # Architecture notes
 
+## Mac release and updates
+
+The packaged macOS app checks the public `OpenProjectRoom/desktop` GitHub Releases feed after launch and every six hours. A newer version downloads in the background; a bottom banner then offers **Restart to update**. Restarting stops local processes started by Project Room. Development runs never check the feed. The UI is implemented, but a successful signed-to-signed update has not yet been exercised. The first update-capable release requires a Developer ID Application certificate, Apple notarization credentials, and the tag-triggered GitHub Actions workflow in `.github/workflows/release-mac.yml`. That workflow must publish both a signed ZIP and `latest-mac.yml` along with the DMG. An unsigned build is not an update baseline. No legacy install migration is needed before the first signed release.
+
 The Project Map shows runtime resources from `.projectroom/project.yaml`: services, databases, storage and persistent CLI servers. Only connections between these resources are drawn. Specifications, test suites, one-off CLI tasks and issue sources remain in the YAML for their dedicated pages and traceability, but do not appear as runtime nodes. Roadmap items refer to component IDs where their work has an architectural effect. A real CLI can be added as a `commandTool` component; its `cli` metadata becomes a manpage-style manual under Run & Verify. This repository does not register a CLI merely to populate that page.
 
 The Spec Kit adapter reads existing `.specify/` and `specs/<feature>/` artifacts without rewriting them. Optional `views.specifications.links` in `.projectroom/project.yaml` connect feature or FR IDs to existing component and test IDs. The desktop compares those links with its current process state and recorded test events. It labels missing or stale evidence without claiming that file presence or completed checkboxes prove a release.

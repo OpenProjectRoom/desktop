@@ -1,0 +1,67 @@
+name: Release signed Mac app
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mac-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check version and signing configuration
+        env:
+          MAC_CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          MAC_CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          test "${GITHUB_REF_NAME}" = "v$(node -p 'require("./package.json").version')" || { echo 'Tag and package version differ'; exit 1; }
+          for name in MAC_CSC_LINK MAC_CSC_KEY_PASSWORD APPLE_API_KEY APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_TEAM_ID; do
+            test -n "${!name}" || { echo "Missing GitHub secret: $name"; exit 1; }
+          done
+      - run: npm ci
+      - run: npm run validate:config
+      - run: npm test
+      - name: Build, sign and notarize
+        run: npm run package:mac
+        env:
+          CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      - name: Verify signed release artifacts
+        run: |
+          ARTIFACT_DIR="$(node -p 'require("node:path").resolve(require("./package.json").build.directories.output)')"
+          test -f "$ARTIFACT_DIR/latest-mac.yml"
+          test -s "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.zip"
+          test -s "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.dmg"
+          codesign --verify --deep --strict --verbose=2 "$ARTIFACT_DIR/mac-arm64/Project Room.app"
+          spctl --assess --verbose --type exec "$ARTIFACT_DIR/mac-arm64/Project Room.app"
+          xcrun stapler validate "$ARTIFACT_DIR/mac-arm64/Project Room.app"
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARTIFACT_DIR="$(node -p 'require("node:path").resolve(require("./package.json").build.directories.output)')"
+          gh release create "$GITHUB_REF_NAME" \
+            "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.dmg" \
+            "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.zip" \
+            "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.zip.blockmap" \
+            "$ARTIFACT_DIR/latest-mac.yml" \
+            --verify-tag --generate-notes --latest
