@@ -54,10 +54,16 @@ test('setup prompt requires a source audit even when a stdio MCP CLI has no clie
   assert.equal(inventory.mcpServers.length, 0);
   assert.ok(inventory.cliTools.some(item => item.name === 'blackbox'));
   const prompt = agentPrompt(inventory, { skill: '/guide.md', schema: '/schema.json' });
-  assert.match(prompt, /Trace wrappers into their delegated code/);
-  assert.match(prompt, /MCP servers \(including stdio CLI subcommands without an MCP client file\)/);
-  assert.match(prompt, /HTTP APIs \(including routes without OpenAPI\)/);
+  assert.match(prompt, /Complete every row of the Source audit table/);
+  assert.match(prompt, /second source pass before reporting anything absent/);
+  assert.match(prompt, /stdio MCP server may exist only as a CLI subcommand/);
+  assert.match(prompt, /HTTP routes need not have OpenAPI/);
   assert.match(prompt, /source audit still required/);
+  assert.match(prompt, /Named OpenAPI files: none; inspect HTTP route source/);
   assert.match(prompt, /Register verified MCP servers in workspace\.mcpServers/);
   assert.match(prompt, /do not substitute an owner or admin key/);
+  const guide = fs.readFileSync(path.resolve(__dirname, '../agent/project-room/SKILL.md'), 'utf8');
+  for (const capability of ['Product and files', 'Services and topology', 'HTTP APIs', 'MCP servers', 'CLI tools', 'Tests', 'Data and local settings', 'Runtime evidence']) {
+    assert.ok(guide.includes(`| ${capability} |`), `Missing source-audit capability: ${capability}`);
+  }
 });

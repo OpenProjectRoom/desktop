@@ -55,7 +55,7 @@
       {
         "id": "source-audited-setup",
         "title": "Source-audited project setup",
-        "summary": "Have the coding agent trace source entry points for services, HTTP APIs, stdio MCP servers, CLI tools, tests and data before creating Project Room configuration; report code evidence and uncertainty.",
+        "summary": "Require a second-pass source audit across every Project Room capability, reconcile findings with YAML, and report evidence, uncertainty and unsupported techniques before configuring the project.",
         "status": "done",
         "relatedComponents": [
           "product-spec",
