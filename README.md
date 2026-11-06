@@ -6,6 +6,8 @@ Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens th
 
 [**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 52-second demo](#see-the-workflow-in-52-seconds)
 
+If this is the control window you've been missing, click **Star** in the GitHub repository header. It saves Project Room for later and helps other builders discover it.
+
 [![Illustration: Project Room opens the same repository as your coding agent and lets you inspect and run local services, tests, and data](assets/hero/control-surface.png)](https://openprojectroom.com/#control-surface)
 
 *Illustrative workspace. Your coding agent edits the repository; Project Room opens that same folder and gives you controls for the running app. [Explore the interactive tour](https://openprojectroom.com/#live-tour).*
@@ -143,6 +145,6 @@ Project Room is a **local development workspace**, not a cloud deployment platfo
     npm run validate:config
     npm start
 
-On Apple Silicon macOS, <code>npm run package:mac:app</code> builds an unsigned local app bundle. The [signed release workflow](docs/product/mac-releases.md) is prepared: once Apple signing and notarization secrets are configured, a matching `v` tag builds the DMG and ZIP, publishes update metadata, and enables the in-app **Restart to update** banner for subsequent versions. The current public preview remains unsigned until that first signed release is published. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports. If Project Room helps you regain control of a local project, a GitHub star helps other builders find it.
+On Apple Silicon macOS, <code>npm run package:mac:app</code> builds an unsigned local app bundle. The [signed release workflow](docs/product/mac-releases.md) is prepared: once Apple signing and notarization secrets are configured, a matching `v` tag builds the DMG and ZIP, publishes update metadata, and enables the in-app **Restart to update** banner for subsequent versions. The current public preview remains unsigned until that first signed release is published. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports.
 
 MIT licensed. See [LICENSE](LICENSE).
