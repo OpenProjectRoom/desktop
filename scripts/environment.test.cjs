@@ -44,7 +44,7 @@ test('project variables use the existing .env and are isolated to declared compo
     assert.equal(listEnvironment(userData, project, config, encryption).variables.find(item => item.name === 'API_TOKEN').status, 'stored');
     const file = path.join(project, '.env');
     assert.match(fs.readFileSync(file, 'utf8'), /^# Existing project values\nUNRELATED=keep-me/m);
-    assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+    if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600);
     assert.equal(execFileSync('git', ['-C', project, 'check-ignore', '.env'], { encoding: 'utf8' }).trim(), '.env');
     assert.equal(fs.existsSync(path.join(userData, 'environment')), false);
     assert.throws(() => saveEnvironment(userData, project, config, encryption, 'UNKNOWN', 'value'), /Unknown environment variable/);

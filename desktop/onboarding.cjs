@@ -17,7 +17,7 @@ function dataCandidates(root, compose) {
     for (const entry of entries) {
       if (++visited > 1200 || found.size >= 20) break;
       if (entry.isSymbolicLink()) continue;
-      const next = path.join(relative, entry.name);
+      const next = path.join(relative, entry.name).split(path.sep).join('/').replace(/^\.\//, '');
       if (entry.isFile() && /\.(?:sqlite|sqlite3|db)$/i.test(entry.name)) found.add(`SQLite file: ${next}`);
       if (!entry.isDirectory() || ['.git', '.productview', 'node_modules', 'target', 'build', 'dist', '.next'].includes(entry.name)) continue;
       if (/^(data|storage|uploads|evidence)$/i.test(entry.name)) found.add(`Local storage folder: ${next}`);

@@ -7,6 +7,7 @@ const { readCommandHelp } = require('./command-tools.cjs');
 const SKIP = new Set(['.git', '.productview', 'node_modules', 'dist', 'build', 'target', '.next', 'reports', 'coverage']);
 const HELP_ARGS = new Set(['--help', '-h', 'help']);
 const SCAN_FIRST = ['package.json', 'scripts', 'bin', 'cli', 'cmd', 'examples', 'packages', 'apps', 'crates', 'tools', 'src'];
+const portable = value => value.split(path.sep).join('/');
 
 function discoverCliTools(root, config = {}) {
   if (!root) return [];
@@ -30,15 +31,24 @@ function discoverCliTools(root, config = {}) {
 
   function commandFor(relative, stat) {
     const ext = path.extname(relative).toLowerCase();
-    const normalized = './' + relative.split(path.sep).join('/');
+    const normalized = './' + portable(relative);
     if (['.js', '.cjs', '.mjs'].includes(ext)) return ['node', normalized];
     if (ext === '.py') return ['python3', normalized];
     if (ext === '.sh' || ext === '.bash') return ['sh', normalized];
+    if (process.platform === 'win32') {
+      if (['.exe', '.cmd', '.bat'].includes(ext)) return [normalized];
+      const first = fs.readFileSync(path.join(base, relative), 'utf8').split(/\r?\n/, 1)[0];
+      if (/^#!.*\b(?:sh|bash)\b/.test(first)) return ['sh', normalized];
+      if (/^#!.*\bnode\b/.test(first)) return ['node', normalized];
+      if (/^#!.*\bpython(?:3)?\b/.test(first)) return ['python', normalized];
+      return null;
+    }
     if (stat.mode & 0o111) return [normalized];
     return null;
   }
 
   function add(name, relative, source, kind, overrideCommand = null) {
+    relative = portable(relative);
     if (candidates.size >= 80) return;
     const entry = file(relative);
     if (!entry) return;
@@ -52,6 +62,7 @@ function discoverCliTools(root, config = {}) {
   }
 
   function addUnbuilt(name, relative, source) {
+    relative = portable(relative);
     if (candidates.size >= 80 || path.isAbsolute(relative) || relative.split(/[\\/]/).includes('..') || !path.resolve(base, relative).startsWith(base + path.sep)) return;
     const command = commandFor(relative, { mode: 0 });
     if (!command) return;
@@ -130,7 +141,7 @@ function discoverCliTools(root, config = {}) {
     for (const entry of entries) {
       if (++visited > 700 || candidates.size >= 80) break;
       if (entry.isSymbolicLink() || SKIP.has(entry.name) || entry.name.startsWith('.')) continue;
-      const next = path.normalize(path.join(relative, entry.name));
+      const next = portable(path.normalize(path.join(relative, entry.name)));
       if (entry.isDirectory()) {
         if (depth < 3 && (depth === 0 || ['bin', 'cli', 'cmd', 'scripts', 'packages', 'apps', 'crates', 'tools', 'src'].includes(entry.name) || /(^|[/\\])(packages|apps|crates|tools|cmd|examples)$/.test(relative))) walk(next, depth + 1);
         continue;
@@ -151,7 +162,7 @@ function discoverCliTools(root, config = {}) {
         (/(^|[/\\])scripts([/\\]|$)/.test(relative) && (!path.extname(entry.name) || /(?:^|[-_])(cli|command|tool)(?:[-_.]|$)/i.test(entry.name))) ||
         /(?:^|[-_])(cli|command|tool)(?:[-_.]|$)/i.test(entry.name)) {
         const found = file(next);
-        if (!found || !(found.stat.mode & 0o111)) continue;
+        if (!found || (process.platform !== 'win32' && !(found.stat.mode & 0o111))) continue;
         const first = fs.readFileSync(found.location, { encoding: 'utf8', flag: 'r' }).slice(0, 180);
         if (!first.startsWith('#!')) continue;
         add(path.basename(entry.name, path.extname(entry.name)), next, `${next} · executable`, 'file');
