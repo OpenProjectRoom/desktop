@@ -40,7 +40,7 @@ jobs:
         shell: pwsh
         run: |
           $output = node -p 'require("node:path").resolve(require("./package.json").build.directories.output)'
-          $installer = Join-Path $output 'Project-Room-Desktop-x64-windows.exe'
+          $installer = Join-Path $output 'Project-Room-Desktop-windows.exe'
           if (-not (Test-Path $installer)) { throw 'Windows test installer is missing' }
           New-Item -ItemType Directory -Force -Path windows-test-installer | Out-Null
           Copy-Item $installer windows-test-installer/
@@ -48,8 +48,8 @@ jobs:
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: windows-x64-unsigned-test-installer
-          path: windows-test-installer/Project-Room-Desktop-x64-windows.exe
+          name: windows-unsigned-test-installer
+          path: windows-test-installer/Project-Room-Desktop-windows.exe
           if-no-files-found: error
           retention-days: 14
       - run: npm test --prefix examples/hello-workspace

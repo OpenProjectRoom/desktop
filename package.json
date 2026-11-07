@@ -11,8 +11,8 @@
     "build:demo": "node scripts/build-demo.cjs",
     "package:mac": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dmg zip --arm64 --publish never",
     "package:mac:app": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dir --arm64 --publish never --config.mac.identity=null --config.mac.forceCodeSigning=false --config.mac.notarize=false --config.electronDist=node_modules/electron/dist",
-    "package:win": "npm run build:demo && electron-builder --win nsis --x64 --publish never",
-    "package:win:unsigned": "npm run build:demo && electron-builder --win nsis --x64 --publish never --config.win.forceCodeSigning=false",
+    "package:win": "npm run build:demo && electron-builder --win nsis --x64 --arm64 --publish never",
+    "package:win:unsigned": "npm run build:demo && electron-builder --win nsis --x64 --arm64 --publish never --config.win.forceCodeSigning=false",
     "package:win:app": "npm run build:demo && electron-builder --win dir --x64 --publish never --config.win.forceCodeSigning=false"
   },
   "dependencies": {
@@ -75,7 +75,7 @@
     },
     "win": {
       "icon": "desktop/assets/icon.png",
-      "artifactName": "Project-Room-Desktop-x64-windows.${ext}",
+      "artifactName": "Project-Room-Desktop-windows.${ext}",
       "forceCodeSigning": true
     },
     "dmg": {

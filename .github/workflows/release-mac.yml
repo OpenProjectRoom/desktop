@@ -116,7 +116,7 @@ jobs:
         shell: pwsh
         run: |
           $out = (Resolve-Path '../../outputs/project-room-desktop').Path
-          $installer = Join-Path $out 'Project-Room-Desktop-x64-windows.exe'
+          $installer = Join-Path $out 'Project-Room-Desktop-windows.exe'
           if (-not (Test-Path $installer) -or -not (Test-Path (Join-Path $out 'latest.yml'))) { throw 'Windows release artifacts are missing' }
           $signature = Get-AuthenticodeSignature $installer
           if ($signature.Status -ne 'Valid') { throw "Installer signature is $($signature.Status)" }
@@ -126,4 +126,4 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $out = (Resolve-Path '../../outputs/project-room-desktop').Path
-          gh release upload $env:GITHUB_REF_NAME (Join-Path $out 'Project-Room-Desktop-x64-windows.exe') (Join-Path $out 'Project-Room-Desktop-x64-windows.exe.blockmap') (Join-Path $out 'latest.yml') --clobber
+          gh release upload $env:GITHUB_REF_NAME (Join-Path $out 'Project-Room-Desktop-windows.exe') (Join-Path $out 'Project-Room-Desktop-windows.exe.blockmap') (Join-Path $out 'latest.yml') --clobber

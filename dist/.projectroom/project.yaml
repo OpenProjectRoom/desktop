@@ -102,8 +102,8 @@ product:
       status: done
       relatedComponents: [web, api, worker]
     - id: windows-desktop-preview
-      title: Windows x64 desktop preview
-      summary: Build a signed Windows installer beside each Mac release, with Windows process controls, session metrics and explicit updates. Real Windows install and update validation remains open.
+      title: Windows desktop preview
+      summary: Build a signed x64 and ARM64 Windows installer beside each Mac release, with Windows process controls, session metrics and explicit updates. Real Windows install and update validation remains open.
       status: in-progress
       relatedComponents: [web]
     - id: local-backlog

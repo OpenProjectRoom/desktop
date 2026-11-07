@@ -13,7 +13,7 @@ npm run validate:config
 npm run build:demo
 ```
 
-The public download currently targets macOS. `npm start` launches the app from source; `npm run package:mac:app` creates an Apple Silicon app bundle on a Mac. Windows x64 source checks run in CI, and `npm run package:win:app` creates an unpacked local Windows build. See the [Windows validation and release checklist](docs/product/windows-releases.md) before offering a Windows download. The example workspace needs only Node.js 20+ and has its own `npm test` script.
+The public download currently targets macOS. `npm start` launches the app from source; `npm run package:mac:app` creates an Apple Silicon app bundle on a Mac. Windows x64 source checks and a combined x64/ARM64 installer build run in CI; `npm run package:win:app` creates an unpacked x64 build locally. See the [Windows validation and release checklist](docs/product/windows-releases.md) before offering a Windows download. The example workspace needs only Node.js 20+ and has its own `npm test` script.
 
 Open a focused issue before a large change. In pull requests, explain what changed, how you checked it, and whether the shared YAML or product documentation changed. Never include secrets, private workspaces, or unreviewed `.productview/` logs.
 

@@ -132,7 +132,7 @@ Project Room's shared `.projectroom/project.yaml` belongs in your repository alo
 
 ## Current boundaries
 
-Project Room opens a **local project folder**. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. Windows x64 source support is [being validated](docs/product/windows-releases.md); no Windows installer is offered until a real install and update pass. Linux packages have not been tested.
+Project Room opens a **local project folder**. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. Windows x64 and ARM64 support is [being validated](docs/product/windows-releases.md); no Windows installer is offered until a real install and update pass. Linux packages have not been tested.
 
 ## Develop and contribute
 
@@ -141,6 +141,6 @@ Project Room opens a **local project folder**. Processes, requests, tests, MCP c
     npm run validate:config
     npm start
 
-On Apple Silicon macOS, <code>npm run package:mac:app</code> builds a local app bundle. The [Mac release workflow](docs/product/mac-releases.md) builds signed and notarized downloads and update metadata. On Windows x64, <code>npm run package:win:app</code> prepares an unpacked local build; the [Windows release checklist](docs/product/windows-releases.md) gates public distribution on real-machine testing and separate Windows signing. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports.
+On Apple Silicon macOS, <code>npm run package:mac:app</code> builds a local app bundle. The [Mac release workflow](docs/product/mac-releases.md) builds signed and notarized downloads and update metadata. On Windows, <code>npm run package:win:app</code> prepares an unpacked x64 build; the [Windows release checklist](docs/product/windows-releases.md) covers the combined x64/ARM64 installer and gates public distribution on real-machine testing and separate Windows signing. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports.
 
 MIT licensed. See [LICENSE](LICENSE).
