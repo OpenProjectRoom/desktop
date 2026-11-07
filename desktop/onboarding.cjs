@@ -155,7 +155,7 @@ function reviewConfig(root) {
     } catch { warnings.push('Environment: the project .env could not be inspected.'); }
     for (const item of declarations(config)) {
       checked.environment++;
-      if (!Object.hasOwn(env, item.name) && !Object.hasOwn(process.env, item.name)) warnings.push('Environment: ' + item.name + ' is not set on this Mac.');
+      if (!Object.hasOwn(env, item.name) && !Object.hasOwn(process.env, item.name)) warnings.push('Environment: ' + item.name + ' is not set on this computer.');
     }
     return { state: 'ready', root, raw, name: config.project.name, components: config.components.map(item => ({ name: item.name, kind: item.kind })), connections: config.connections.length, checked, warnings };
   } catch (error) { return { state: 'invalid', message: String(error.message).slice(0, 3000) }; }
