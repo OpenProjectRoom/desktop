@@ -8,6 +8,8 @@ Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens th
 
 The Apple Silicon Mac release is signed and notarized. The Windows 11 x64/ARM64 preview is unsigned and may trigger SmartScreen; its real-project integrations and installed-to-installed updater still need the final Windows test.
 
+[Code signing policy](CODE_SIGNING_POLICY.md) · [Privacy](https://openprojectroom.com/privacy.html)
+
 If this is the control window you've been missing, click **Star** in the GitHub repository header. It saves Project Room for later and helps other builders discover it.
 
 [![Illustration: Project Room opens the same repository as your coding agent and lets you inspect and run local services, tests, and data](assets/hero/control-surface.png)](https://openprojectroom.com/#control-surface)

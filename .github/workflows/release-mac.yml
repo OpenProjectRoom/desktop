@@ -88,6 +88,9 @@ jobs:
     needs: release
     if: vars.WINDOWS_SIGNING_READY == 'true'
     runs-on: windows-latest
+    permissions:
+      actions: read
+      contents: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -97,29 +100,73 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Check version and signing configuration
+        id: win-version
         shell: pwsh
         env:
-          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
+          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
         run: |
-          if ($env:GITHUB_REF_NAME -ne "v$(node -p 'require("./package.json").version')") { throw 'Tag and package version differ' }
-          if (-not $env:WIN_CSC_LINK -or -not $env:WIN_CSC_KEY_PASSWORD) { throw 'Windows signing secrets are missing' }
+          $version = node -p 'require("./package.json").version'
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and package version differ' }
+          foreach ($name in @('SIGNPATH_API_TOKEN', 'SIGNPATH_ORGANIZATION_ID', 'SIGNPATH_PROJECT_SLUG', 'SIGNPATH_SIGNING_POLICY_SLUG', 'SIGNPATH_ARTIFACT_CONFIGURATION_SLUG')) {
+            if (-not (Get-Item "Env:$name").Value) { throw "Missing SignPath setting: $name" }
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
       - run: npm ci
       - run: npm run validate:config
       - run: npm test
-      - name: Build signed Windows installer
-        run: npm run package:win
+      - name: Build unsigned Windows installer
+        run: npm run package:win:unsigned
         env:
-          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-      - name: Verify installer and update metadata
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Upload unsigned installer for SignPath
+        id: unsigned-installer
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: project-room-windows-unsigned
+          path: ../../outputs/project-room-desktop/Project-Room-Desktop-windows.exe
+          if-no-files-found: error
+          retention-days: 7
+      - name: Request SignPath Foundation signature
+        uses: signpath/github-action-submit-signing-request@f6d04783b4569d051e0c80105fe66e82819d0092 # v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.unsigned-installer.outputs.artifact-id }}
+          wait-for-completion: true
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: ${{ runner.temp }}/signpath-signed
+          parameters: |
+            version: "${{ steps.win-version.outputs.version }}"
+      - name: Stage and verify signed installer
         shell: pwsh
         run: |
           $out = (Resolve-Path '../../outputs/project-room-desktop').Path
           $installer = Join-Path $out 'Project-Room-Desktop-windows.exe'
-          if (-not (Test-Path $installer) -or -not (Test-Path (Join-Path $out 'latest.yml'))) { throw 'Windows release artifacts are missing' }
+          $signed = @(Get-ChildItem "$env:RUNNER_TEMP/signpath-signed" -Recurse -File -Filter 'Project-Room-Desktop-windows.exe')
+          if ($signed.Count -ne 1) { throw "Expected exactly one signed installer, found $($signed.Count)" }
+          Copy-Item $signed[0].FullName $installer -Force
           $signature = Get-AuthenticodeSignature $installer
           if ($signature.Status -ne 'Valid') { throw "Installer signature is $($signature.Status)" }
+          if ($signature.SignerCertificate.Subject -notmatch 'SignPath Foundation') { throw "Unexpected signer: $($signature.SignerCertificate.Subject)" }
+          $versionInfo = (Get-Item $installer).VersionInfo
+          if ($versionInfo.ProductName -ne 'Project Room') { throw "Unexpected product: $($versionInfo.ProductName)" }
+          if ($versionInfo.ProductVersion -notlike "${{ steps.win-version.outputs.version }}*") { throw "Unexpected product version: $($versionInfo.ProductVersion)" }
+      - name: Refresh update metadata for signed bytes
+        shell: pwsh
+        run: |
+          $out = (Resolve-Path '../../outputs/project-room-desktop').Path
+          node scripts/refresh-windows-update-metadata.cjs $out
+          if ($LASTEXITCODE -ne 0) { throw 'Windows update metadata refresh failed' }
+          foreach ($name in @('Project-Room-Desktop-windows.exe.blockmap', 'latest.yml')) {
+            if (-not (Test-Path (Join-Path $out $name))) { throw "Missing Windows update artifact: $name" }
+          }
       - name: Add Windows installer to the same GitHub release
         shell: pwsh
         env:
