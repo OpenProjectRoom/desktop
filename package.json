@@ -12,6 +12,7 @@
     "package:mac": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dmg zip --arm64 --publish never",
     "package:mac:app": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dir --arm64 --publish never --config.mac.identity=null --config.mac.forceCodeSigning=false --config.mac.notarize=false --config.electronDist=node_modules/electron/dist",
     "package:win": "npm run build:demo && electron-builder --win nsis --x64 --publish never",
+    "package:win:unsigned": "npm run build:demo && electron-builder --win nsis --x64 --publish never --config.win.forceCodeSigning=false",
     "package:win:app": "npm run build:demo && electron-builder --win dir --x64 --publish never --config.win.forceCodeSigning=false"
   },
   "dependencies": {

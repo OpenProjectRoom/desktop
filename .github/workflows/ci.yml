@@ -32,5 +32,16 @@ jobs:
       - name: Package unsigned Windows app
         if: matrix.os == 'windows-latest'
         run: npm run package:win:app
+      - name: Build unsigned Windows test installer
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:unsigned
+      - name: Keep Windows test installer on this CI run
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-x64-unsigned-test-installer
+          path: ../../outputs/project-room-desktop/Project-Room-Desktop-x64-windows.exe
+          if-no-files-found: error
+          retention-days: 14
       - run: npm test --prefix examples/hello-workspace
       - run: npm run build:demo
