@@ -1,5 +1,6 @@
 const { app, BrowserWindow, clipboard, dialog, ipcMain, safeStorage, shell, session } = require('electron');
 const { spawn } = require('node:child_process');
+const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
 const { StringDecoder } = require('node:string_decoder');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -153,11 +154,7 @@ function fileWithinProject(relative) {
   return file;
 }
 function stopChild(child) {
-  if (!child || child.exitCode !== null) return;
-  try {
-    if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGTERM');
-    else child.kill('SIGTERM');
-  } catch (error) { /* Process may already have exited. */ }
+  stopProcessTree(child);
 }
 function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); for (const timer of detachedTimers.values()) clearInterval(timer); detachedTimers.clear(); launchedBuilds.clear(); processMetrics.reset(); }
 function observeDetached(item, root, options) {
@@ -229,7 +226,7 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     const output = fs.createWriteStream(outputFile, { fd: fs.openSync(outputFile, 'ax', 0o600), autoClose: true });
     const relativeLog = path.relative(root, outputFile);
     appendEvent(root, `${kind}.started`, { component: id, ...details, command, log: relativeLog, startedAt, ...(buildIdentity ? { buildIdentity } : {}) });
-    const child = spawn(command[0], command.slice(1), { cwd, env: localEnv, shell: false, detached: process.platform !== 'win32', stdio: [keepStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] });
+    const child = spawnProject(command[0], command.slice(1), { cwd, env: localEnv, shell: false, detached: process.platform !== 'win32', stdio: [keepStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'] });
     let settled = false;
     let failed = false;
     let logBytes = 0;
@@ -655,7 +652,8 @@ function createWindow() {
   windowRef = new BrowserWindow({
     width: 1540, height: 980, minWidth: 950, minHeight: 650,
     title: 'Project Room', backgroundColor: '#f9f9fb',
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : process.platform === 'win32' ? 'hidden' : 'default',
+    ...(process.platform === 'win32' ? { titleBarOverlay: { height: 38 } } : {}),
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), contextIsolation: true, nodeIntegration: false, sandbox: true }
   });
   windowRef.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

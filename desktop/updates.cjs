@@ -3,7 +3,7 @@ const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 function createUpdates({ app, updater, send, platform = process.platform, delay = setTimeout, repeat = setInterval }) {
   let state = { phase: 'idle', version: null, percent: 0, message: null };
   let timer;
-  const enabled = platform === 'darwin' && app.isPackaged;
+  const enabled = ['darwin', 'win32'].includes(platform) && app.isPackaged;
   const setState = patch => { state = { ...state, ...patch }; send(state); };
   const check = async () => {
     if (!enabled || ['downloading', 'ready'].includes(state.phase)) return;

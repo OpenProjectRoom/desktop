@@ -1,11 +1,11 @@
-const { spawn } = require('node:child_process');
+const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
 
 function execute(command, { cwd, env, timeoutMs = 20000, onOutput = () => {} }) {
   if (!Array.isArray(command) || !command.length || command.some(value => typeof value !== 'string' || !value)) {
     throw new Error('Invalid detached service command.');
   }
   return new Promise((resolve, reject) => {
-    const child = spawn(command[0], command.slice(1), {
+    const child = spawnProject(command[0], command.slice(1), {
       cwd, env, shell: false, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe']
     });
     let settled = false;
@@ -17,8 +17,7 @@ function execute(command, { cwd, env, timeoutMs = 20000, onOutput = () => {} }) 
     child.stdout.on('data', collect);
     child.stderr.on('data', collect);
     const timer = setTimeout(() => {
-      try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGTERM'); else child.kill('SIGTERM'); }
-      catch { /* Already exited. */ }
+      stopProcessTree(child);
       setTimeout(() => {
         if (child.exitCode !== null) return;
         try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, 'SIGKILL'); else child.kill('SIGKILL'); }

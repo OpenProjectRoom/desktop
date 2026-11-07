@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -20,8 +23,14 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+        if: matrix.os != 'windows-latest'
+      - run: npm ci
+        if: matrix.os == 'windows-latest'
       - run: npm run validate:config
       - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test
+      - name: Package unsigned Windows app
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:app
       - run: npm test --prefix examples/hello-workspace
       - run: npm run build:demo

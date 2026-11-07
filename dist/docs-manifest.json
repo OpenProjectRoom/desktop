@@ -31,6 +31,12 @@
       "type": "file",
       "depth": 1,
       "previewable": true
+    },
+    {
+      "path": "docs/product/windows-releases.md",
+      "type": "file",
+      "depth": 1,
+      "previewable": true
     }
   ]
 }

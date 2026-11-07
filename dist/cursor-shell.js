@@ -1,6 +1,9 @@
 /* Minimal desktop shell around Project Room's workspace pages. */
 (() => {
   document.body.classList.add('cursor-shell');
+  const windows = window.productView?.platform === 'win32';
+  if (windows) document.body.classList.add('platform-win32');
+  const shortcut = windows ? 'Ctrl+' : '⌘';
   const app = document.querySelector('.app');
   const main = document.querySelector('.main');
   const sidebar = document.querySelector('.sidebar');
@@ -13,7 +16,7 @@
         <div class="cursor-open-group">Project</div>
         <button type="button" role="menuitem" data-page="dashboard">${icon('grid')}<span>Overview</span></button>
         <button type="button" role="menuitem" data-page="overview">${icon('cube')}<span>Project Map</span></button>
-        <button type="button" role="menuitem" data-page="files">${icon('folder')}<span>Files</span><kbd>⌘B</kbd></button>
+        <button type="button" role="menuitem" data-page="files">${icon('folder')}<span>Files</span><kbd>${shortcut}B</kbd></button>
         <button type="button" role="menuitem" data-page="onboarding">${icon('check')}<span>Onboarding</span></button>
         <div class="cursor-open-group">Product</div>
         <button type="button" role="menuitem" data-page="vision">${icon('doc')}<span>Vision</span></button>
@@ -31,7 +34,7 @@
         <button type="button" role="menuitem" data-page="environment">${icon('settings')}<span>Environment</span></button>
         <div class="cursor-open-group">Observe</div>
         <button type="button" role="menuitem" data-page="activity">${icon('activity')}<span>Activity</span></button>
-        <button type="button" role="menuitemcheckbox" data-cursor-panel="activity" aria-checked="false">${icon('terminal')}<span>Event panel</span><kbd>⌘J</kbd></button>
+        <button type="button" role="menuitemcheckbox" data-cursor-panel="activity" aria-checked="false">${icon('terminal')}<span>Event panel</span><kbd>${shortcut}J</kbd></button>
       </div></div>
     <button type="button" id="cursorChatToggle" class="cursor-titlebar-action" title="Show product chat" aria-label="Show product chat" aria-controls="chatPanel" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H5l1.7-3.4A7.5 7.5 0 1 1 20 11.5Z"/></svg><span>Chat</span></button>
   </div>`);

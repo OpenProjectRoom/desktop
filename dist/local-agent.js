@@ -64,7 +64,7 @@
   const footer = document.querySelector('.chat-composer-footer');
   const microphone = document.createElement('button');
   microphone.type = 'button'; microphone.id = 'chatMicrophone'; microphone.className = 'chat-microphone'; microphone.title = 'Dictate locally'; microphone.setAttribute('aria-label', 'Start dictation'); microphone.innerHTML = micSvg;
-  footer.insertBefore(microphone, footer.querySelector('button[type="submit"]'));
+  if (!api || api.platform === 'darwin') footer.insertBefore(microphone, footer.querySelector('button[type="submit"]'));
   microphone.addEventListener('click', async () => {
     if (!api) { toast('Dictation is available in the desktop app.'); return; }
     if (recording) { await api.stopDictation(); return; }

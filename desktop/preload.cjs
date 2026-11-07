@@ -1,6 +1,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('productView', {
+  platform: process.platform,
   updateStatus: () => ipcRenderer.invoke('updates:status'),
   installUpdate: () => ipcRenderer.invoke('updates:install'),
   onUpdateState: callback => {
