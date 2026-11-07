@@ -101,6 +101,11 @@ product:
       summary: Sample CPU and resident memory for services started by Project Room and their child processes every five seconds; show overview and per-service charts without saving measurements.
       status: done
       relatedComponents: [web, api, worker]
+    - id: windows-desktop-preview
+      title: Windows desktop preview
+      summary: Build a signed x64 and ARM64 Windows installer beside each Mac release, with Windows process controls, session metrics and explicit updates. Real Windows install and update validation remains open.
+      status: in-progress
+      relatedComponents: [web]
     - id: local-backlog
       title: Repository-backed local backlog
       summary: Capture and update product issues in Markdown files without an external tracker.
@@ -173,6 +178,10 @@ product:
       title: Mac releases and updates
       path: docs/product/mac-releases.md
       summary: Signing, notarization, GitHub release and in-app update workflow.
+    - id: windows-releases
+      title: Windows x64 release preparation
+      path: docs/product/windows-releases.md
+      summary: Windows build, signing, release gating and real-machine validation.
 
 workspace:
   startPage: overview

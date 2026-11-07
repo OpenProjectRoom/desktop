@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
 const { appendEvent, readEvents } = require('./history.cjs');
 const { redactOutput } = require('./environment.cjs');
 
@@ -26,9 +26,10 @@ function runBoundedCommand(root, id, command, cwd, environment, sensitiveValues,
   appendEvent(root, `${eventName}-requested`, { component: id, argumentCount: command.length - 1 });
   return new Promise((resolve, reject) => {
     let output = '', truncated = false, timedOut = false, settled = false;
-    const child = spawn(command[0], command.slice(1), { cwd, env: environment, shell: false, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawnProject(command[0], command.slice(1), { cwd, env: environment, shell: false, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] });
     const stop = signal => {
-      try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, signal); else child.kill(signal); }
+      if (signal === 'SIGTERM') stopProcessTree(child);
+      else try { if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, signal); else child.kill(signal); }
       catch { /* The process may already have exited. */ }
     };
     const collect = chunk => {

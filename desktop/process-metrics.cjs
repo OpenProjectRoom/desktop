@@ -38,9 +38,43 @@ function processTreeUsage(rows, rootPid) {
   };
 }
 
+const WINDOWS_PROCESS_QUERY = `$ErrorActionPreference = 'Stop'; Get-CimInstance Win32_Process | ForEach-Object { if ($_.ProcessId -gt 0) { $ticks = [double]$_.KernelModeTime + [double]$_.UserModeTime; [Console]::Out.WriteLine('{0} {1} {2} {3}', $_.ProcessId, $_.ParentProcessId, $ticks, $_.WorkingSetSize) } }`;
+let previousWindows = new Map();
+let previousWindowsAt = 0;
+
+function parseWindowsProcessTable(output) {
+  return String(output).split(/\r?\n/).map(line => {
+    const fields = line.trim().split(/\s+/).map(Number);
+    if (fields.length !== 4 || !fields.every(Number.isFinite) || fields[0] <= 0) return null;
+    const [pid, parent, cpuTicks, memoryBytes] = fields;
+    return { pid, parent, cpuTicks, memoryBytes };
+  }).filter(Boolean);
+}
+
+function windowsUsageRows(rows, previous, elapsedMs) {
+  return rows.map(row => {
+    const old = previous.get(row.pid);
+    const ticks = old && old.cpuTicks <= row.cpuTicks ? row.cpuTicks - old.cpuTicks : 0;
+    return { pid: row.pid, parent: row.parent,
+      cpu: elapsedMs > 0 ? Math.max(0, ticks / 10000000 / (elapsedMs / 1000) * 100) : 0,
+      rss: Math.max(0, row.memoryBytes / 1024) };
+  });
+}
+
 function readProcessTable() {
-  if (process.platform === 'win32') return Promise.reject(new Error('Process sampling is available on macOS and Linux.'));
   return new Promise((resolve, reject) => {
+    if (process.platform === 'win32') {
+      execFile('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', WINDOWS_PROCESS_QUERY], { timeout: 8000, maxBuffer: 4 * 1024 * 1024, windowsHide: true }, (error, output) => {
+        if (error) return reject(error);
+        const now = Date.now();
+        const rows = parseWindowsProcessTable(output);
+        const usage = windowsUsageRows(rows, previousWindows, now - previousWindowsAt);
+        previousWindows = new Map(rows.map(row => [row.pid, row]));
+        previousWindowsAt = now;
+        resolve(usage);
+      });
+      return;
+    }
     execFile('ps', ['-axo', 'pid=,ppid=,%cpu=,rss='], { timeout: 3000, maxBuffer: 4 * 1024 * 1024 }, (error, output) => {
       if (error) reject(error);
       else resolve(parseProcessTable(output));
@@ -129,4 +163,4 @@ class ProcessMetrics {
   }
 }
 
-module.exports = { ProcessMetrics, parseProcessTable, processTreeUsage, compactHistory };
+module.exports = { ProcessMetrics, parseProcessTable, parseWindowsProcessTable, windowsUsageRows, processTreeUsage, compactHistory };

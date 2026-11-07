@@ -43,3 +43,20 @@ test('development and other platforms never check or install', async () => {
   assert.equal(updates.install(), false);
   assert.equal(updates.enabled, false);
 });
+
+test('packaged Windows uses the same explicit update flow', async () => {
+  const updater = new EventEmitter();
+  let firstCheck;
+  let installs = 0;
+  updater.checkForUpdates = async () => {};
+  updater.quitAndInstall = () => { installs++; };
+  const updates = createUpdates({ app: { isPackaged: true }, updater, platform: 'win32', send: () => {},
+    delay: callback => { firstCheck = callback; }, repeat: () => 1 });
+  updates.start();
+  await firstCheck();
+  updater.emit('update-downloaded', { version: '0.9.79' });
+  assert.equal(updates.snapshot().phase, 'ready');
+  assert.equal(updates.install(), true);
+  assert.equal(installs, 1);
+  updates.stop();
+});

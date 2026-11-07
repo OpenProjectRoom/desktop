@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
 const ts = require('typescript');
 
 const MAX_CASES = 500;
@@ -165,11 +165,11 @@ function discoverCargo(root, suite, env) {
   const cwd = inside(root, suite.tests.cwd || '.');
   const command = [...suite.tests.command, '--', '--list'];
   return new Promise((resolve, reject) => {
-    const child = spawn(command[0], command.slice(1), { cwd, env, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
+    const child = spawnProject(command[0], command.slice(1), { cwd, env, shell: false, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '', stderr = '', finished = false;
-    const timer = setTimeout(() => { child.kill('SIGTERM'); fail(new Error('Test discovery timed out after 90 seconds.')); }, 90000);
+    const timer = setTimeout(() => { stopProcessTree(child); fail(new Error('Test discovery timed out after 90 seconds.')); }, 90000);
     function fail(error) { if (finished) return; finished = true; clearTimeout(timer); reject(error); }
-    child.stdout.on('data', chunk => { stdout += chunk.toString(); if (stdout.length > 2_000_000) { child.kill('SIGTERM'); fail(new Error('Test list is too large.')); } });
+    child.stdout.on('data', chunk => { stdout += chunk.toString(); if (stdout.length > 2_000_000) { stopProcessTree(child); fail(new Error('Test list is too large.')); } });
     child.stderr.on('data', chunk => { stderr = (stderr + chunk.toString()).slice(-5000); });
     child.once('error', error => fail(error));
     child.once('close', code => {

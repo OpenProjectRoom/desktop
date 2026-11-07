@@ -1,18 +1,20 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawn } = require('node:child_process');
+const { spawnProject } = require('./platform-process.cjs');
 const { configPath } = require('../scripts/config.cjs');
 
 const providers = { codex: 'Codex CLI', claude: 'Claude Code' };
 const maxOutput = 2_000_000;
 
 function executable(name, envPath = process.env.PATH || '') {
-  const directories = [...new Set([...envPath.split(path.delimiter), '/opt/homebrew/bin', '/usr/local/bin', '/usr/bin'])];
+  const directories = [...new Set([...envPath.split(path.delimiter), ...(process.platform === 'win32' ? [] : ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin'])])];
   for (const directory of directories) {
     if (!directory) continue;
-    const candidate = path.join(directory, name);
-    try { fs.accessSync(candidate, fs.constants.X_OK); return candidate; } catch { /* Try next directory. */ }
+    for (const suffix of process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : ['']) {
+      const candidate = path.join(directory, name + suffix);
+      try { fs.accessSync(candidate, fs.constants.X_OK); return candidate; } catch { /* Try next candidate. */ }
+    }
   }
   return null;
 }
@@ -70,7 +72,7 @@ function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild }) {
   const command = invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir);
   if (!command.command) { fs.rmSync(tempDir, { recursive: true, force: true }); throw new Error(`${providers[settings.provider]} is not installed or not on PATH.`); }
   return new Promise((resolve, reject) => {
-    const child = spawn(command.command, command.args, { cwd: root, env: { ...process.env, PATH: ['/opt/homebrew/bin', '/usr/local/bin', process.env.PATH || ''].join(path.delimiter) }, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const child = spawnProject(command.command, command.args, { cwd: root, env: { ...process.env, PATH: [...(process.platform === 'win32' ? [] : ['/opt/homebrew/bin', '/usr/local/bin']), process.env.PATH || ''].join(path.delimiter) }, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
     onChild?.(child);
     let stdout = '', stderr = '';
     child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxOutput); });

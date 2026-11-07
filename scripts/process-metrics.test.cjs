@@ -1,6 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { ProcessMetrics, parseProcessTable, processTreeUsage, compactHistory } = require('../desktop/process-metrics.cjs');
+const { ProcessMetrics, parseProcessTable, parseWindowsProcessTable, windowsUsageRows, processTreeUsage, compactHistory } = require('../desktop/process-metrics.cjs');
+
+test('Windows cumulative CPU ticks become a five-second usage sample', () => {
+  const before = parseWindowsProcessTable('20 1 100000000 1048576\n21 20 50000000 2097152\n');
+  const after = parseWindowsProcessTable('20 1 120000000 1572864\n21 20 60000000 2097152\n');
+  const rows = windowsUsageRows(after, new Map(before.map(row => [row.pid, row])), 5000);
+  assert.deepEqual(processTreeUsage(rows, 20), { cpu: 60, memoryBytes: 3670016, processCount: 2 });
+  assert.equal(windowsUsageRows(after, new Map(), 5000)[0].cpu, 0);
+});
 
 test('counts a service and its children, excluding unrelated processes', () => {
   const rows = parseProcessTable(' 11 1 2.5 1024\n 12 11 4.0 2048\n 13 12 1.0 512\n 14 1 99.0 8192\n');

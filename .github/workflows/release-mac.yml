@@ -1,4 +1,4 @@
-name: Release signed Mac app
+name: Release desktop apps
 
 on:
   push:
@@ -83,3 +83,47 @@ jobs:
             "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.zip.blockmap" \
             "$ARTIFACT_DIR/latest-mac.yml" \
             --verify-tag --generate-notes --latest
+
+  windows:
+    needs: release
+    if: vars.WINDOWS_SIGNING_READY == 'true'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Check version and signing configuration
+        shell: pwsh
+        env:
+          WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        run: |
+          if ($env:GITHUB_REF_NAME -ne "v$(node -p 'require("./package.json").version')") { throw 'Tag and package version differ' }
+          if (-not $env:WIN_CSC_LINK -or -not $env:WIN_CSC_KEY_PASSWORD) { throw 'Windows signing secrets are missing' }
+      - run: npm ci
+      - run: npm run validate:config
+      - run: npm test
+      - name: Build signed Windows installer
+        run: npm run package:win
+        env:
+          CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+      - name: Verify installer and update metadata
+        shell: pwsh
+        run: |
+          $out = (Resolve-Path '../../outputs/project-room-desktop').Path
+          $installer = Join-Path $out 'Project-Room-Desktop-windows.exe'
+          if (-not (Test-Path $installer) -or -not (Test-Path (Join-Path $out 'latest.yml'))) { throw 'Windows release artifacts are missing' }
+          $signature = Get-AuthenticodeSignature $installer
+          if ($signature.Status -ne 'Valid') { throw "Installer signature is $($signature.Status)" }
+      - name: Add Windows installer to the same GitHub release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $out = (Resolve-Path '../../outputs/project-room-desktop').Path
+          gh release upload $env:GITHUB_REF_NAME (Join-Path $out 'Project-Room-Desktop-windows.exe') (Join-Path $out 'Project-Room-Desktop-windows.exe.blockmap') (Join-Path $out 'latest.yml') --clobber

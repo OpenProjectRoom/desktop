@@ -11,6 +11,8 @@ body[data-theme="dark"].cursor-shell{--workbench-chrome:#262b30;--workbench-chro
 .cursor-traffic i{display:block;width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px #0002}
 .cursor-traffic i:nth-child(1){background:#ff605c}.cursor-traffic i:nth-child(2){background:#ffbd44}.cursor-traffic i:nth-child(3){background:#00ca4e}
 .desktop-app .cursor-traffic{visibility:hidden}
+body.platform-win32 .cursor-traffic{display:none}
+body.platform-win32 .cursor-titlebar{padding-right:145px}
 .cursor-titlebar .breadcrumb{display:flex;align-items:center;min-width:0;max-width:min(40vw,460px);overflow:hidden;white-space:nowrap;color:var(--workbench-chrome-muted);font-size:11px}
 .cursor-titlebar .breadcrumb-root{color:var(--workbench-chrome-muted)}
 .cursor-titlebar .breadcrumb-divider{margin:0 7px;color:var(--workbench-chrome-faint)}

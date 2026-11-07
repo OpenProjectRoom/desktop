@@ -158,7 +158,7 @@ function discoverSpecs(root) {
     for (const entry of entries) {
       if (++visited > 1600 || found.length >= 30) break;
       if (entry.isSymbolicLink()) continue;
-      const next = path.join(relative, entry.name).replace(/^\.\//, '');
+      const next = path.join(relative, entry.name).split(path.sep).join('/').replace(/^\.\//, '');
       if (entry.isFile() && SPEC_NAME.test(entry.name)) {
         try { const spec = readSpec(root, next); found.push({ id: `file:${next}`, name: spec.title, source: next, spec: next, suggestedUrl: spec.suggestedUrl, operations: spec.operations, version: spec.version }); } catch { /* A name alone is not proof of an OpenAPI file. */ }
       } else if (entry.isDirectory() && !SKIP.has(entry.name)) walk(next, depth + 1);

@@ -10,7 +10,10 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -20,8 +23,34 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci --ignore-scripts
+        if: matrix.os != 'windows-latest'
+      - run: npm ci
+        if: matrix.os == 'windows-latest'
       - run: npm run validate:config
       - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test
+      - name: Package unsigned Windows app
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:app
+      - name: Build unsigned Windows test installer
+        if: matrix.os == 'windows-latest'
+        run: npm run package:win:unsigned
+      - name: Stage Windows test installer
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $output = node -p 'require("node:path").resolve(require("./package.json").build.directories.output)'
+          $installer = Join-Path $output 'Project-Room-Desktop-windows.exe'
+          if (-not (Test-Path $installer)) { throw 'Windows test installer is missing' }
+          New-Item -ItemType Directory -Force -Path windows-test-installer | Out-Null
+          Copy-Item $installer windows-test-installer/
+      - name: Keep Windows test installer on this CI run
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: windows-unsigned-test-installer
+          path: windows-test-installer/Project-Room-Desktop-windows.exe
+          if-no-files-found: error
+          retention-days: 14
       - run: npm test --prefix examples/hello-workspace
       - run: npm run build:demo
