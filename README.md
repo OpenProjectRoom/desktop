@@ -2,9 +2,11 @@
 
 **Your agent builds the app. You keep the controls.**
 
-Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens the **same local repository** and gives you one window to run the app, check tests, inspect data, and follow the product plan. It is a free, open-source macOS desktop app for people building software with coding agents and the teammates who need to understand that software later.
+Build in Codex, Claude Code, Cursor, or your usual editor. Project Room opens the **same local repository** and gives you one window to run the app, check tests, inspect data, and follow the product plan. It is a free, open-source desktop app for people building software with coding agents and the teammates who need to understand that software later.
 
-[**Download free for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 60-second demo](#see-a-real-project-in-60-seconds)
+[**Download for Mac**](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) · [**Download Windows preview**](https://github.com/OpenProjectRoom/desktop/releases/download/v0.9.78-windows-preview.1/Project-Room-Desktop-windows.exe) · [Connect an existing repository](#connect-an-existing-repository) · [Start a new app](#start-a-new-app) · [Watch the 60-second demo](#see-a-real-project-in-60-seconds)
+
+The Apple Silicon Mac release is signed and notarized. The Windows 11 x64/ARM64 preview is unsigned and may trigger SmartScreen; its real-project integrations and installed-to-installed updater still need the final Windows test.
 
 If this is the control window you've been missing, click **Star** in the GitHub repository header. It saves Project Room for later and helps other builders discover it.
 
@@ -14,7 +16,7 @@ If this is the control window you've been missing, click **Star** in the GitHub 
 
 ## Get from download to your own project
 
-1. **Download and open** the free [Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip). Move **Project Room.app** to Applications.
+1. **Download and open** the [Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) or [Windows 11 preview](https://github.com/OpenProjectRoom/desktop/releases/download/v0.9.78-windows-preview.1/Project-Room-Desktop-windows.exe). On Mac, unzip and move **Project Room.app** to Applications. On Windows, run the installer.
 2. **Open your project folder in Codex, Claude Code, Cursor, or your usual coding agent.** Paste the prompt for an [existing repository](#connect-an-existing-repository) or a [new app](#start-a-new-app). For an existing repository, the agent first summarizes what it found and waits for your answer before preparing `.projectroom/project.yaml`.
 3. **Choose Open project folder in Project Room and select that same folder.** Review **Onboarding** and **Project Map**, then start one configured service and run one test. Nothing starts just because you opened the folder.
 
@@ -25,7 +27,7 @@ Use this in the coding agent already working in your repository. Spec Kit is opt
 <details><summary>Show the copyable existing-repository prompt</summary>
 
 ```text
-Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Complete every row of the guide’s source audit without changing files: trace entry points and wrappers into product context, services, HTTP APIs, MCP servers (including stdio subcommands), CLI tools, tests, data and runtime evidence, even when no client configuration lists them. Make a second source pass before reporting a capability absent. Cite the files that prove each finding and separate uncertainties from verified implementations. Summarize whether GitHub Spec Kit is present and what Project Room could show. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide. Finish with the Mac download and installation steps, the exact folder to open in Project Room, and what I should verify there first.
+Add Project Room to this repository. Read the agent guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) first. Complete every row of the guide’s source audit without changing files: trace entry points and wrappers into product context, services, HTTP APIs, MCP servers (including stdio subcommands), CLI tools, tests, data and runtime evidence, even when no client configuration lists them. Make a second source pass before reporting a capability absent. Cite the files that prove each finding and separate uncertainties from verified implementations. Summarize whether GitHub Spec Kit is present and what Project Room could show. Ask only the decisions you cannot safely infer. Wait for my answer before creating or updating the configuration. Then follow the guide. Finish with the Project Room download and installation steps for my operating system, the exact folder to open in Project Room, and what I should verify there first.
 ```
 
 </details>
@@ -41,7 +43,7 @@ Build [my app idea] for [my audience] in this folder with Git, the official GitH
 
 Read the Project Room guide (https://github.com/OpenProjectRoom/desktop/blob/main/agent/project-room/SKILL.md) and schema (https://github.com/OpenProjectRoom/desktop/blob/main/schemas/projectroom.schema.json). Keep the constitution, specs, plans, and tasks in Spec Kit's standard files. Create .projectroom/project.yaml from real code and commands as they appear; no parallel spec tree, invented components, or secrets. Use manual startup and validate the YAML.
 
-Finish with the Mac download and installation steps, the exact folder to open in Project Room, what you configured, what remains uncertain, and what I should verify there first.
+Finish with the Project Room download and installation steps for my operating system, the exact folder to open in Project Room, what you configured, what remains uncertain, and what I should verify there first.
 ```
 
 </details>
@@ -120,7 +122,7 @@ Test Explorer runs a configured suite or a supported individual Node/Rust test e
 
 ## Start with the included working example
 
-1. Download the [signed and notarized Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip), unzip it, and move **Project Room.app** to Applications.
+1. Download the [signed Apple Silicon Mac app](https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip) or the [unsigned Windows 11 preview](https://github.com/OpenProjectRoom/desktop/releases/download/v0.9.78-windows-preview.1/Project-Room-Desktop-windows.exe). On Mac, unzip it and move **Project Room.app** to Applications. On Windows, run the installer.
 2. Open Project Room and choose **Try working example**. It copies a small project to <code>~/Documents/Project Room Examples/hello-workspace</code> and opens it without starting a process.
 3. With [Node.js 20+](https://nodejs.org/) installed, start **Notes web service**, inspect its API and JSON storage, run **Node endpoint tests**, and open the linked Spec Kit feature in **Backlog**. Node is needed for this example's commands, not for the desktop app itself.
 
@@ -132,7 +134,7 @@ Project Room's shared `.projectroom/project.yaml` belongs in your repository alo
 
 ## Current boundaries
 
-Project Room opens a **local project folder**. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. Windows x64 and ARM64 support is [being validated](docs/product/windows-releases.md); no Windows installer is offered until a real install and update pass. Linux packages have not been tested.
+Project Room opens a **local project folder**. Processes, requests, tests, MCP connections, and data inspection require deliberate actions. The packaged browser demo and website tour use labeled sample data. Live GitHub/Linear issue synchronization, external telemetry adapters, database editing, and arbitrary SQL are not part of the current preview. Windows x64 and ARM64 support is [being validated](docs/product/windows-releases.md); the unsigned installer is an early preview, with real-project and update tests still open. Linux packages have not been tested.
 
 ## Develop and contribute
 
@@ -141,6 +143,6 @@ Project Room opens a **local project folder**. Processes, requests, tests, MCP c
     npm run validate:config
     npm start
 
-On Apple Silicon macOS, <code>npm run package:mac:app</code> builds a local app bundle. The [Mac release workflow](docs/product/mac-releases.md) builds signed and notarized downloads and update metadata. On Windows, <code>npm run package:win:app</code> prepares an unpacked x64 build; the [Windows release checklist](docs/product/windows-releases.md) covers the combined x64/ARM64 installer and gates public distribution on real-machine testing and separate Windows signing. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports.
+On Apple Silicon macOS, <code>npm run package:mac:app</code> builds a local app bundle. The [Mac release workflow](docs/product/mac-releases.md) builds signed and notarized downloads and update metadata. On Windows, <code>npm run package:win:app</code> prepares an unpacked x64 build; the [Windows release checklist](docs/product/windows-releases.md) covers the combined x64/ARM64 installer, final validation, signing, and updates. Read [CONTRIBUTING.md](CONTRIBUTING.md) before a pull request; use [Issues](https://github.com/OpenProjectRoom/desktop/issues) for focused bugs and feature requests and [SECURITY.md](SECURITY.md) for sensitive reports.
 
 MIT licensed. See [LICENSE](LICENSE).
