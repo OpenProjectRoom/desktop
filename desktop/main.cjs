@@ -36,6 +36,7 @@ const { checkPrerequisites } = require('./prerequisites.cjs');
 const { autoUpdater } = require('electron-updater');
 const { createUpdates } = require('./updates.cjs');
 const { watchProjectFiles, describeConfigChange } = require('./config-watch.cjs');
+const { useSingleInstance } = require('./single-instance.cjs');
 
 let windowRef;
 let selectedRoot = null;
@@ -850,10 +851,12 @@ function createWindow() {
   windowRef.webContents.on('will-navigate', event => event.preventDefault());
   windowRef.loadFile(path.join(__dirname, '../dist/index.html'));
 }
-app.whenReady().then(() => {
-  session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
-  registerIpc(); createWindow(); updates.start();
-  app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
-});
+if (useSingleInstance(app, { currentWindow: () => windowRef, createWindow })) {
+  app.whenReady().then(() => {
+    session.defaultSession.setPermissionRequestHandler((_contents, _permission, callback) => callback(false));
+    registerIpc(); createWindow(); updates.start();
+    app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
+  });
+}
 app.on('before-quit', () => { updates.stop(); projectWatcher?.close(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

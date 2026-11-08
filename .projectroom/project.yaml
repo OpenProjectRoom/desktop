@@ -91,6 +91,11 @@ product:
       summary: Start with the sidebar collapsed at 900 px or narrower and collapse it when resizing into that range, while allowing a manual reopening until the next compact launch.
       status: done
       relatedComponents: [web]
+    - id: single-desktop-instance
+      title: Reuse the open desktop window
+      summary: Keep one Project Room process per user session and bring its existing window forward when the app is launched again, restoring it if minimized.
+      status: done
+      relatedComponents: [web]
     - id: explorer-deduplication
       title: Show each explorer integration once
       summary: Merge linked CLI and MCP discoveries into their registered entries, and normalize OpenAPI spec paths before showing additional local files.
