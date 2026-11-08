@@ -33,6 +33,15 @@
         ]
       },
       {
+        "id": "overview-map-preview",
+        "title": "Project Map preview in Overview",
+        "summary": "Show a compact, read-only preview of runtime components and real connections in Overview, with the full map available for inspection and editing.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "sidebar-entry-counts",
         "title": "Sidebar entry counts",
         "summary": "Show the number of configured services, tools, servers, APIs, suites, data sources and declared variable names, plus product content counts, in the expanded navigation.",
