@@ -32,9 +32,12 @@ The recommended first setup has two starts: for a new app, ask a coding agent to
 
 Detached services such as Docker Compose stacks need explicit lifecycle commands. `runtime.command` starts the stack, `statusCommand` returns 0 only when the intended stack is running, 1 when stopped and 2 or higher on error, and `stopCommand` stops the stack without deleting its data. Project Room executes these commands only after a user action, checks status after Start and Stop, and polls a confirmed running stack while the app remains open. An unknown state after opening a project is deliberate: **Check status** runs the project command. Process CPU and memory sampling remains available for foreground services; a detached controller does not invent per-container metrics.
 
+Services and command tools whose verified launch path needs Docker declare `runtime.requires: [docker]`, including commands that hide Compose behind a repository script. Before manual Start, Project Room checks that the Docker CLI and Engine are available. If Docker is missing or stopped, it does not launch the project command and shows an actionable error beside the service with a Retry button. It never starts Docker itself. An omitted requirement does not mean the app has proven that Docker is unnecessary; the coding agent must trace the start command through wrappers and record only verified prerequisites.
+
 ```yaml
 runtime:
   command: [./my-project, up]
+  requires: [docker]
   statusCommand: [./my-project, project-room-status]
   stopCommand: [./my-project, down]
   lifecycle: detached

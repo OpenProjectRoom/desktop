@@ -30,6 +30,7 @@ const agentChat = require('./agent-chat.cjs');
 const { readBuildIdentity, listBuildIdentities, sourceRevision } = require('./build-identity.cjs');
 const { ProcessMetrics } = require('./process-metrics.cjs');
 const detachedService = require('./detached-service.cjs');
+const { checkPrerequisites } = require('./prerequisites.cjs');
 const { autoUpdater } = require('electron-updater');
 const { createUpdates } = require('./updates.cjs');
 
@@ -40,6 +41,7 @@ let selectedRaw = null;
 const processes = new Map();
 const detachedStates = new Map();
 const detachedPending = new Set();
+const startPending = new Set();
 const detachedTimers = new Map();
 const launchedBuilds = new Map();
 const processMetrics = new ProcessMetrics({ onSample: notify });
@@ -205,6 +207,17 @@ async function detachedAction(item, operation) {
     }
     throw error;
   } finally { detachedPending.delete(id); }
+}
+async function startWithPrerequisites(item, launch) {
+  const root = selectedRoot;
+  const key = `${root}\0${item.id}`;
+  if (startPending.has(key)) throw new Error('This service is already starting.');
+  startPending.add(key);
+  try {
+    await checkPrerequisites(item.runtime.requires);
+    if (selectedRoot !== root) throw new Error('The project changed before Start. Select the service again.');
+    return await launch();
+  } finally { startPending.delete(key); }
 }
 function prepareOnboarding(root) {
   const inventory = inspectFolder(root);
@@ -461,12 +474,13 @@ function registerIpc() {
     if (item.runtime.lifecycle !== 'detached') return { status: status()[id] || 'stopped' };
     return detachedAction(item, 'status');
   });
-  ipcMain.handle('component:start', (event, id) => {
+  ipcMain.handle('component:start', async (event, id) => {
     assertSender(event);
     const item = component(id, 'service');
-    if (item.runtime.lifecycle === 'detached') return detachedAction(item, 'start');
-    if (processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
-    return runCommand(id, item.runtime.command, item.runtime.cwd, 'service');
+    if (item.runtime.lifecycle !== 'detached' && processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
+    return startWithPrerequisites(item, () => item.runtime.lifecycle === 'detached'
+      ? detachedAction(item, 'start')
+      : runCommand(id, item.runtime.command, item.runtime.cwd, 'service'));
   });
   ipcMain.handle('component:stop', (event, id) => {
     assertSender(event);
@@ -562,11 +576,11 @@ function registerIpc() {
     try { return await dataViewer.preview(selectedRoot, item, value, String(entryId)); }
     catch (error) { throw dataError(error, value); }
   });
-  ipcMain.handle('command:start', (event, id) => {
+  ipcMain.handle('command:start', async (event, id) => {
     assertSender(event);
     const item = component(id, 'commandTool');
     if (processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
-    return runCommand(id, item.runtime.command, item.runtime.cwd, 'tool', item.cli.mode === 'task', item.cli.protocol === 'stdio');
+    return startWithPrerequisites(item, () => runCommand(id, item.runtime.command, item.runtime.cwd, 'tool', item.cli.mode === 'task', item.cli.protocol === 'stdio'));
   });
   ipcMain.handle('command:stop', (event, id) => {
     assertSender(event);

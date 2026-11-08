@@ -3,7 +3,8 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { configPath, hasConfig, loadConfig, CONFIG_RELATIVE } = require('./config.cjs');
+const YAML = require('yaml');
+const { configPath, hasConfig, loadConfig, parseConfig, CONFIG_RELATIVE } = require('./config.cjs');
 const { addWorkspace, createWorkspace, discover, readRegistry } = require('../desktop/workspace.cjs');
 
 test('new workspaces use a hidden, Git-trackable project configuration', t => {
@@ -45,4 +46,13 @@ test('auto setup keeps an existing repository intact and does not model detached
   assert.deepEqual(config.components.map(item => item.kind), ['testSuite']);
   assert.equal(config.product, undefined);
   assert.deepEqual(fs.readdirSync(root).filter(name => name !== '.projectroom').sort(), before);
+});
+
+test('runtime prerequisites accept known checks and reject unknown ones', () => {
+  const config = loadConfig(path.join(__dirname, '..', CONFIG_RELATIVE)).config;
+  const service = config.components.find(item => item.kind === 'service');
+  service.runtime.requires = ['docker'];
+  assert.deepEqual(parseConfig(YAML.stringify(config)).components.find(item => item.id === service.id).runtime.requires, ['docker']);
+  service.runtime.requires = ['unknown-engine'];
+  assert.throws(() => parseConfig(YAML.stringify(config)), /invalid/);
 });
