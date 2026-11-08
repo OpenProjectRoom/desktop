@@ -64,7 +64,7 @@ function assertSender(event) {
 }
 function status() {
   return {
-    ...Object.fromEntries((selectedConfig?.components || []).filter(item => item.kind === 'service' && item.runtime?.lifecycle === 'detached').map(item => [item.id, detachedStates.get(item.id) || 'unknown'])),
+    ...Object.fromEntries((selectedConfig?.components || []).filter(item => ['application', 'service'].includes(item.kind) && item.runtime?.lifecycle === 'detached').map(item => [item.id, detachedStates.get(item.id) || 'unknown'])),
     ...Object.fromEntries([...processes].map(([id, child]) => [id, child.exitCode === null ? 'running' : 'stopped']))
   };
 }
@@ -113,6 +113,12 @@ function component(id, kind) {
   if (!selectedRoot) throw new Error('Open a repository with .projectroom/project.yaml first.');
   const found = selectedConfig?.components?.find(item => item.id === id && item.kind === kind);
   if (!found) throw new Error(`Unknown ${kind} component: ${id}`);
+  return found;
+}
+function runnableComponent(id) {
+  if (!selectedRoot) throw new Error('Open a repository with .projectroom/project.yaml first.');
+  const found = selectedConfig?.components?.find(item => item.id === id && ['application', 'service'].includes(item.kind));
+  if (!found) throw new Error(`Unknown runnable component: ${id}`);
   return found;
 }
 function requireProject() { if (!selectedRoot) throw new Error('Open a local repository to edit product content.'); return selectedRoot; }
@@ -183,7 +189,7 @@ function observeDetached(item, root, options) {
 }
 async function detachedAction(item, operation) {
   const id = item.id;
-  if (detachedPending.has(id)) throw new Error('This service command is already running.');
+  if (detachedPending.has(id)) throw new Error('This runtime command is already running.');
   detachedPending.add(id);
   const root = selectedRoot;
   try {
@@ -196,14 +202,14 @@ async function detachedAction(item, operation) {
       detachedStates.set(id, result.status);
       notify({ type: 'status', id, status: result.status });
       observeDetached(item, root, options);
-      appendEvent(root, `service.${operation}-confirmed`, { component: id, status: result.status });
+      appendEvent(root, `${item.kind}.${operation}-confirmed`, { component: id, status: result.status });
     }
     return result;
   } catch (error) {
     if (selectedRoot === root) {
       detachedStates.set(id, 'unknown');
       notify({ type: 'status', id, status: 'unknown' });
-      appendEvent(root, `service.${operation}-error`, { component: id, message: error.message });
+      appendEvent(root, `${item.kind}.${operation}-error`, { component: id, message: error.message });
     }
     throw error;
   } finally { detachedPending.delete(id); }
@@ -229,7 +235,7 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in .projectroom/project.yaml.');
   const cwd = cwdWithinProject(relativeCwd);
   const runComponent = selectedConfig.components.find(item => item.id === id);
-  const buildIdentity = runComponent && ['service', 'commandTool'].includes(runComponent.kind) ? readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
+  const buildIdentity = runComponent && ['application', 'service', 'commandTool'].includes(runComponent.kind) ? readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
   const startedAt = new Date().toISOString();
   const localEnv = runtimeEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, runComponent);
   const sensitiveValues = declarations(selectedConfig).map(item => localEnv[item.name]).filter(Boolean);
@@ -255,10 +261,10 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     child.stdout.on('data', data => stdout.write(stdoutDecoder.write(data)));
     child.stderr.on('data', data => stderr.write(stderrDecoder.write(data)));
     const flushOutput = () => { stdout.write(stdoutDecoder.end()); stderr.write(stderrDecoder.end()); stdout.end(); stderr.end(); output.end(); };
-    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (processes.get(id) === child) { processes.delete(id); if (kind === 'service') processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
+    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (processes.get(id) === child) { processes.delete(id); if (['service', 'application'].includes(kind)) processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
     child.once('spawn', () => {
       if (buildIdentity) launchedBuilds.set(id, { ...buildIdentity, startedAt });
-      if (kind === 'service') processMetrics.start(id, child.pid);
+      if (['service', 'application'].includes(kind)) processMetrics.start(id, child.pid);
       if (!waitForExit) { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); settled = true; resolve({ status: 'running', pid: child.pid, buildIdentity: launchedBuilds.get(id) }); }
       else { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); }
     });
@@ -470,26 +476,26 @@ function registerIpc() {
   });
   ipcMain.handle('component:status', (event, id) => {
     assertSender(event);
-    const item = component(id, 'service');
+    const item = runnableComponent(id);
     if (item.runtime.lifecycle !== 'detached') return { status: status()[id] || 'stopped' };
     return detachedAction(item, 'status');
   });
   ipcMain.handle('component:start', async (event, id) => {
     assertSender(event);
-    const item = component(id, 'service');
+    const item = runnableComponent(id);
     if (item.runtime.lifecycle !== 'detached' && processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
     return startWithPrerequisites(item, () => item.runtime.lifecycle === 'detached'
       ? detachedAction(item, 'start')
-      : runCommand(id, item.runtime.command, item.runtime.cwd, 'service'));
+      : runCommand(id, item.runtime.command, item.runtime.cwd, item.kind));
   });
   ipcMain.handle('component:stop', (event, id) => {
     assertSender(event);
-    const item = component(id, 'service');
+    const item = runnableComponent(id);
     if (item.runtime.lifecycle === 'detached') return detachedAction(item, 'stop');
     const child = processes.get(id);
     if (!child) return { status: 'stopped' };
     stopChild(child);
-    appendEvent(selectedRoot, 'service.stop-requested', { component: id });
+    appendEvent(selectedRoot, `${item.kind}.stop-requested`, { component: id });
     processes.delete(id);
     notify({ type: 'status', id, status: 'stopped' });
     return { status: 'stopped' };

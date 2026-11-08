@@ -51,3 +51,16 @@ test('invalid CLI input never changes repository YAML', () => {
     assert.equal(fs.readFileSync(file, 'utf8'), original);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+test('map adds a launchable mobile application with an explicit target', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-application-map-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const file = path.join(root, '.projectroom/project.yaml');
+  fs.mkdirSync(path.dirname(file));
+  fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
+  const added = addMapComponent(root, { kind: 'application', name: 'iOS App', platform: 'mobile', target: 'iOS Simulator', executable: 'npm', args: 'run\nios', linkedTo: 'api' });
+  const app = added.config.components.find(item => item.id === added.id);
+  assert.deepEqual(app.application, { platform: 'mobile', target: 'iOS Simulator' });
+  assert.deepEqual(app.runtime.command, ['npm', 'run', 'ios']);
+  assert.ok(added.config.connections.some(edge => edge.from === added.id && edge.to === 'api'));
+});

@@ -25,6 +25,7 @@
         <button type="button" role="menuitem" data-page="issues">${icon('list')}<span>Backlog</span></button>
         <button type="button" role="menuitem" data-page="docs">${icon('folder')}<span>Documentation</span></button>
         <div class="cursor-open-group">Run &amp; Verify</div>
+        <button type="button" role="menuitem" data-page="applications">${icon('grid')}<span>Applications</span></button>
         <button type="button" role="menuitem" data-page="runtime">${icon('play')}<span>Services</span></button>
         <button type="button" role="menuitem" data-page="commands">${icon('terminal')}<span>CLI Explorer</span></button>
         <button type="button" role="menuitem" data-page="mcp">${icon('cube')}<span>MCP Explorer</span></button>

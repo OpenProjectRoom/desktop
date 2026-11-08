@@ -42,7 +42,7 @@
     }, "additionalProperties": false },
     "workspace": {
       "type": "object", "properties": {
-        "startPage": { "enum": ["overview", "product", "vision", "north-star", "roadmap", "docs", "map", "runtime", "commands", "mcp", "api", "tests", "data", "environment", "files", "issues", "activity"] },
+        "startPage": { "enum": ["overview", "product", "vision", "north-star", "roadmap", "docs", "map", "applications", "runtime", "commands", "mcp", "api", "tests", "data", "environment", "files", "issues", "activity"] },
         "additionalViews": { "type": "array", "items": { "enum": ["vision", "roadmap", "north-star", "commands"] }, "uniqueItems": true },
         "mcpServers": { "type": "array", "items": { "type": "object", "required": ["id", "name"], "properties": {
           "id": { "$ref": "#/$defs/id" },
@@ -126,10 +126,14 @@
       "x": { "type": "number", "minimum": 0, "maximum": 100 }, "y": { "type": "number", "minimum": 0 }
     }, "additionalProperties": false },
     "component": { "type": "object", "required": ["id", "kind", "name", "position"], "properties": {
-      "id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["service", "commandTool", "database", "testSuite", "specification", "issues", "storage", "external"] },
+      "id": { "$ref": "#/$defs/id" }, "kind": { "enum": ["application", "service", "commandTool", "database", "testSuite", "specification", "issues", "storage", "external"] },
       "name": { "type": "string", "minLength": 1 }, "icon": { "type": "string" }, "position": { "$ref": "#/$defs/position" },
       "path": { "$ref": "#/$defs/relativePath" }, "url": { "type": "string" },
       "build": { "$ref": "#/$defs/build" },
+      "application": { "type": "object", "required": ["platform"], "properties": {
+        "platform": { "enum": ["web", "desktop", "mobile"] },
+        "target": { "type": "string", "minLength": 1, "maxLength": 120 }
+      }, "additionalProperties": false },
       "runtime": { "type": "object", "required": ["command", "startup"], "properties": {
         "command": { "$ref": "#/$defs/command" }, "cwd": { "$ref": "#/$defs/relativePath" },
         "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
@@ -177,6 +181,7 @@
         "teamId": { "type": "string" }, "url": { "type": "string", "pattern": "^https://" }
       }, "required": ["provider"], "additionalProperties": false }
     }, "allOf": [
+      { "if": { "properties": { "kind": { "const": "application" } } }, "then": { "required": ["application", "runtime"] } },
       { "if": { "properties": { "kind": { "const": "service" } } }, "then": { "required": ["runtime"] } },
       { "if": { "properties": { "kind": { "const": "commandTool" } } }, "then": { "required": ["runtime", "cli"] } },
       { "if": { "properties": { "kind": { "const": "testSuite" } } }, "then": { "required": ["tests"] } },

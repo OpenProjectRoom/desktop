@@ -56,3 +56,12 @@ test('runtime prerequisites accept known checks and reject unknown ones', () => 
   service.runtime.requires = ['unknown-engine'];
   assert.throws(() => parseConfig(YAML.stringify(config)), /invalid/);
 });
+
+test('auto setup distinguishes a web app from an unknown development process', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-app-auto-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ scripts: { dev: 'vite --host 127.0.0.1' } }));
+  const { config } = createWorkspace(root, 'auto');
+  assert.equal(config.components[0].kind, 'application');
+  assert.equal(config.components[0].application.platform, 'web');
+});

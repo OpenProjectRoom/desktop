@@ -248,3 +248,14 @@ body[data-theme="dark"] .north-star-grid text{fill:#8fa3b4}
 .spec-kit-evidence-note{display:block;margin-top:10px}
 .spec-kit-link{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;border-top:1px solid #e6ebef;padding:9px 0;font-size:11px;color:#485c70}.spec-kit-link:first-of-type{margin-top:10px}.spec-kit-link small{color:#8491a0}
 @media(max-width:760px){.spec-kit-trace{grid-template-columns:1fr}}
+.application-tabs{margin:0 0 14px;gap:8px}
+.application-tabs button{padding:8px 13px;font-size:12px;border:1px solid var(--line);background:var(--card,#fff);color:var(--muted,#728396)}
+.application-tabs button.active{background:#dcebf1;border-color:#a8c8d3;color:#244a5e}
+.application-tabs button span{margin-left:5px;opacity:.7}
+.overview-runtime-group{display:flex;align-items:center;justify-content:space-between;padding:9px 20px 5px;color:#72869a;font-size:10px;font-weight:750;text-transform:uppercase;letter-spacing:1px}
+.overview-runtime-group button{border:0;background:none;color:#4c7187;font-size:10px;font-weight:700;text-transform:none;letter-spacing:0}
+.overview-runtime-group+.env-row{border-top:0}
+body[data-theme="dark"] .application-tabs button{background:#263747;color:#b6c7d3;border-color:#405767}
+body[data-theme="dark"] .application-tabs button.active{background:#38576a;color:#f0f8fb;border-color:#65899d}
+body[data-theme="dark"] .overview-runtime-group{color:#a3bdcb}
+body[data-theme="dark"] .overview-runtime-group button{color:#a5cfde}

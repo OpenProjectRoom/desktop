@@ -3,8 +3,8 @@ const path = require('node:path');
 const YAML = require('yaml');
 const { loadConfig, parseConfig, configPath } = require('../scripts/config.cjs');
 
-const kinds = new Set(['service', 'database', 'storage', 'testSuite', 'specification', 'external']);
-const icons = { service: 'terminal', database: 'database', storage: 'folder', testSuite: 'flask', specification: 'doc', external: 'cube' };
+const kinds = new Set(['application', 'service', 'database', 'storage', 'testSuite', 'specification', 'external']);
+const icons = { application: 'grid', service: 'terminal', database: 'database', storage: 'folder', testSuite: 'flask', specification: 'doc', external: 'cube' };
 
 function text(value, label, max = 160) {
   if (typeof value !== 'string' || !value.trim() || value.trim().length > max) throw new Error(`${label} must contain 1–${max} characters.`);
@@ -31,13 +31,24 @@ function addMapComponent(root, input) {
     id, kind: input.kind, name, icon: icons[input.kind],
     position
   };
-  if (input.kind === 'service' || input.kind === 'testSuite') {
+  if (['application', 'service', 'testSuite'].includes(input.kind)) {
     const executable = text(input.executable, 'Executable', 120);
     const args = typeof input.args === 'string' ? input.args.split('\n').map(x => x.trim()).filter(Boolean) : [];
     if (args.some(x => x.length > 160) || args.length > 30) throw new Error('Use at most 30 arguments of 160 characters each.');
     const command = [executable, ...args];
-    if (input.kind === 'service') {
+    if (['application', 'service'].includes(input.kind)) {
       component.runtime = { command, cwd: '.', startup: 'manual' };
+      if (input.kind === 'application') {
+        if (!['web', 'desktop', 'mobile'].includes(input.platform)) throw new Error('Choose Web, Desktop or Mobile.');
+        component.application = { platform: input.platform };
+        if (input.target) component.application.target = text(input.target, 'Target', 120);
+        if (input.url) {
+          if (input.platform !== 'web') throw new Error('Only Web applications can have a browser URL.');
+          const url = new URL(text(input.url, 'Local URL', 500));
+          if (url.protocol !== 'http:' || !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) || url.username || url.password) throw new Error('Use a local HTTP URL without credentials.');
+          component.runtime.url = url.toString();
+        }
+      }
       if (input.port !== '' && input.port !== undefined) {
         const port = Number(input.port);
         if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Port must be between 1 and 65535.');
