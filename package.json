@@ -74,7 +74,7 @@
       }
     },
     "win": {
-      "icon": "desktop/assets/icon.png",
+      "icon": "desktop/assets/icon.ico",
       "artifactName": "Project-Room-Desktop-windows.${ext}",
       "forceCodeSigning": false
     },
