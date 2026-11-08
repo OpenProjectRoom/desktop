@@ -109,7 +109,7 @@ jobs:
           grep -q '^-----BEGIN PRIVATE KEY-----$' "$key_file"
           echo "APPLE_API_KEY=$key_file" >> "$GITHUB_ENV"
       - name: Build, sign and notarize
-        run: npm run package:mac -- --config.electronDist="$ELECTRON_DIST"
+        run: npm run package:mac -- --config.electronDist="$ELECTRON_DIST" --config.extraMetadata.projectRoomDistribution=github-release
         env:
           CSC_LINK: ${{ secrets.MAC_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
@@ -127,6 +127,8 @@ jobs:
           test -f "$ARTIFACT_DIR/latest-mac.yml"
           test -s "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.zip"
           test -s "$ARTIFACT_DIR/Project-Room-Desktop-arm64-mac.dmg"
+          test -s "$ARTIFACT_DIR/mac-arm64/Project Room.app/Contents/Resources/app-update.yml"
+          node -e 'const asar = require("@electron/asar"); const meta = JSON.parse(asar.extractFile(process.argv[1], "package.json")); if (meta.projectRoomDistribution !== "github-release") throw new Error("Release provenance missing from packaged app");' "$ARTIFACT_DIR/mac-arm64/Project Room.app/Contents/Resources/app.asar"
           codesign --verify --deep --strict --verbose=2 "$ARTIFACT_DIR/mac-arm64/Project Room.app"
           signed_team_id="$(codesign -dv --verbose=4 "$ARTIFACT_DIR/mac-arm64/Project Room.app" 2>&1 | sed -n 's/^TeamIdentifier=//p')"
           test "$signed_team_id" = "$APPLE_TEAM_ID" || { echo 'Signed app Team ID does not match APPLE_TEAM_ID'; exit 1; }
@@ -179,7 +181,7 @@ jobs:
       - run: npm run validate:config
       - run: npm test
       - name: Build unsigned Windows installer
-        run: npm run package:win:unsigned
+        run: npm run package:win:unsigned -- --config.extraMetadata.projectRoomDistribution=github-release
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
       - name: Upload unsigned installer for SignPath

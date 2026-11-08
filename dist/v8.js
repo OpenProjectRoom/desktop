@@ -50,13 +50,16 @@
     if (!pv?.checkForUpdates) return '<p>Update checks are available in the installed desktop app.</p>';
     if (!versionStatus) return '<p>Loading version information…</p>';
     const checked = versionStatus.lastCheckedAt ? new Date(versionStatus.lastCheckedAt).toLocaleString() : null;
-    const status = !versionStatus.enabled ? 'Update checks are unavailable in this development build.'
+    const buildSource = versionStatus.buildType === 'official' ? 'Official GitHub release'
+      : versionStatus.buildType === 'local' ? 'Built locally' : 'Development checkout';
+    const status = versionStatus.buildType === 'local' ? 'Update checks are disabled for local builds.'
+      : !versionStatus.enabled ? 'Update checks are unavailable in this development build.'
       : versionStatus.phase === 'checking' ? 'Checking for updates…'
       : versionStatus.phase === 'downloading' ? `Downloading v${value(versionStatus.version)} · ${Number(versionStatus.percent) || 0}%`
       : versionStatus.phase === 'ready' ? `Version ${value(versionStatus.version)} is ready to install.`
       : versionStatus.message ? `Could not check: ${value(versionStatus.message)}`
       : checked ? `Up to date · checked ${value(checked)}` : 'No update check completed yet.';
-    return `<div class="settings-key-value"><span>Installed version</span><strong>${value(versionStatus.currentVersion || 'Unknown')}</strong></div><p role="status">${status}</p><div class="settings-version-actions"><button type="button" class="btn" data-v8="check-version" ${!versionStatus.enabled || ['checking', 'downloading', 'ready'].includes(versionStatus.phase) ? 'disabled' : ''}>Check now</button>${versionStatus.phase === 'ready' ? '<button type="button" class="btn primary" data-v8="install-version">Restart to update</button>' : ''}</div>${versionStatus.phase === 'ready' ? '<small>Restarting stops local processes started by Project Room.</small>' : ''}`;
+    return `<div class="settings-key-value"><span>Installed version</span><strong>${value(versionStatus.currentVersion || 'Unknown')}</strong></div><div class="settings-key-value"><span>Build source</span><strong>${buildSource}</strong></div><p role="status">${status}</p>${versionStatus.enabled ? `<div class="settings-version-actions"><button type="button" class="btn" data-v8="check-version" ${['checking', 'downloading', 'ready'].includes(versionStatus.phase) ? 'disabled' : ''}>Check now</button>${versionStatus.phase === 'ready' ? '<button type="button" class="btn primary" data-v8="install-version">Restart to update</button>' : ''}</div>` : ''}${versionStatus.phase === 'ready' ? '<small>Restarting stops local processes started by Project Room.</small>' : ''}`;
   };
   const updateVersionPanel = () => { const panel = document.getElementById('settingsVersionDetails'); if (panel) panel.innerHTML = versionDetails(); };
   pv?.onUpdateState?.(state => { versionStatus = { ...versionStatus, ...state }; updateVersionPanel(); });

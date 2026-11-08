@@ -1,6 +1,6 @@
 # Mac releases and in-app updates
 
-Project Room checks public GitHub Releases shortly after launch and every six hours. It downloads a newer release in the background and shows **Restart to update** when ready. Restarting stops services launched from Project Room. The first signed release must be installed from the website; later signed releases can update in place. There is no migration path for older unsigned previews because they have no installed user base.
+Official GitHub release builds check public GitHub Releases shortly after launch and every six hours. They download a newer release in the background and show **Restart to update** when ready. Restarting stops services launched from Project Room. Locally packaged apps and development checkouts identify their build source in Settings → Preferences and do not check for updates. The release workflow adds this provenance to the packaged app; a local package does not receive it. The first signed release must be installed from the website; later signed releases can update in place. There is no migration path for older unsigned previews because they have no installed user base.
 
 ## One-time release setup
 
@@ -21,4 +21,4 @@ Project Room checks public GitHub Releases shortly after launch and every six ho
 4. After all six secrets are present, set the repository Actions variable `APPLE_SIGNING_READY` to `true`. Until then, version tags can be used for manually packaged unsigned previews without starting the signed-release job. Increase `package.json` version, commit it, and push a matching `v<version>` tag. The workflow builds and notarizes the app, verifies its signature, signing Team ID and stapled ticket, then publishes the DMG, ZIP, blockmap, and `latest-mac.yml` as a GitHub Release. The stable Mac download URL is `https://github.com/OpenProjectRoom/desktop/releases/latest/download/Project-Room-Desktop-arm64-mac.zip`.
 5. Install that first signed release from the website onto a Mac as a fresh install. Then publish a second version and verify the bottom update banner, download, restart, installed version, and running-service shutdown on that Mac. Both versions must be signed by the same Apple Team ID.
 
-`npm run package:mac:app` remains an unsigned local development build. It is not a substitute for the signed release or an end-to-end update test.
+`npm run package:mac:app` remains an unsigned local development build. Settings labels it **Built locally** and does not offer **Check now**. It is not a substitute for the signed release or an end-to-end update test.

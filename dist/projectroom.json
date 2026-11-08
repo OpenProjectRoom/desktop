@@ -367,6 +367,15 @@
         "relatedComponents": [
           "web"
         ]
+      },
+      {
+        "id": "release-build-provenance",
+        "title": "Distinguish official releases from local builds",
+        "summary": "Mark published builds in release automation; show the build source in Settings and allow update checks only for official releases.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
       }
     ],
     "documentation": [

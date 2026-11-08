@@ -1,11 +1,12 @@
 const CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
-function createUpdates({ app, updater, send, platform = process.platform, delay = setTimeout, repeat = setInterval }) {
+function createUpdates({ app, updater, send, distribution, platform = process.platform, delay = setTimeout, repeat = setInterval }) {
   let state = { phase: 'idle', version: null, percent: 0, message: null, lastCheckedAt: null };
   let timer;
   let checking = null;
-  const enabled = ['darwin', 'win32'].includes(platform) && app.isPackaged;
-  const setState = patch => { state = { ...state, ...patch }; send(state); };
+  const buildType = app.isPackaged ? (distribution === 'github-release' ? 'official' : 'local') : 'development';
+  const enabled = ['darwin', 'win32'].includes(platform) && buildType === 'official';
+  const setState = patch => { state = { ...state, ...patch }; send({ ...state, buildType }); };
   const check = () => {
     if (!enabled || ['downloading', 'ready'].includes(state.phase)) return Promise.resolve({ ...state });
     if (checking) return checking;
@@ -39,7 +40,7 @@ function createUpdates({ app, updater, send, platform = process.platform, delay 
     return true;
   };
   const stop = () => { if (timer) clearInterval(timer); };
-  return { start, stop, check, install, snapshot: () => ({ ...state }), enabled };
+  return { start, stop, check, install, snapshot: () => ({ ...state, buildType }), enabled };
 }
 
 module.exports = { createUpdates, CHECK_INTERVAL_MS };

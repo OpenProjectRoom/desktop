@@ -12,7 +12,7 @@ test('packaged Mac downloads an update and waits for one explicit restart', asyn
   updater.quitAndInstall = () => { installs += 1; };
   const seen = [];
   const updates = createUpdates({
-    app: { isPackaged: true }, updater, platform: 'darwin', send: state => seen.push(state),
+    app: { isPackaged: true }, updater, distribution: 'github-release', platform: 'darwin', send: state => seen.push(state),
     delay: callback => { firstCheck = callback; }, repeat: () => 1
   });
   updates.start();
@@ -28,20 +28,25 @@ test('packaged Mac downloads an update and waits for one explicit restart', asyn
   assert.equal(checks, 1);
   updater.emit('update-downloaded', { version: '0.9.67' });
   assert.equal(seen.at(-1).phase, 'ready');
+  assert.equal(seen.at(-1).buildType, 'official');
   assert.equal(updates.install(), true);
   assert.equal(installs, 1);
   updates.stop();
 });
 
-test('development and other platforms never check or install', async () => {
+test('local packages and development builds never check or install', async () => {
   const updater = new EventEmitter();
   updater.checkForUpdates = () => { throw new Error('unexpected'); };
   updater.quitAndInstall = () => { throw new Error('unexpected'); };
-  const updates = createUpdates({ app: { isPackaged: false }, updater, platform: 'darwin', send: () => {} });
-  updates.start();
-  await updates.check();
-  assert.equal(updates.install(), false);
-  assert.equal(updates.enabled, false);
+  for (const [isPackaged, buildType] of [[true, 'local'], [false, 'development']]) {
+    const updates = createUpdates({ app: { isPackaged }, updater, platform: 'darwin', send: () => {} });
+    updates.start();
+    await updates.check();
+    assert.equal(updates.install(), false);
+    assert.equal(updates.enabled, false);
+    assert.equal(updates.snapshot().buildType, buildType);
+    assert.equal(updates.snapshot().message, null);
+  }
 });
 
 test('packaged Windows uses the same explicit update flow', async () => {
@@ -50,7 +55,7 @@ test('packaged Windows uses the same explicit update flow', async () => {
   let installs = 0;
   updater.checkForUpdates = async () => {};
   updater.quitAndInstall = () => { installs++; };
-  const updates = createUpdates({ app: { isPackaged: true }, updater, platform: 'win32', send: () => {},
+  const updates = createUpdates({ app: { isPackaged: true }, updater, distribution: 'github-release', platform: 'win32', send: () => {},
     delay: callback => { firstCheck = callback; }, repeat: () => 1 });
   updates.start();
   await firstCheck();
@@ -66,7 +71,7 @@ test('manual checks report progress and reuse an in-flight check', async () => {
   let finish;
   let checks = 0;
   updater.checkForUpdates = () => { checks++; return new Promise(resolve => { finish = resolve; }); };
-  const updates = createUpdates({ app: { isPackaged: true }, updater, platform: 'darwin', send: () => {} });
+  const updates = createUpdates({ app: { isPackaged: true }, updater, distribution: 'github-release', platform: 'darwin', send: () => {} });
   const first = updates.check();
   const second = updates.check();
   assert.equal(checks, 1);

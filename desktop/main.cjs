@@ -45,7 +45,7 @@ const startPending = new Set();
 const detachedTimers = new Map();
 const launchedBuilds = new Map();
 const processMetrics = new ProcessMetrics({ onSample: notify });
-const updates = createUpdates({ app, updater: autoUpdater, send: value => {
+const updates = createUpdates({ app, updater: autoUpdater, distribution: require('../package.json').projectRoomDistribution, send: value => {
   if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('updates:state', value);
 } });
 let pendingOnboardingRoot = null;
