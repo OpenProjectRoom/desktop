@@ -64,7 +64,6 @@ const demoEvents = [
   { at: new Date(Date.now() - 120000).toISOString(), type: 'test.finished', component: 'tests', exitCode: 0, demo: true },
   { at: new Date(Date.now() - 480000).toISOString(), type: 'application.started', component: 'web', demo: true }
 ];
-let dashboardMetric = 'cpu';
 let serviceMetricType = 'cpu';
 let serviceMetricSelected = null;
 let applicationPlatform = 'web';
@@ -83,6 +82,27 @@ function liveMetricChart(samples, type, emptyMessage) {
   const start = new Date(display[0].at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const end = new Date(last.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   return `<div class="live-metric-chart"><svg viewBox="0 0 630 110" preserveAspectRatio="none" role="img" aria-label="${type === 'cpu' ? 'CPU' : 'Memory'} trend"><polyline points="${points}" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>${values.length === 1 ? `<circle cx="0" cy="${Math.round(102 - values[0] / ceiling * 88)}" r="4" fill="currentColor"/>` : ''}</svg></div><div class="live-metric-times"><span>${escapeHtml(start)}</span><span>${escapeHtml(end)}</span></div><div class="live-metric-current"><strong>${metricLabel(metricValue(last, type), type)}</strong><span>${samples.length} samples · 5-second interval · local session</span></div>`;
+}
+function overviewMetricCharts(samples, sampleData = false) {
+  const demoValues = [
+    [8.2, 272], [11.4, 281], [9.1, 288], [13.8, 303], [12.2, 316], [15.3, 331],
+    [13.1, 344], [17.8, 352], [14.7, 360], [20.2, 372], [16.4, 379], [18.6, 384]
+  ];
+  const series = sampleData ? demoValues.map(([cpu, mb]) => ({ cpu, memoryBytes: mb * 1048576 })) : (samples || []);
+  const stride = Math.max(1, Math.ceil(series.length / 300));
+  const display = series.filter((_, index) => index % stride === 0 || index === series.length - 1);
+  const chart = (type, label) => {
+    const values = display.map(point => Math.max(0, Number(metricValue(point, type)) || 0));
+    const peak = Math.max(0, ...values);
+    const ceiling = type === 'cpu' ? Math.max(10, Math.ceil(peak * 1.15 / 10) * 10) : Math.max(64, Math.ceil(peak * 1.15 / 64) * 64);
+    const points = values.map((value, index) => `${Math.round(index * 300 / Math.max(1, values.length - 1))},${Math.round(82 - value / ceiling * 72)}`).join(' ');
+    const current = display.length ? metricLabel(metricValue(display.at(-1), type), type) : '—';
+    const top = type === 'cpu' ? `${ceiling}%` : `${ceiling} MB`;
+    const start = sampleData ? '4h ago' : display.length ? new Date(display[0].at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const end = sampleData ? 'Now' : display.length ? new Date(display.at(-1).at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    return `<div class="overview-metric-panel ${type}"><div class="overview-metric-head"><span><i aria-hidden="true"></i>${label}</span><strong>${current}</strong></div><div class="overview-metric-plot"><div class="overview-metric-scale"><span>${top}</span><span>0</span></div><div class="overview-metric-graph">${display.length ? `<svg viewBox="0 0 300 90" preserveAspectRatio="none" role="img" aria-label="${sampleData ? 'Sample ' : ''}${label} trend, latest ${current}"><path d="M0 10H300 M0 46H300 M0 82H300" class="overview-metric-grid"/><polyline points="${points}" class="overview-metric-line"/>${values.length === 1 ? `<circle cx="0" cy="${Math.round(82 - values[0] / ceiling * 72)}" r="4" fill="currentColor"/>` : ''}</svg>` : '<span class="overview-metric-empty">No samples yet</span>'}</div></div><div class="overview-metric-times"><span>${escapeHtml(start)}</span><span>${escapeHtml(end)}</span></div></div>`;
+  };
+  return `<div class="overview-metric-charts">${chart('cpu', 'CPU')}${chart('memory', 'Memory')}</div><div class="overview-metric-note">${sampleData ? 'Sample measurements · interactive demo' : series.length ? `${series.length} samples · 5-second interval · local session` : 'Start an application or service in Project Room to record CPU and memory. Only processes started here are measured.'}</div>`;
 }
 function metricTabs(type, action) {
   return `<div class="metric-tabs"><button class="${type === 'cpu' ? 'active' : ''}" data-v3="${action}:cpu">CPU</button><button class="${type === 'memory' ? 'active' : ''}" data-v3="${action}:memory">Memory</button></div>`;
@@ -172,7 +192,6 @@ function dashboardProjectMapPreview() {
 }
 function dashboardPage() {
   const demo = !projectRoot;
-  if (!demo && dashboardMetric === 'latency') dashboardMetric = 'cpu';
   const applications = projectConfig.components.filter(c => c.kind === 'application');
   const services = projectConfig.components.filter(c => c.kind === 'service');
   const runnables = [...applications, ...services];
@@ -182,13 +201,7 @@ function dashboardPage() {
   const running = runnables.filter(c => v3Status(c)[0].startsWith('Running')).length;
   const runs = pvHistory.filter(e => e.type === 'test.finished');
   const lastRun = runs[0];
-  const metricData = {
-    latency: { label: 'Latency', value: '186 ms', detail: 'P95 response time', path: 'M0 83 C30 80 31 62 58 65 S81 79 108 56 S134 46 164 65 S195 71 224 53 S261 44 291 59 S325 70 354 49 S389 40 417 58 S452 68 475 41 S512 60 541 49 S572 58 601 42 S620 49 630 39' },
-    cpu: { label: 'CPU', value: '18.6 %', detail: 'Process utilization', path: 'M0 74 C37 65 53 72 82 55 S134 51 163 63 S210 80 241 53 S284 52 316 44 S356 70 387 58 S422 39 452 52 S500 67 530 45 S574 59 601 44 S621 50 630 43' },
-    memory: { label: 'Memory', value: '384 MB', detail: 'Process memory', path: 'M0 82 C35 80 53 77 80 75 S128 73 160 70 S206 70 238 67 S284 65 315 62 S361 57 389 55 S430 55 458 50 S503 48 532 43 S581 42 607 39 S620 40 630 37' }
-  };
-  const activeMetric = metricData[dashboardMetric];
-  const metricCard = demo ? `<div class="metric-wrap"><div class="metric-tabs">${Object.entries(metricData).map(([key, m]) => `<button class="${dashboardMetric === key ? 'active' : ''}" data-v3="metric:${key}">${m.label}</button>`).join('')}</div><div class="chart"><svg viewBox="0 0 630 100" preserveAspectRatio="none" aria-label="Sample ${activeMetric.label} trend"><defs><linearGradient id="dashboard-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b7c6d7" stop-opacity=".23"/><stop offset="1" stop-color="#b7c6d7" stop-opacity="0"/></linearGradient></defs><path d="${activeMetric.path} L630 100 L0 100Z" fill="url(#dashboard-fill)"/><path d="${activeMetric.path}" stroke="#6c87a2" stroke-width="2.4" fill="none"/></svg></div><div class="chart-labels"><span>09:00</span><span>10:00</span><span>11:00</span><span>12:00</span><span>13:00</span><span>Now</span></div></div><div class="metric-summary"><div><span>${activeMetric.detail}</span><strong>${activeMetric.value}</strong></div><div><span>CPU</span><strong>18.6 %</strong></div><div><span>Memory</span><strong>384 MB</strong></div></div>` : `<div class="metric-wrap">${metricTabs(dashboardMetric, 'metric')}${liveMetricChart(processMetricState().totals, dashboardMetric, 'Start an application or service in Project Room to record CPU and memory usage. Only processes started here are measured.')}</div>`;
+  const metricCard = `<div class="metric-wrap">${overviewMetricCharts(processMetricState().totals, demo)}</div>`;
   let issueRows = demo ? demoBacklog.map(issue => `<div class="queue-item"><span class="task-check" aria-hidden="true"></span><div class="queue-copy"><strong>${escapeHtml(issue.title)}</strong><small>${escapeHtml(issue.id)} · interactive sample</small></div><span class="tag">${escapeHtml(issue.type)}</span></div>`).join('') : issueSources.map(c => `<div class="queue-item"><div class="queue-copy"><strong>${escapeHtml(c.name)}</strong><small>${escapeHtml(c.integration?.provider || 'External')} · live sync not connected</small></div>${badge('Configured', 'off')}</div>`).join('') || v3Empty('No issue source configured.');
   if (!demo) issueRows = productWorkItems().filter(issue => issue.status !== 'done').slice(0, 3).map(issue => `<button class="queue-item backlog-overview-issue" data-v3="page:issues"><div class="queue-copy"><strong>${escapeHtml(issue.title)}</strong><small>${escapeHtml(issue.local ? issue.id : issue.source)} · ${escapeHtml(issue.status)}</small></div><span class="tag">${escapeHtml(issue.type)}</span></button>`).join('') || v3Empty('No open work yet. Create an item in Backlog.');
   const testStatus = demo ? `<div class="test-progress"><div class="progress-head"><strong>87 %</strong><span>26 of 30 sample checks passed</span></div><div class="progress-track"><div class="progress-fill"></div></div><div class="progress-foot"><span>Sample test coverage</span><span>Demo</span></div></div><div class="test-latest">${icon('check')} Latest sample run <strong>passed</strong> · 1 min 24 s</div>` : lastRun ? `<div class="test-progress"><div class="progress-head"><strong>${lastRun.exitCode === 0 ? 'Passed' : 'Failed'}</strong><span>${escapeHtml(lastRun.component || 'Test suite')}</span></div><p class="dashboard-test-note">${escapeHtml(new Date(lastRun.at).toLocaleString('en-GB'))} · exit ${escapeHtml(lastRun.exitCode)}</p></div><div class="test-latest">${icon('flask')} ${runs.length} recorded run${runs.length === 1 ? '' : 's'} · see Activity for logs</div>` : `<div class="dashboard-empty-test">No test runs recorded in this project yet.</div>`;
@@ -647,7 +660,6 @@ document.addEventListener('click', async event => {
     else if (action === 'doc-raw') { docRaw = !docRaw; render(); }
     else if (action === 'doc-refresh') await refreshDocumentation();
     else if (action === 'spec-refresh') await refreshSpecifications();
-    else if (action === 'metric') { dashboardMetric = arg; render(); }
     else if (action === 'service-metric') { serviceMetricType = arg; render(); }
     else if (action === 'service-metrics') { serviceMetricSelected = arg; state.page = 'runtime'; render(); document.querySelector('.service-metric-card')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
     else if (action === 'map-view') {

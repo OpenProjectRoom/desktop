@@ -52,6 +52,15 @@
         ]
       },
       {
+        "id": "overview-dual-metrics",
+        "title": "CPU and memory together in Overview",
+        "summary": "Show both session-only process measurements at once in compact, separately scaled charts with distinct colors.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "sidebar-entry-counts",
         "title": "Sidebar entry counts",
         "summary": "Show the number of configured services, tools, servers, APIs, suites, data sources and declared variable names, plus product content counts, in the expanded navigation.",
