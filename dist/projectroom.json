@@ -13,6 +13,15 @@
     "backlogRoot": "backlog",
     "roadmap": [
       {
+        "id": "direct-data-source-inspection",
+        "title": "Open data source catalogs with one click",
+        "summary": "Selecting a database or local file source loads its bounded structure immediately; table rows and file contents remain behind a separate entry click, with Refresh and Retry for follow-up.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "focused-cli-catalog",
         "title": "Keep runnable CLI tools in focus",
         "summary": "Show configured commands as the primary CLI list and put available, unregistered source discoveries behind an optional expander; omit unbuilt candidates from interactive results.",

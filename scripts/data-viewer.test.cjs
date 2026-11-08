@@ -3,9 +3,34 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { DatabaseSync } = require('node:sqlite');
 const { engine, inspect, preview } = require('../desktop/data-viewer.cjs');
 const { inspectFolder } = require('../desktop/onboarding.cjs');
+
+test('selecting a data source loads its catalog without reading a table or file', async () => {
+  const clicks = [];
+  const calls = [];
+  const config = { components: [{ id: 'evidence', kind: 'storage', name: 'Acceptance evidence', data: { path: 'reports/evidence' } }] };
+  const context = {
+    document: { getElementById() { return { innerHTML: '' }; }, addEventListener(name, callback) { if (name === 'click') clicks.push(callback); } },
+    projectConfig: config, projectRoot: '/sample', state: { page: 'data' }, escapeHtml: String,
+    icon: () => '', pageHead: () => '', render() {},
+    pv: {
+      async inspectDataSource(id) { calls.push(`inspect:${id}`); return { engine: 'files', tables: [{ id: 'reports/evidence/check.json', name: 'check.json', type: 'file' }] }; },
+      async previewDataEntry(id, entry) { calls.push(`preview:${id}:${entry}`); return { kind: 'file', name: 'check.json', text: '{"passed":true}' }; }
+    }
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/data-viewer.js'), 'utf8'), context);
+  assert.match(context.dataPage(), /Select a source to inspect it/);
+  await clicks.at(-1)({ target: { closest(selector) { return selector === '[data-data-viewer]' ? { dataset: { dataViewer: 'source:evidence' } } : null; } } });
+  assert.deepEqual(calls, ['inspect:evidence']);
+  assert.match(context.dataPage(), /check\.json/);
+  assert.doesNotMatch(context.dataPage(), /passed/);
+  await clicks.at(-1)({ target: { closest(selector) { return selector === '[data-data-viewer]' ? { dataset: { dataViewer: 'entry:reports%2Fevidence%2Fcheck.json' } } : null; } } });
+  assert.deepEqual(calls, ['inspect:evidence', 'preview:evidence:reports/evidence/check.json']);
+  assert.match(context.dataPage(), /passed/);
+});
 
 test('read-only SQLite viewer lists tables, columns and at most 20 rows', async () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-data-'));

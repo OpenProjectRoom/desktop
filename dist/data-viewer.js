@@ -7,6 +7,7 @@
   let preview = null;
   let busy = false;
   let error = '';
+  let requestVersion = 0;
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const sources = () => projectConfig.components.filter(item => ['database', 'storage', 'external'].includes(item.kind));
   const selected = () => sources().find(item => item.id === selectedId);
@@ -28,17 +29,27 @@
     const item = selected();
     if (!item) return '<div class="data-preview-empty">Select a source to inspect it.</div>';
     const location = item.kind === 'storage' || /sqlite/i.test(item.data?.engine || '') ? item.data?.path : item.data?.connectionEnv;
-    const header = `<div class="data-viewer-head"><div><span class="data-viewer-kicker">${safe(typeLabel(item))}</span><h2>${safe(item.name)}</h2><p>${safe(location || (item.kind === 'external' ? item.url : 'No connection configured'))}</p></div><div class="data-viewer-actions">${item.kind === 'external' ? '' : button(catalog ? 'Refresh' : 'Inspect source', 'inspect', busy)}${button('Remove', 'remove', !pv || !projectRoot || busy)}</div></div>`;
+    const header = `<div class="data-viewer-head"><div><span class="data-viewer-kicker">${safe(typeLabel(item))}</span><h2>${safe(item.name)}</h2><p>${safe(location || (item.kind === 'external' ? item.url : 'No connection configured'))}</p></div><div class="data-viewer-actions">${item.kind === 'external' || (!catalog && !error) ? '' : button(catalog ? 'Refresh' : 'Retry', 'inspect', busy)}${button('Remove', 'remove', !pv || !projectRoot || busy)}</div></div>`;
     if (item.kind === 'external') return `${header}<div class="data-preview-empty">This external source has no built-in data viewer. Open its configured URL from Project Map.</div>`;
-    if (!catalog) return `${header}<div class="data-preview-empty"><strong>Inspect this source</strong><p>${projectRoot ? 'This reads structures locally. Choose a table or file to load a limited preview.' : 'Open a local project in the desktop app to inspect real data.'}</p>${item.data?.connectionEnv ? `<p>Connection variable: <code>${safe(item.data.connectionEnv)}</code> · <button type="button" data-page="environment">Open Environment</button></p>` : ''}</div>`;
+    if (!catalog) return `${header}<div class="data-preview-empty"><strong>${busy ? 'Loading source…' : error ? 'Source could not be loaded' : 'Select a source'}</strong><p>${projectRoot ? 'Tables and files appear here. Select an entry to load its limited preview.' : 'Open a local project in the desktop app to inspect real data.'}</p>${item.data?.connectionEnv ? `<p>Connection variable: <code>${safe(item.data.connectionEnv)}</code> · <button type="button" data-page="environment">Open Environment</button></p>` : ''}</div>`;
     if (catalog.engine === 'unsupported') return `${header}<div class="data-preview-empty">${safe(catalog.message)}</div>`;
     return `${header}<div class="data-viewer-meta"><span>${catalog.tables.length} ${catalog.engine === 'files' ? 'files and folders' : 'tables and views'}${catalog.truncated ? ' · first 250' : ''}</span><span>Contents load only when selected</span></div>${catalog.message ? `<p class="data-viewer-empty">${safe(catalog.message)}</p>` : ''}<div class="data-viewer-browser"><div class="data-entry-list">${catalog.tables.length ? catalog.tables.map(entry => `<button type="button" class="data-entry ${selectedEntry?.id === entry.id ? 'active' : ''}" data-data-viewer="entry:${safe(encodeURIComponent(entry.id))}" ${entry.type === 'folder' ? 'disabled' : ''}><strong>${safe(entry.name)}</strong><small>${safe(entry.type)}${entry.bytes != null ? ' · ' + Math.round(entry.bytes / 1024) + ' KB' : ''}</small></button>`).join('') : '<p class="data-viewer-empty">No entries found.</p>'}</div><div class="data-entry-preview">${table()}</div></div>`;
   }
   dataPage = function () {
-    if (loadedConfig !== projectConfig) { loadedConfig = projectConfig; selectedId = sources()[0]?.id || null; catalog = null; selectedEntry = null; preview = null; error = ''; }
+    if (loadedConfig !== projectConfig) { loadedConfig = projectConfig; ++requestVersion; selectedId = null; catalog = null; selectedEntry = null; preview = null; error = ''; busy = false; }
     return `${pageHead('Data Explorer', 'Inspect database structures and a small, read-only data preview.', `<button type="button" class="btn primary" data-data-viewer="add" ${!pv || !projectRoot ? 'disabled title="Open a local project to edit .projectroom/project.yaml"' : ''}>Add data source</button>`)}<div class="data-viewer-shell">${error ? `<div class="data-viewer-error" role="alert">${safe(error)}</div>` : ''}<div class="data-viewer-layout"><section class="card data-source-list"><div class="data-source-title"><strong>Project sources</strong><span>${sources().length}</span></div>${sourceList()}<p class="data-source-note">PostgreSQL · MySQL/MariaDB · SQLite · local files. Connections come from local Environment values.</p></section><section class="card data-viewer-main">${workspace()}</section></div></div>`;
   };
   const modalRoot = document.getElementById('modalRoot');
+  async function inspectSource(id) {
+    const request = ++requestVersion;
+    selectedId = id; catalog = null; selectedEntry = null; preview = null; error = '';
+    busy = !!pv && !!projectRoot;
+    render();
+    if (!busy) return;
+    try { const result = await pv.inspectDataSource(id); if (request === requestVersion) catalog = result; }
+    catch (cause) { if (request === requestVersion) error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
+    finally { if (request === requestVersion) { busy = false; render(); } }
+  }
   const fields = {
     database: `<label>Engine<select name="engine" id="dataAddEngine"><option>PostgreSQL</option><option>MySQL</option><option>MariaDB</option><option>SQLite</option></select></label><label data-data-config="remote">Connection variable <small>name only; set its value in Environment</small><input name="connectionEnv" required pattern="[A-Z][A-Z0-9_]*" placeholder="DATABASE_URL"></label><label data-data-config="sqlite" hidden>Relative database file<input name="path" placeholder="data/app.sqlite"></label>`,
     storage: `<label>Relative folder<input name="path" required placeholder="data/uploads"></label>`,
@@ -65,7 +76,7 @@
       try {
         const updated = await pv.addMapComponent(Object.fromEntries(new FormData(event.target)));
         closeModal(); setProject(updated); state.page = 'data'; selectedId = updated.addedId; loadedConfig = projectConfig;
-        catalog = null; preview = null; selectedEntry = null; error = ''; render();
+        await inspectSource(updated.addedId);
         toast('Data source added to .projectroom/project.yaml.');
       } catch (cause) { toast(String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, '')); }
       finally { submit.disabled = false; }
@@ -83,8 +94,8 @@
     target.disabled = true;
     try {
       const updated = await pv.removeComponent(target.dataset.id);
-      closeModal(); setProject(updated); state.page = 'data'; selectedId = sources()[0]?.id || null; loadedConfig = projectConfig;
-      catalog = null; preview = null; selectedEntry = null; error = ''; render();
+      closeModal(); setProject(updated); state.page = 'data'; loadedConfig = projectConfig;
+      ++requestVersion; selectedId = null; catalog = null; preview = null; selectedEntry = null; error = ''; busy = false; render();
       toast('Data source removed from .projectroom/project.yaml.');
     } catch (cause) { toast(String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, '')); target.disabled = false; }
   });
@@ -96,18 +107,21 @@
     const value = parts.join(':');
     if (action === 'add') { if (pv && projectRoot) openAdd(); return; }
     if (action === 'remove') { if (pv && projectRoot) openRemove(); return; }
-    if (action === 'source') { selectedId = value; catalog = null; selectedEntry = null; preview = null; error = ''; render(); return; }
+    if (action === 'source') { await inspectSource(value); return; }
     if (!pv || !projectRoot || busy || !selectedId) return;
+    const request = ++requestVersion;
     busy = true; error = ''; render();
     try {
-      if (action === 'inspect') { catalog = await pv.inspectDataSource(selectedId); selectedEntry = null; preview = null; }
+      if (action === 'inspect') { const result = await pv.inspectDataSource(selectedId); if (request !== requestVersion) return; catalog = result; selectedEntry = null; preview = null; }
       if (action === 'entry') {
         const id = decodeURIComponent(value);
         selectedEntry = catalog?.tables.find(item => item.id === id);
         if (!selectedEntry) throw new Error('Choose a listed entry.');
-        preview = await pv.previewDataEntry(selectedId, id);
+        const result = await pv.previewDataEntry(selectedId, id);
+        if (request !== requestVersion) return;
+        preview = result;
       }
-    } catch (cause) { error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
-    finally { busy = false; render(); }
+    } catch (cause) { if (request === requestVersion) error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
+    finally { if (request === requestVersion) { busy = false; render(); } }
   });
 })();
