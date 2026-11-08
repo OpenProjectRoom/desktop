@@ -126,3 +126,6 @@ body[data-theme="dark"] .product-roadmap-card small{background:#34485b;color:#c5
 .work-description .spec-markdown,.work-file .spec-markdown{padding:0}.work-description .product-markdown,.work-file .product-markdown{padding:0;color:var(--text,#26394a)}
 body[data-theme="dark"] .work-filters button,body[data-theme="dark"] .work-row{color:#dce9f2}body[data-theme="dark"] .work-filters button.active,body[data-theme="dark"] .work-row:hover,body[data-theme="dark"] .work-row.active,body[data-theme="dark"] .work-artifacts button.active{background:#344d5f;border-color:#66899e;color:#edf7fb}body[data-theme="dark"] .work-kind{color:#a4c9dc}
 @media(max-width:760px){.work-layout,.work-evidence{grid-template-columns:1fr}.work-list{max-height:270px}.work-detail{padding:15px;min-height:0}}
+/* Manual update controls share the existing settings card layout. */
+.settings-version-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 6px}
+.settings-version-actions .btn:disabled{cursor:default;opacity:.6}

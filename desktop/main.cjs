@@ -272,7 +272,8 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
   });
 }
 function registerIpc() {
-  ipcMain.handle('updates:status', event => { assertSender(event); return { enabled: updates.enabled, ...updates.snapshot() }; });
+  ipcMain.handle('updates:status', event => { assertSender(event); return { enabled: updates.enabled, currentVersion: app.getVersion(), ...updates.snapshot() }; });
+  ipcMain.handle('updates:check', async event => { assertSender(event); await updates.check(); return { enabled: updates.enabled, currentVersion: app.getVersion(), ...updates.snapshot() }; });
   ipcMain.handle('updates:install', event => { assertSender(event); return updates.install(); });
   ipcMain.handle('metrics:list', event => { assertSender(event); return processMetrics.snapshot(); });
   const oauthStore = (root, kind, id) => new SecureOAuthStore(app.getPath('userData'), safeStorage, root, kind, id);
