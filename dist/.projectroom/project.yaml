@@ -61,6 +61,11 @@ product:
       summary: Count only detected sections, keep configured entries separate from hands-on verification, review paths, commands and environment names, and make the agent inspect before writing.
       status: done
       relatedComponents: [product-spec, web]
+    - id: onboarding-completion
+      title: Finish onboarding and clear navigation
+      summary: Let users complete onboarding after configured sections and hands-on checks are done; remember completion locally per project, hide the navigation item, and offer reopening in Settings.
+      status: done
+      relatedComponents: [web]
     - id: source-audited-setup
       title: Source-audited project setup
       summary: Require a second-pass source audit across every Project Room capability, distinguish launch profiles and external clients from project servers, reconcile findings with YAML, and report evidence, uncertainty and unsupported techniques before configuring the project.

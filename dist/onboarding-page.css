@@ -9,6 +9,10 @@
 .onboarding-progress-explanation{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .onboarding-progress-explanation strong{font-size:10px;color:#5d806f}
 .onboarding-progress-explanation small{max-width:600px;line-height:1.5}
+.onboarding-finish-card{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 19px;margin:-7px 0 19px;border-color:#abd4bb;background:#f2faf5}
+.onboarding-finish-card strong{font-size:13px;color:#286644}
+.onboarding-finish-card p{margin:4px 0 0;font-size:11px;line-height:1.5;color:#536f5e}
+.onboarding-finish-card .btn{flex:none}
 .onboarding-agent-help{padding:12px 19px;margin:-7px 0 19px}
 .onboarding-agent-help>summary{cursor:pointer;font-size:11px;font-weight:650;color:var(--ink)}
 .onboarding-agent-help p{font-size:11px;line-height:1.5;color:var(--muted);margin:10px 0}
@@ -56,4 +60,7 @@ body[data-theme="dark"] .onboarding-verify{background:#263d34;border-color:#456e
 body[data-theme="dark"] .onboarding-verify:hover,body[data-theme="dark"] .onboarding-verify.is-verified{background:#315541;border-color:#65a77a;color:#e0f4e5}
 body[data-theme="dark"] .onboarding-verify:disabled{background:#293744;border-color:#3b4c5b;color:#8192a0}
 body[data-theme="dark"] .onboarding-progress-track{background:#344453}
-@media(max-width:700px){.onboarding-step{padding:14px;gap:10px}.onboarding-progress>div:first-child{display:block}.onboarding-progress span{display:block;text-align:left;margin-top:3px}.onboarding-verify{margin-left:0;width:100%}}
+body[data-theme="dark"] .onboarding-finish-card{background:#243a30;border-color:#466d55}
+body[data-theme="dark"] .onboarding-finish-card strong{color:#b8e3c5}
+body[data-theme="dark"] .onboarding-finish-card p{color:#b3ccbb}
+@media(max-width:700px){.onboarding-step{padding:14px;gap:10px}.onboarding-progress>div:first-child{display:block}.onboarding-progress span{display:block;text-align:left;margin-top:3px}.onboarding-verify{margin-left:0;width:100%}.onboarding-finish-card{align-items:stretch;flex-direction:column}.onboarding-finish-card .btn{align-self:flex-start}}

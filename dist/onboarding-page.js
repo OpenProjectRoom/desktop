@@ -6,6 +6,15 @@
   let error = '';
   let checked = {};
   const key = () => 'productview.onboardingChecklist.v1:' + (projectRoot || 'demo');
+  const completionKey = () => 'productview.onboardingCompleted.v1:' + (projectRoot || 'demo');
+  window.projectRoomOnboardingComplete = () => {
+    if (!projectRoot) return false;
+    try { return localStorage.getItem(completionKey()) === 'true'; } catch (_) { return false; }
+  };
+  window.projectRoomReopenOnboarding = () => {
+    if (!projectRoot) return;
+    try { localStorage.removeItem(completionKey()); } catch (_) {}
+  };
   const save = () => { try { localStorage.setItem(key(), JSON.stringify(checked)); } catch (_) {} };
   const current = () => {
     const root = projectRoot || 'demo';
@@ -86,6 +95,7 @@
     const applicable = Object.values(relevant).filter(Boolean).length;
     const reviewable = reviewIds.filter(id => relevant[id] && setup[id]).length;
     const reviewedCount = Object.values(reviewed).filter(Boolean).length;
+    const canFinish = local && applicable === completed && reviewable === reviewedCount;
     const prompt = guide?.prompt || '';
     const status = !local ? 'Open a local project to begin.' : loading ? 'Inspecting the selected project…' : error ? escapeHtml(error) : review?.state === 'invalid' ? 'YAML needs a fix: ' + escapeHtml(review.message) : valid ? escapeHtml(review.name) + ' · ' + review.components.length + ' components · ' + review.connections + ' connections' : 'Waiting for .projectroom/project.yaml.';
     const warnings = valid && review.warnings.length ? '<div class="onboarding-alert">Review before running: ' + review.warnings.map(escapeHtml).join(' · ') + '</div>' : '';
@@ -94,6 +104,7 @@
     return '<div class="onboarding-shell">' +
       '<div class="page-head"><div><div class="eyebrow">PROJECT ROOM / PROJECT</div><h1>Onboarding</h1><p>Set up this repository, then check what Project Room actually shows and runs.</p></div></div>' +
       '<section class="card onboarding-progress"><div><strong>' + completed + ' of ' + applicable + ' detected sections configured</strong><span>' + escapeHtml(projectRoot || 'Interactive demo') + '</span></div><div class="onboarding-progress-track" role="progressbar" aria-label="Project setup progress" aria-valuemin="0" aria-valuemax="' + applicable + '" aria-valuenow="' + completed + '"><i style="width:' + (applicable ? completed / applicable * 100 : 0) + '%"></i></div><div class="onboarding-progress-explanation"><strong>' + reviewedCount + ' of ' + reviewable + ' available hands-on checks verified</strong><small>Undetected optional views do not lower setup progress. Configuration is separate from manual verification; neither proves that a command runs successfully.</small></div></section>' +
+      (canFinish ? '<section class="card onboarding-finish-card"><div><strong>Ready to finish onboarding</strong><p>All detected sections are configured and their available hands-on checks are verified. You can reopen this page from Settings.</p></div><button type="button" class="btn primary" data-onboard-finish>Complete onboarding</button></section>' : '') +
       '<details class="card onboarding-agent-help"><summary>Need help from a coding agent?</summary><p>Copy the Project Room prompt into Codex, Claude Code, or your usual agent. It asks the agent to read the source for apps, services, APIs, MCP servers, tools, tests and data even when no client config lists them. Review its findings before it writes project YAML. This is optional and does not affect setup progress.</p>' + (local ? '<details><summary>Read the exact agent prompt</summary><textarea readonly aria-label="Project Room agent prompt">' + escapeHtml(prompt || 'Loading prompt…') + '</textarea></details>' : '') + '<div class="onboarding-step-actions"><button type="button" class="btn" data-onboard-copy' + (!prompt ? ' disabled' : '') + '>Copy agent prompt</button>' + action('Agent Access', 'agent') + '</div></details>' +
       '<div class="onboarding-steps">' +
       card(1, 'project', 'Open a project', 'Select a repository folder on this computer. Existing Spec Kit files can stay in their own folders.', '<strong>Project folder</strong><span>' + escapeHtml(projectRoot || 'No local project selected') + '</span>', '<button type="button" class="btn" data-onboard-open>Open project folder</button>', setup.project, true, false, true, 'Opened') +
@@ -117,6 +128,17 @@
       checked[id] = !checked[id];
       save();
       render();
+      return;
+    }
+    if (event.target.closest('[data-onboard-finish]')) {
+      if (!pv || !projectRoot || !guide?.review || guide.review.state !== 'ready') return;
+      const button = event.target.closest('[data-onboard-finish]');
+      if (!button) return;
+      try { localStorage.setItem(completionKey(), 'true'); }
+      catch { toast('Could not save onboarding completion on this computer.'); return; }
+      state.page = 'dashboard';
+      render();
+      toast('Onboarding complete. Reopen it from Settings when needed.');
       return;
     }
     const page = event.target.closest('[data-onboard-page]');
