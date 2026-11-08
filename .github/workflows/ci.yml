@@ -31,10 +31,24 @@ jobs:
       - run: npm test
       - name: Package unsigned Windows app
         if: matrix.os == 'windows-latest'
-        run: npm run package:win:app
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run package:win:app
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -eq 3) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds (10 * $attempt)
+          }
       - name: Build unsigned Windows test installer
         if: matrix.os == 'windows-latest'
-        run: npm run package:win:unsigned
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run package:win:unsigned
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -eq 3) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds (10 * $attempt)
+          }
       - name: Stage Windows test installer
         if: matrix.os == 'windows-latest'
         shell: pwsh
