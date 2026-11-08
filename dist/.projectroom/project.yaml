@@ -26,6 +26,11 @@ product:
       summary: Separate launchable Web, Desktop and Mobile apps from backend services while keeping both visible and controllable in Overview and Project Map.
       status: done
       relatedComponents: [web, api]
+    - id: manual-component-rebuild
+      title: Rebuild launchable components
+      summary: Let agents record verified build commands and offer an explicit Rebuild action for stopped applications, services and CLI tools or disconnected local MCP servers, with build output and identity.
+      status: done
+      relatedComponents: [web, api]
     - id: overview-map-preview
       title: Project Map preview in Overview
       summary: Show a compact, read-only preview of runtime components and real connections in Overview; open the full map there for inspection and arrangement without a separate main-menu entry.

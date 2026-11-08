@@ -12,6 +12,8 @@ The **Explore** tab is an interactive local tester. It shows the exact invocatio
 
 For a configured tool, `runtime.command` is the exact argument array behind Start or Run. `cli.mode` is `server` for a long-running process or `task` for a command that exits. `cli.protocol` describes how a server communicates (`http`, `stdio`, or `other`).
 
+When the source audit finds a separate, terminating build step, add its exact argument array as `runtime.buildCommand`. CLI Explorer then shows **Rebuild** beside Run or Start. It runs only on click while the tool is stopped, streams output to Process output and records the result in Activity. A successful build updates the displayed local build time for this app session. Do not use an install, migration, watch, packaging or deployment command as a build step.
+
 The manual maps `cli.summary` to NAME, optional `cli.description` to DESCRIPTION, `cli.usage` to SYNOPSIS, and the optional `commands`, `options`, `examples` and `environment` arrays to the matching sections. These are repository-authored descriptions, not detected flags. An optional `cli.helpCommand` enables **Read actual --help** in the desktop app. Its raw output appears separately, with exit status, so it can be compared with the written manual. A linked discovery candidate starts with the selected help command; manually authored definitions may use another explicit help command. The web preview does not simulate help or process output.
 
 In a local workspace, Start and Stop control the configured server. Run executes a one-shot task. Output streams into the view and is saved under `.productview/logs/`; Activity records starts, stops and help requests. Enter only environment variable **names** in the configuration, never credentials.

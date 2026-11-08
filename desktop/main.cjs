@@ -41,6 +41,9 @@ let selectedRoot = null;
 let selectedConfig = null;
 let selectedRaw = null;
 const processes = new Map();
+const buildProcesses = new Map();
+const buildPending = new Set();
+const completedBuilds = new Map();
 const detachedStates = new Map();
 const detachedPending = new Set();
 const startPending = new Set();
@@ -104,7 +107,7 @@ function readSelected(root) {
   ensureHistory(root);
   watchSelectedProject(root);
   appendEvent(root, 'workspace.opened', { project: selectedConfig.project.name });
-  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
+  return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, new Map([...completedBuilds, ...launchedBuilds])) };
 }
 function loadInitial() {
   const userData = app.getPath('userData');
@@ -163,7 +166,7 @@ function environmentConfig() {
   return { ...selectedConfig, workspace: { ...selectedConfig.workspace,
     mcpServers: [...(selectedConfig.workspace?.mcpServers || []), ...discovered] } };
 }
-function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(selectedRoot, loaded.file), status: status(), buildIdentities: listBuildIdentities(selectedRoot, selectedConfig.components, launchedBuilds) }; }
+function updatedProject(loaded) { selectedConfig = loaded.config; selectedRaw = loaded.raw; return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(selectedRoot, loaded.file), status: status(), buildIdentities: listBuildIdentities(selectedRoot, selectedConfig.components, new Map([...completedBuilds, ...launchedBuilds])) }; }
 function cwdWithinProject(relative = '.') {
   const root = fs.realpathSync(selectedRoot);
   const cwd = fs.realpathSync(path.resolve(root, relative));
@@ -180,7 +183,7 @@ function fileWithinProject(relative) {
 function stopChild(child) {
   stopProcessTree(child);
 }
-function stopAll() { for (const child of processes.values()) stopChild(child); processes.clear(); for (const timer of detachedTimers.values()) clearInterval(timer); detachedTimers.clear(); launchedBuilds.clear(); processMetrics.reset(); }
+function stopAll() { for (const child of processes.values()) stopChild(child); for (const child of buildProcesses.values()) stopChild(child); processes.clear(); buildProcesses.clear(); buildPending.clear(); completedBuilds.clear(); for (const timer of detachedTimers.values()) clearInterval(timer); detachedTimers.clear(); launchedBuilds.clear(); processMetrics.reset(); }
 function observeDetached(item, root, options) {
   const id = item.id;
   if (detachedTimers.has(id)) clearInterval(detachedTimers.get(id));
@@ -256,11 +259,11 @@ function onboardingReview(root) {
   const session = onboardingSession(root);
   return { ...reviewConfig(root), progress: readOnboardingProgress(session), copiedAt: session.copiedAt };
 }
-function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = false, keepStdin = false, details = {}) {
+function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = false, keepStdin = false, details = {}, componentOverride = null) {
   if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in .projectroom/project.yaml.');
   const cwd = cwdWithinProject(relativeCwd);
-  const runComponent = selectedConfig.components.find(item => item.id === id);
-  const buildIdentity = runComponent && ['application', 'service', 'commandTool'].includes(runComponent.kind) ? readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
+  const runComponent = componentOverride || selectedConfig.components.find(item => item.id === id);
+  const buildIdentity = kind !== 'build' && runComponent && ['application', 'service', 'commandTool'].includes(runComponent.kind) ? completedBuilds.get(id) || readBuildIdentity(selectedRoot, runComponent, sourceRevision(selectedRoot)) : null;
   const startedAt = new Date().toISOString();
   const localEnv = runtimeEnvironment(app.getPath('userData'), selectedRoot, selectedConfig, safeStorage, runComponent);
   const sensitiveValues = declarations(selectedConfig).map(item => localEnv[item.name]).filter(Boolean);
@@ -286,8 +289,9 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     child.stdout.on('data', data => stdout.write(stdoutDecoder.write(data)));
     child.stderr.on('data', data => stderr.write(stderrDecoder.write(data)));
     const flushOutput = () => { stdout.write(stdoutDecoder.end()); stderr.write(stderrDecoder.end()); stdout.end(); stderr.end(); output.end(); };
-    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (processes.get(id) === child) { processes.delete(id); if (['service', 'application'].includes(kind)) processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
+    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (kind === 'build' && buildProcesses.get(id) === child) buildProcesses.delete(id); else if (processes.get(id) === child) { processes.delete(id); if (['service', 'application'].includes(kind)) processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
     child.once('spawn', () => {
+      if (kind === 'build') { buildProcesses.set(id, child); return; }
       if (buildIdentity) launchedBuilds.set(id, { ...buildIdentity, startedAt });
       if (['service', 'application'].includes(kind)) processMetrics.start(id, child.pid);
       if (!waitForExit) { processes.set(id, child); notify({ type: 'status', id, status: 'running', buildIdentity: launchedBuilds.get(id) }); settled = true; resolve({ status: 'running', pid: child.pid, buildIdentity: launchedBuilds.get(id) }); }
@@ -297,7 +301,8 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
       if (failed) return;
       flushOutput();
       appendEvent(root, `${kind}.finished`, { component: id, ...details, exitCode: code, signal, log: relativeLog });
-      if (processes.get(id) === child) { processes.delete(id); if (kind === 'service') processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); }
+      if (kind === 'build' && buildProcesses.get(id) === child) buildProcesses.delete(id);
+      else if (processes.get(id) === child) { processes.delete(id); if (kind === 'service') processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); }
       if (waitForExit && !settled) { settled = true; resolve({ status: 'stopped', exitCode: code ?? (signal ? 1 : 0), log: relativeLog }); }
     });
   });
@@ -326,9 +331,37 @@ function registerIpc() {
     record: (type, details) => { if (selectedRoot) appendEvent(selectedRoot, type, details); },
     oauthStore, openExternal: url => shell.openExternal(url)
   });
-  ipcMain.handle('mcp:list', event => { assertSender(event); return mcpExplorer.list(); });
-  ipcMain.handle('mcp:connect', (event, id) => { assertSender(event); return mcpExplorer.connect(String(id)); });
+  ipcMain.handle('mcp:list', event => { assertSender(event); return mcpExplorer.list().map(item => ({ ...item, buildIdentity: completedBuilds.get(`mcp:${item.id}`) || item.buildIdentity, canRebuild: item.origin === 'project-registration' && item.transport === 'stdio' && !!selectedConfig?.workspace?.mcpServers?.find(entry => `yaml:${entry.id}` === item.id)?.buildCommand })); });
+  ipcMain.handle('mcp:connect', (event, id) => { assertSender(event); if (buildPending.has(`${selectedRoot}\0mcp:${id}`)) throw new Error('Wait for Rebuild to finish before connecting this server.'); return mcpExplorer.connect(String(id)); });
   ipcMain.handle('mcp:disconnect', (event, id) => { assertSender(event); return mcpExplorer.disconnect(String(id)); });
+  ipcMain.handle('mcp:rebuild', async (event, id) => {
+    assertSender(event);
+    const item = selectedConfig?.workspace?.mcpServers?.find(entry => `yaml:${entry.id}` === String(id));
+    if (!selectedRoot || !item || (item.transport || (item.url ? 'http' : 'stdio')) !== 'stdio' || !item.buildCommand) throw new Error('This local MCP server has no verified build command.');
+    if (mcpExplorer.list().find(entry => entry.id === id)?.connected) throw new Error('Disconnect the MCP server before rebuilding it.');
+    const root = selectedRoot;
+    const buildId = `mcp:${id}`;
+    const key = `${root}\0${buildId}`;
+    if (buildPending.has(key)) throw new Error('This MCP server is already rebuilding.');
+    buildPending.add(key);
+    try {
+      const before = readBuildIdentity(root, item, sourceRevision(root));
+      const result = await runCommand(buildId, item.buildCommand, item.cwd || '.', 'build', true, false, {}, { id: buildId, runtime: { environment: item.environment || [] } });
+      if (result.exitCode !== 0) throw new Error(`Build failed (exit ${result.exitCode}). Review ${result.log}.`);
+      if (selectedRoot !== root) throw new Error('The project changed during Rebuild.');
+      const revision = sourceRevision(root);
+      const after = readBuildIdentity(root, item, revision);
+      const identity = after.builtAt && after.builtAt !== before.builtAt
+        ? after
+        : { builtAt: new Date().toISOString(), revision, version: null, source: 'Project Room rebuild', sourceRevision: revision };
+      completedBuilds.set(buildId, identity);
+      appendEvent(root, 'build.succeeded', { server: id, buildIdentity: identity, log: result.log });
+      return { ...result, buildIdentity: identity };
+    } catch (error) {
+      if (selectedRoot === root) appendEvent(root, 'build.failed', { server: id, message: error.message });
+      throw error;
+    } finally { buildPending.delete(key); }
+  });
   ipcMain.handle('mcp:forget-auth', (event, id) => { assertSender(event); return mcpExplorer.forgetAuth(String(id)); });
   ipcMain.handle('mcp:describe', (event, id) => { assertSender(event); return mcpExplorer.describe(String(id)); });
   ipcMain.handle('mcp:add', (event, input) => { assertSender(event); const added = addMcpServer(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'mcp.registered', { server: added.id, transport: input.transport }); return { ...updated, addedId: `yaml:${added.id}` }; });
@@ -514,6 +547,7 @@ function registerIpc() {
   ipcMain.handle('component:start', async (event, id) => {
     assertSender(event);
     const item = runnableComponent(id);
+    if (buildPending.has(`${selectedRoot}\0${id}`)) throw new Error('Wait for Rebuild to finish before starting this component.');
     if (item.runtime.lifecycle !== 'detached' && processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
     return startWithPrerequisites(item, () => item.runtime.lifecycle === 'detached'
       ? detachedAction(item, 'start')
@@ -530,6 +564,41 @@ function registerIpc() {
     processes.delete(id);
     notify({ type: 'status', id, status: 'stopped' });
     return { status: 'stopped' };
+  });
+  ipcMain.handle('component:rebuild', async (event, id) => {
+    assertSender(event);
+    const item = selectedConfig?.components?.find(entry => entry.id === id && ['application', 'service', 'commandTool'].includes(entry.kind));
+    if (!selectedRoot || !item) throw new Error('Open a configured local component first.');
+    if (!item.runtime?.buildCommand) throw new Error('No verified build command is configured for this component.');
+    const root = selectedRoot;
+    const key = `${root}\0${id}`;
+    if (buildPending.has(key)) throw new Error('This component is already rebuilding.');
+    if (processes.has(id) || startPending.has(key) || detachedPending.has(id) || detachedStates.get(id) === 'running') throw new Error('Stop this component before rebuilding it.');
+    buildPending.add(key);
+    try {
+      await checkPrerequisites(item.runtime.requires);
+      if (selectedRoot !== root) throw new Error('The project changed before Rebuild.');
+      if (item.runtime.lifecycle === 'detached') {
+        const env = runtimeEnvironment(app.getPath('userData'), root, selectedConfig, safeStorage, item);
+        if (await detachedService.inspect(item.runtime, { cwd: cwdWithinProject(item.runtime.cwd), env }) !== 'stopped') throw new Error('Stop this component before rebuilding it.');
+      }
+      const before = readBuildIdentity(root, item, sourceRevision(root));
+      const result = await runCommand(id, item.runtime.buildCommand, item.runtime.cwd, 'build', true);
+      if (result.exitCode !== 0) throw new Error(`Build failed (exit ${result.exitCode}). Review ${result.log}.`);
+      if (selectedRoot !== root) throw new Error('The project changed during Rebuild.');
+      const revision = sourceRevision(root);
+      const after = readBuildIdentity(root, item, revision);
+      const identity = after.builtAt && after.builtAt !== before.builtAt
+        ? after
+        : { builtAt: new Date().toISOString(), revision, version: null, source: 'Project Room rebuild', sourceRevision: revision };
+      completedBuilds.set(id, identity);
+      launchedBuilds.delete(id);
+      appendEvent(root, 'build.succeeded', { component: id, buildIdentity: identity, log: result.log });
+      return { ...result, buildIdentity: identity };
+    } catch (error) {
+      if (selectedRoot === root) appendEvent(root, 'build.failed', { component: id, message: error.message });
+      throw error;
+    } finally { buildPending.delete(key); }
   });
   ipcMain.handle('tests:run', (event, id) => {
     assertSender(event);
@@ -616,6 +685,7 @@ function registerIpc() {
   ipcMain.handle('command:start', async (event, id) => {
     assertSender(event);
     const item = component(id, 'commandTool');
+    if (buildPending.has(`${selectedRoot}\0${id}`)) throw new Error('Wait for Rebuild to finish before running this tool.');
     if (processes.has(id)) return { status: 'running', pid: processes.get(id).pid };
     return startWithPrerequisites(item, () => runCommand(id, item.runtime.command, item.runtime.cwd, 'tool', item.cli.mode === 'task', item.cli.protocol === 'stdio'));
   });

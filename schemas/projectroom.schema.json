@@ -53,6 +53,7 @@
           "command": { "type": "string", "minLength": 1 },
           "args": { "type": "array", "items": { "type": "string" } },
           "cwd": { "$ref": "#/$defs/relativePath" },
+          "buildCommand": { "$ref": "#/$defs/command" },
           "url": { "type": "string", "minLength": 1 },
           "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
           "authEnv": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" },
@@ -136,6 +137,7 @@
       }, "additionalProperties": false },
       "runtime": { "type": "object", "required": ["command", "startup"], "properties": {
         "command": { "$ref": "#/$defs/command" }, "cwd": { "$ref": "#/$defs/relativePath" },
+        "buildCommand": { "$ref": "#/$defs/command" },
         "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
         "requires": { "type": "array", "items": { "enum": ["docker"] }, "uniqueItems": true },
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 }, "url": { "type": "string" },
