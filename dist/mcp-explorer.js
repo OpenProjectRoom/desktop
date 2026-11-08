@@ -15,6 +15,7 @@
   let message = '';
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const selected = () => servers.find(item => item.id === selectedId);
+  const projectServers = async () => (await pv.listMcpServers()).filter(item => !item.builtIn);
   const editable = item => !!item && item.id.startsWith('yaml:');
   const activeItems = () => detail ? ({ tools: detail.tools, resources: detail.resources, templates: detail.resourceTemplates, prompts: detail.prompts })[selectedKind] || [] : [];
   const activeItem = () => activeItems().find(item => (item.name || item.uri || item.uriTemplate) === selectedName);
@@ -83,7 +84,7 @@
     if (!pv || !projectRoot) { servers = []; return; }
     busy = true; message = '';
     try {
-      servers = await pv.listMcpServers();
+      servers = await projectServers();
       if (!servers.some(item => item.id === selectedId)) selectedId = servers[0]?.id || null;
       if (detail && !servers.some(item => item.id === detail.id && item.connected)) detail = null;
       if (selected()?.connected && detail?.id !== selectedId) detail = await pv.describeMcpServer(selectedId);
@@ -208,9 +209,9 @@
         const updated = await pv.linkMcpServer(selectedId);
         setProject(updated); state.page = 'mcp'; selectedId = updated.addedId; detail = null; await reload(); toast('MCP server linked in .projectroom/project.yaml. Set any missing variables in Environment.');
       }
-      if (action === 'connect') { detail = await pv.connectMcpServer(selectedId); servers = await pv.listMcpServers(); selectedKind = detail.tools.length ? 'tools' : detail.resources.length ? 'resources' : detail.prompts.length ? 'prompts' : 'tools'; selectedName = null; result = null; }
-      if (action === 'disconnect') { await pv.disconnectMcpServer(selectedId); detail = null; servers = await pv.listMcpServers(); result = null; }
-      if (action === 'forget-auth') { await pv.forgetMcpAuth(selectedId); detail = null; servers = await pv.listMcpServers(); result = null; toast('Stored MCP sign-in removed from this Mac.'); }
+      if (action === 'connect') { detail = await pv.connectMcpServer(selectedId); servers = await projectServers(); selectedKind = detail.tools.length ? 'tools' : detail.resources.length ? 'resources' : detail.prompts.length ? 'prompts' : 'tools'; selectedName = null; result = null; }
+      if (action === 'disconnect') { await pv.disconnectMcpServer(selectedId); detail = null; servers = await projectServers(); result = null; }
+      if (action === 'forget-auth') { await pv.forgetMcpAuth(selectedId); detail = null; servers = await projectServers(); result = null; toast('Stored MCP sign-in removed from this Mac.'); }
       if (['run-tool', 'read-resource', 'read-template', 'get-prompt'].includes(action)) {
         let output;
         if (action === 'run-tool' || action === 'get-prompt') {
