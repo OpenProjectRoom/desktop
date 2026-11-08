@@ -1,6 +1,5 @@
 const { build, devDependencies } = require('./package.json');
 const checksums = require('electron/checksums.json');
-const { Arch } = require('builder-util');
 const path = require('node:path');
 
 for (const artifact of [
@@ -17,7 +16,7 @@ module.exports = {
   ...build,
   electronDownload: { checksums },
   electronDist: ({ arch, platformName }) =>
-    platformName === process.platform && Arch[arch] === process.arch
+    platformName === process.platform && arch === process.arch
       ? path.join(__dirname, 'node_modules/electron/dist')
       : null,
 };
