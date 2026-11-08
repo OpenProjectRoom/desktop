@@ -26,6 +26,8 @@ jobs:
         if: matrix.os != 'windows-latest'
       - run: npm ci
         if: matrix.os == 'windows-latest'
+      - run: node node_modules/electron/install.js
+        if: matrix.os == 'windows-latest'
       - run: npm run validate:config
       - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test

@@ -37,6 +37,7 @@ jobs:
             test -n "${!name}" || { echo "Missing GitHub secret: $name"; exit 1; }
           done
       - run: npm ci
+      - run: node node_modules/electron/install.js
       - run: npm run validate:config
       - run: npm test
       - name: Prepare notarization key for electron-builder 26
@@ -116,6 +117,7 @@ jobs:
           }
           "version=$version" >> $env:GITHUB_OUTPUT
       - run: npm ci
+      - run: node node_modules/electron/install.js
       - run: npm run validate:config
       - run: npm test
       - name: Build unsigned Windows installer
