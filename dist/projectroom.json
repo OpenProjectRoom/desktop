@@ -61,6 +61,15 @@
         ]
       },
       {
+        "id": "explorer-workbench-focus",
+        "title": "Put explorer workbenches first",
+        "summary": "Show MCP capabilities and the first item directly below compact connection controls, keep CLI trial actions ahead of reference material, and shorten the API source header.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "sidebar-entry-counts",
         "title": "Sidebar entry counts",
         "summary": "Show the number of configured services, tools, servers, APIs, suites, data sources and declared variable names, plus product content counts, in the expanded navigation.",

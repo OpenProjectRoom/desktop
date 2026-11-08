@@ -19,6 +19,16 @@
   const editable = item => !!item && item.id.startsWith('yaml:');
   const activeItems = () => detail ? ({ tools: detail.tools, resources: detail.resources, templates: detail.resourceTemplates, prompts: detail.prompts })[selectedKind] || [] : [];
   const activeItem = () => activeItems().find(item => (item.name || item.uri || item.uriTemplate) === selectedName);
+  const focusFirstItem = () => {
+    const first = activeItems()[0];
+    selectedName = first?.name || first?.uri || first?.uriTemplate || null;
+    draft = selectedKind === 'templates' ? selectedName || '{}' : '{}';
+    fieldValues = {};
+  };
+  const focusFirstCapability = () => {
+    selectedKind = detail?.tools?.length ? 'tools' : detail?.resources?.length ? 'resources' : detail?.resourceTemplates?.length ? 'templates' : detail?.prompts?.length ? 'prompts' : 'tools';
+    focusFirstItem();
+  };
   const simpleSchema = item => {
     const schema = item?.inputSchema;
     if (!schema || schema.type !== 'object' || !schema.properties) return null;
@@ -87,7 +97,7 @@
       servers = await projectServers();
       if (!servers.some(item => item.id === selectedId)) selectedId = servers[0]?.id || null;
       if (detail && !servers.some(item => item.id === detail.id && item.connected)) detail = null;
-      if (selected()?.connected && detail?.id !== selectedId) detail = await pv.describeMcpServer(selectedId);
+      if (selected()?.connected && detail?.id !== selectedId) { detail = await pv.describeMcpServer(selectedId); focusFirstCapability(); }
     } catch (error) { message = error.message; }
     finally { busy = false; if (state.page === 'mcp') render(); }
   }
@@ -130,9 +140,12 @@
   }
   function page() {
     const item = selected();
+    const connectedDetail = item && detail?.id === item.id ? detail : null;
+    const connectionAction = item?.connected ? button('Disconnect', 'disconnect', false, busy) : button('Connect', 'connect', true, busy);
+    const connectionDetails = item ? `<details class="mcp-meta"><summary>Connection and server details</summary><div class="mcp-meta-body"><p>${safe(item.description || 'No description in project configuration.')}</p><div class="mcp-meta-row"><strong>Connection</strong><code>${safe(item.endpoint)}</code></div><small>${item.transport === 'stdio' ? 'Connect starts this local command. Disconnect stops it.' : `Connect contacts this endpoint · ${item.authType === 'oauth2' ? 'OAuth browser sign-in' : item.authType === 'bearer' ? 'Bearer token from Environment' : 'no configured auth'}. HTTPS or local HTTP is required.`}</small>${item.environment.length ? `<div class="mcp-env">${item.environment.map(entry => pill(entry.name + (entry.available ? ' · set' : ' · missing'), entry.available ? '' : 'missing')).join('')}</div>` : ''}${connectedDetail ? `<div class="mcp-server-info">${safe(connectedDetail.serverInfo?.name || item.name)}${connectedDetail.serverInfo?.version ? ' · v' + safe(connectedDetail.serverInfo.version) : ''}${connectedDetail.instructions ? `<p>${safe(connectedDetail.instructions)}</p>` : ''}</div>` : ''}</div></details>` : '';
     return `<div class="mcp-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>MCP Explorer</h1><p>Inspect connected tools, resources and prompts. A coding agent can find project servers that have no client config.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add MCP server', 'add', true, !pv || !projectRoot || busy)}</div></div>
       <div class="mcp-layout"><section class="card mcp-server-list">${listing()}<div class="mcp-discovery-note">File discovery does not inspect source or verify that a server belongs to this project.</div></section>
-      <section class="card mcp-main">${item ? `<div class="mcp-main-head"><div><div class="mcp-kicker">${safe(item.transport.toUpperCase())} · ${safe(item.source)}</div><h2>${safe(item.name)}</h2><p>${safe(item.description || 'No description in project configuration.')}</p>${buildLine(item, detail?.id === item.id ? detail : null)}</div><div class="mcp-head-actions">${pill(item.connected ? 'Connected' : 'Disconnected', item.connected ? 'connected' : '')}${editable(item) ? button('Remove', 'remove', false, busy) : !item.builtIn && !item.linkedId ? button('Add to project YAML', 'link', false, busy) : ''}</div></div><div class="mcp-connection"><div><strong>Connection</strong><code>${safe(item.endpoint)}</code><small>${item.transport === 'stdio' ? 'Connect starts this local command. Disconnect stops it.' : `Connect contacts this endpoint · ${item.authType === 'oauth2' ? 'OAuth browser sign-in' : item.authType === 'bearer' ? 'Bearer token from Environment' : 'no configured auth'}. HTTPS or local HTTP is required.`}</small>${item.environment.length ? `<div class="mcp-env">${item.environment.map(entry => pill(entry.name + (entry.available ? ' · set' : ' · missing'), entry.available ? '' : 'missing')).join('')}</div>` : ''}</div><div class="mcp-connection-actions">${item.connected ? button('Disconnect', 'disconnect', false, busy) : button('Connect', 'connect', true, busy)}${item.authType === 'oauth2' ? button('Forget sign-in', 'forget-auth', false, busy) : ''}</div></div>${detail?.id === item.id ? `<div class="mcp-server-info">${safe(detail.serverInfo?.name || item.name)}${detail.serverInfo?.version ? ' · v' + safe(detail.serverInfo.version) : ''}${detail.instructions ? `<p>${safe(detail.instructions)}</p>` : ''}${(detail.errors || []).map(error => `<p class="mcp-error">${safe(error)}</p>`).join('')}</div>${catalog()}` : `<div class="mcp-start"><h3>Inspect this server</h3><p>Connect to ask the server for its actual capabilities. You can review each item before running a tool or reading a resource.</p></div>`}` : `<div class="mcp-start"><h3>${projectRoot ? 'No server selected' : 'Open a local project'}</h3><p>${projectRoot ? 'Add an MCP server to the project configuration and refresh discovery.' : 'The desktop app discovers MCP servers in the selected repository. The browser preview does not connect to local processes.'}</p></div>`}</section></div>${message ? `<div class="mcp-alert" role="alert">${safe(message)}</div>` : ''}</div>`;
+      <section class="card mcp-main">${item ? `<div class="mcp-main-head mcp-workbench-head"><div><div class="mcp-kicker">${safe(item.transport.toUpperCase())} · ${safe(item.source)}</div><h2>${safe(item.name)}</h2>${buildLine(item, connectedDetail)}</div><div class="mcp-head-actions">${pill(item.connected ? 'Connected' : 'Disconnected', item.connected ? 'connected' : '')}${connectionAction}${editable(item) ? button('Remove', 'remove', false, busy) : !item.builtIn && !item.linkedId ? button('Add to project YAML', 'link', false, busy) : ''}${item.authType === 'oauth2' ? button('Forget sign-in', 'forget-auth', false, busy) : ''}</div></div>${connectedDetail ? `${(connectedDetail.errors || []).length ? `<div class="mcp-errors">${connectedDetail.errors.map(error => `<p class="mcp-error">${safe(error)}</p>`).join('')}</div>` : ''}${catalog()}${connectionDetails}` : `<div class="mcp-start"><h3>Inspect this server</h3><p>Connect to ask the server for its actual capabilities. You can review each item before running a tool or reading a resource.</p></div>${connectionDetails}`}` : `<div class="mcp-start"><h3>${projectRoot ? 'No server selected' : 'Open a local project'}</h3><p>${projectRoot ? 'Add an MCP server to the project configuration and refresh discovery.' : 'The desktop app discovers MCP servers in the selected repository. The browser preview does not connect to local processes.'}</p></div>`}</section></div>${message ? `<div class="mcp-alert" role="alert">${safe(message)}</div>` : ''}</div>`;
   }
   const modalRoot = document.getElementById('modalRoot');
   function closeModal() { modalRoot.innerHTML = ''; }
@@ -195,8 +208,8 @@
     if (!target) return;
     const [action, ...parts] = target.dataset.mcp.split(':');
     const value = parts.join(':');
-    if (action === 'select') { selectedId = value; selectedName = null; result = null; detail = null; if (selected()?.connected) { try { detail = await pv.describeMcpServer(value); } catch (error) { message = error.message; } } render(); return; }
-    if (action === 'tab') { selectedKind = value; selectedName = null; result = null; render(); return; }
+    if (action === 'select') { selectedId = value; selectedName = null; result = null; detail = null; if (selected()?.connected) { try { detail = await pv.describeMcpServer(value); focusFirstCapability(); } catch (error) { message = error.message; } } render(); return; }
+    if (action === 'tab') { selectedKind = value; focusFirstItem(); result = null; render(); return; }
     if (action === 'item') { selectedName = value; draft = selectedKind === 'templates' ? value : '{}'; fieldValues = {}; result = null; render(); return; }
     if (action === 'clear') { result = null; render(); return; }
     if (action === 'refresh') { await reload(); return; }
@@ -209,7 +222,7 @@
         const updated = await pv.linkMcpServer(selectedId);
         setProject(updated); state.page = 'mcp'; selectedId = updated.addedId; detail = null; await reload(); toast('MCP server linked in .projectroom/project.yaml. Set any missing variables in Environment.');
       }
-      if (action === 'connect') { detail = await pv.connectMcpServer(selectedId); servers = await projectServers(); selectedKind = detail.tools.length ? 'tools' : detail.resources.length ? 'resources' : detail.prompts.length ? 'prompts' : 'tools'; selectedName = null; result = null; }
+      if (action === 'connect') { detail = await pv.connectMcpServer(selectedId); servers = await projectServers(); focusFirstCapability(); result = null; }
       if (action === 'disconnect') { await pv.disconnectMcpServer(selectedId); detail = null; servers = await projectServers(); result = null; }
       if (action === 'forget-auth') { await pv.forgetMcpAuth(selectedId); detail = null; servers = await projectServers(); result = null; toast('Stored MCP sign-in removed from this Mac.'); }
       if (['run-tool', 'read-resource', 'read-template', 'get-prompt'].includes(action)) {

@@ -5,3 +5,10 @@ body[data-theme="dark"] .api-source:hover,body[data-theme="dark"] .api-source.se
 
 #apiAuthFields{display:grid;gap:10px}
 .api-head-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+
+/* API requests already lead the page; keep their source header brief. */
+.api-main-head{padding:14px 20px 12px}
+.api-main-head h2{font-size:17px;margin:3px 0 4px}
+.api-main-head p{margin-bottom:4px;line-height:1.4}
+.api-main-head p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.api-main-head small{margin-top:3px}

@@ -57,3 +57,18 @@ body[data-theme="dark"] .cli-explorer-shell .mcp-tabs button.active{color:#c4d8e
 body[data-theme="dark"] .cli-explorer-shell .mcp-pill{background:#354557;color:#c4d2df}
 body[data-theme="dark"] .cli-explore-placeholder{border-color:#46586a}
 @media(max-width:900px){.cli-launch-bar{flex-direction:column}.cli-launch-actions{justify-content:flex-start}}
+
+/* Put the command and trial result ahead of optional reference material. */
+.cli-explorer-main .mcp-main-head{padding:14px 20px 10px}
+.cli-explorer-main .mcp-main-head h2{font-size:17px}
+.cli-explorer-main .mcp-main-head p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+.cli-explorer-main .mcp-connection{margin:0 20px 12px;padding:10px 12px}
+.cli-explorer-main .mcp-tabs button{padding-top:9px;padding-bottom:8px}
+.cli-explore-body{padding:16px 20px 22px}
+.cli-explore-intro p{margin-bottom:12px}
+.cli-explore-command{margin-bottom:12px;padding:9px 12px}
+.cli-explore-reference-details,.cli-trial-note{margin-top:14px;font-size:11px;color:var(--muted,#778596)}
+.cli-explore-reference-details>summary,.cli-trial-note>summary{cursor:pointer;color:var(--accent,#536f88);font-weight:600}
+.cli-explore-reference-details .cli-explore-reference{margin:9px 0 0}
+.cli-trial-note p{margin:8px 0 0;line-height:1.55}
+body[data-theme="dark"] .cli-explore-reference-details>summary,body[data-theme="dark"] .cli-trial-note>summary{color:#bdd5e8}
