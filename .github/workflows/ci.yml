@@ -1,5 +1,9 @@
 name: Verify desktop source
 
+env:
+  ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+  ELECTRON_CUSTOM_DIR: '{{ version }}'
+
 on:
   push:
     branches: [main]

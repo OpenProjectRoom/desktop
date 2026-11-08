@@ -54,7 +54,7 @@
     },
     "mac": {
       "category": "public.app-category.developer-tools",
-      "icon": "desktop/assets/icon.png",
+      "icon": "desktop/assets/icon.icns",
       "extraResources": [
         {
           "from": "desktop/bin/product-view-dictation",

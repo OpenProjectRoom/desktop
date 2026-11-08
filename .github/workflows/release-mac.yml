@@ -1,5 +1,9 @@
 name: Release desktop apps
 
+env:
+  ELECTRON_MIRROR: https://npmmirror.com/mirrors/electron/
+  ELECTRON_CUSTOM_DIR: '{{ version }}'
+
 on:
   push:
     tags: ['v*']
