@@ -63,7 +63,7 @@ test('legacy filesystem noise is removed while real activity survives compaction
 
   assert.deepEqual(readEvents(root).map(event => event.type), ['test.finished', 'service.started']);
   assert.ok(fs.statSync(file).size < 4_000_000);
-  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600);
 });
 
 test('new activity stays bounded as events are appended', t => {
