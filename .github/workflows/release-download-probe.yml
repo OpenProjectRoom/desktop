@@ -23,12 +23,11 @@ jobs:
             status="$(curl -L -I --max-time 25 -sS -o /dev/null -w '%{http_code}' "$url")"
             echo "$item HTTP $status"
           done
-          curl -L --max-time 25 -fsS \
-            -o latest-mac-probe.yml \
-            'https://github.com/OpenProjectRoom/desktop/releases/download/v0.9.84/latest-mac.yml'
-          test "$(wc -c < latest-mac-probe.yml)" -eq 531
-          echo "v0.9.84/latest-mac.yml GET bytes $(wc -c < latest-mac-probe.yml)"
-          curl -L --max-time 25 -fsS -r 0-1023 \
-            -o mac-zip-probe.bin \
-            'https://github.com/OpenProjectRoom/desktop/releases/download/v0.9.84/Project-Room-Desktop-arm64-mac.zip'
-          echo "v0.9.84/mac.zip GET bytes $(wc -c < mac-zip-probe.bin)"
+          for item in \
+            'v0.9.84/latest-mac.yml' \
+            'v0.9.84/download-probe-v0.9.84.yml' \
+            'v0.9.80/latest-mac.yml'; do
+            url="https://github.com/OpenProjectRoom/desktop/releases/download/$item"
+            result="$(curl -L --max-time 15 -sS -o /tmp/release-asset -w '%{http_code} bytes=%{size_download}' "$url")"
+            echo "$item GET $result exit=$?"
+          done
