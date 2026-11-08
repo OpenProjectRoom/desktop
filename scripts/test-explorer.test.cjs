@@ -4,7 +4,29 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const vm = require('node:vm');
 const { listCases, parseCargoList } = require('../desktop/test-explorer.cjs');
+
+test('Test Explorer renders a configured suite when opened', () => {
+  const context = {
+    document: { addEventListener() {} },
+    projectConfig: { components: [{ id: 'checks', kind: 'testSuite', name: 'Checks', tests: { command: ['node', '--test'] } }] },
+    projectRoot: '/example',
+    pv: null,
+    pvHistory: [],
+    desktopStatus: {},
+    state: { page: 'tests' },
+    escapeHtml: String,
+    icon: () => '',
+    pageHead: title => `<h1>${title}</h1>`,
+    testsPage: () => '',
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '..', 'dist', 'test-explorer.js'), 'utf8'), context);
+  const html = context.testsPage();
+  assert.match(html, /Test Explorer/);
+  assert.match(html, /Checks/);
+  assert.match(html, /Run suite/);
+});
 
 test('Node suite lists actual files and preserves build prerequisites for a single run', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-tests-'));
