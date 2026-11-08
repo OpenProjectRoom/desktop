@@ -46,7 +46,7 @@ function readBuildIdentity(root, item, revision = null) {
 function listBuildIdentities(root, components, snapshots = new Map()) {
   if (!root) return {};
   const revision = sourceRevision(root);
-  return Object.fromEntries((components || []).filter(item => ['service', 'commandTool'].includes(item.kind)).map(item => {
+  return Object.fromEntries((components || []).filter(item => ['application', 'service', 'commandTool'].includes(item.kind)).map(item => {
     const snapshot = snapshots.get(item.id);
     return [item.id, snapshot || readBuildIdentity(root, item, revision)];
   }));

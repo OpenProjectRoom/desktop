@@ -28,6 +28,9 @@ test('detached config requires real status and stop commands', () => {
   const base = 'schemaVersion: 1\nproject: {id: pilot, name: Pilot}\ncomponents:\n  - id: app\n    kind: service\n    name: App\n    position: {x: 1, y: 1}\n    runtime: {command: [node, app.js], startup: manual, lifecycle: detached}\nconnections: []\n';
   assert.throws(() => parseConfig(base), /statusCommand and stopCommand/);
   assert.equal(parseConfig(base.replace('lifecycle: detached', 'lifecycle: detached, statusCommand: [node, status.js], stopCommand: [node, stop.js]')).components[0].runtime.lifecycle, 'detached');
+  const mobile = base.replace('kind: service', 'kind: application\n    application: {platform: mobile}');
+  assert.throws(() => parseConfig(mobile), /statusCommand and stopCommand/);
+  assert.equal(parseConfig(mobile.replace('lifecycle: detached', 'lifecycle: detached, statusCommand: [node, status.js], stopCommand: [node, stop.js]')).components[0].application.platform, 'mobile');
 });
 
 test('onboarding asks for inspection before edits and flags mismatched Compose lifecycle', t => {
@@ -63,7 +66,7 @@ test('setup prompt requires a source audit even when a stdio MCP CLI has no clie
   assert.match(prompt, /Register verified MCP servers in workspace\.mcpServers/);
   assert.match(prompt, /do not substitute an owner or admin key/);
   const guide = fs.readFileSync(path.resolve(__dirname, '../agent/project-room/SKILL.md'), 'utf8');
-  for (const capability of ['Product and files', 'Services and topology', 'HTTP APIs', 'MCP servers', 'CLI tools', 'Tests', 'Data and local settings', 'Runtime evidence']) {
+  for (const capability of ['Product and files', 'Applications and topology', 'Backend services', 'HTTP APIs', 'MCP servers', 'CLI tools', 'Tests', 'Data and local settings', 'Runtime evidence']) {
     assert.ok(guide.includes(`| ${capability} |`), `Missing source-audit capability: ${capability}`);
   }
 });

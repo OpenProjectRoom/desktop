@@ -24,7 +24,13 @@ function detect(root) {
       const pkg = JSON.parse(fs.readFileSync(packageFile, 'utf8'));
       const start = pkg.scripts?.dev ? 'dev' : pkg.scripts?.start ? 'start' : null;
       const script = start ? pkg.scripts[start] : '';
-      if (start && !/(?:\bdocker\s+compose\b.*(?:-d|--detach)\b|\bpm2\s+start\b|\bnohup\b|\s&\s*$)/.test(script)) findings.push({ id: 'app', kind: 'service', name: 'App', icon: 'cube', position: { x: 36, y: 160 }, runtime: { command: ['npm', 'run', start], cwd: '.', startup: 'manual' } });
+      if (start && !/(?:\bdocker\s+compose\b.*(?:-d|--detach)\b|\bpm2\s+start\b|\bnohup\b|\s&\s*$)/.test(script)) {
+        const dependencies = { ...pkg.dependencies, ...pkg.devDependencies };
+        const platform = /\b(?:electron|tauri)\b/i.test(script) || dependencies.electron || dependencies['@tauri-apps/cli'] ? 'desktop'
+          : /\b(?:expo|react-native|capacitor)\b/i.test(script) || dependencies.expo || dependencies['react-native'] ? 'mobile'
+          : /\b(?:vite|next|nuxt|astro|svelte-kit|ng serve)\b/i.test(script) || ['vite', 'next', 'nuxt', 'astro', '@sveltejs/kit'].some(name => dependencies[name]) ? 'web' : null;
+        findings.push({ id: 'app', kind: platform ? 'application' : 'service', name: platform ? 'App' : 'Development process', icon: platform ? 'grid' : 'terminal', position: { x: 36, y: 160 }, ...(platform ? { application: { platform } } : {}), runtime: { command: ['npm', 'run', start], cwd: '.', startup: 'manual' } });
+      }
       if (pkg.scripts?.test) findings.push({ id: 'tests', kind: 'testSuite', name: 'Tests', icon: 'flask', position: { x: 65, y: 320 }, tests: { command: ['npm', 'test'], cwd: '.' } });
     } catch { /* ignore malformed package metadata */ }
   }

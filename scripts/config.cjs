@@ -66,12 +66,12 @@ function parseConfig(raw) {
   for (const component of config.components) {
     if (ids.has(component.id)) throw new Error(`Duplicate component ID: ${component.id}`);
     ids.add(component.id);
-    if (component.kind === 'service' && component.runtime?.lifecycle === 'detached' &&
+    if (['service', 'application'].includes(component.kind) && component.runtime?.lifecycle === 'detached' &&
       (!component.runtime.statusCommand || !component.runtime.stopCommand)) {
-      throw new Error(`Detached service ${component.id} needs statusCommand and stopCommand.`);
+      throw new Error(`Detached component ${component.id} needs statusCommand and stopCommand.`);
     }
-    if (component.runtime?.lifecycle === 'detached' && component.kind !== 'service') {
-      throw new Error(`Detached lifecycle is only supported for services: ${component.id}.`);
+    if (component.runtime?.lifecycle === 'detached' && !['service', 'application'].includes(component.kind)) {
+      throw new Error(`Detached lifecycle is only supported for applications and services: ${component.id}.`);
     }
     if (component.kind === 'testSuite') {
       const caseIds = new Set();

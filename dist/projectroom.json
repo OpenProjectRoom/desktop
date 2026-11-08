@@ -33,6 +33,16 @@
         ]
       },
       {
+        "id": "applications-and-services",
+        "title": "Applications and services",
+        "summary": "Separate launchable Web, Desktop and Mobile apps from backend services while keeping both visible and controllable in Overview and Project Map.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "api"
+        ]
+      },
+      {
         "id": "overview-map-preview",
         "title": "Project Map preview in Overview",
         "summary": "Show a compact, read-only preview of runtime components and real connections in Overview, with the full map available for inspection and editing.",
@@ -411,12 +421,15 @@
     },
     {
       "id": "web",
-      "kind": "service",
+      "kind": "application",
       "name": "Web App",
       "icon": "cube",
       "position": {
         "x": 35,
         "y": 70
+      },
+      "application": {
+        "platform": "web"
       },
       "runtime": {
         "command": [

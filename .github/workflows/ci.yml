@@ -26,15 +26,47 @@ jobs:
         if: matrix.os != 'windows-latest'
       - run: npm ci
         if: matrix.os == 'windows-latest'
+      - name: Download verified Electron archives through GitHub API
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $version = node -p "require('./node_modules/electron/package.json').version"
+          $release = Invoke-RestMethod "https://api.github.com/repos/electron/electron/releases/tags/v$version"
+          New-Item -ItemType Directory -Force windows-electron-cache | Out-Null
+          foreach ($arch in @('x64', 'arm64')) {
+            $name = "electron-v$version-win32-$arch.zip"
+            $asset = $release.assets | Where-Object { $_.name -eq $name } | Select-Object -First 1
+            if (-not $asset) { throw "Electron release asset missing: $name" }
+            $file = Join-Path windows-electron-cache $name
+            Invoke-WebRequest -Uri $asset.url -Headers @{ Accept = 'application/octet-stream' } -OutFile $file
+            $env:ELECTRON_ASSET_NAME = $name
+            $expected = node -p "require('./node_modules/electron/checksums.json')[process.env.ELECTRON_ASSET_NAME]"
+            $actual = (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant()
+            if ($actual -ne $expected) { throw "Electron archive checksum mismatch: $name" }
+          }
       - run: npm run validate:config
       - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test
       - name: Package unsigned Windows app
         if: matrix.os == 'windows-latest'
-        run: npm run package:win:app
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run package:win:app -- --config.electronDist=windows-electron-cache
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -eq 3) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds (10 * $attempt)
+          }
       - name: Build unsigned Windows test installer
         if: matrix.os == 'windows-latest'
-        run: npm run package:win:unsigned
+        shell: pwsh
+        run: |
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            npm run package:win:unsigned -- --config.electronDist=windows-electron-cache
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -eq 3) { exit $LASTEXITCODE }
+            Start-Sleep -Seconds (10 * $attempt)
+          }
       - name: Stage Windows test installer
         if: matrix.os == 'windows-latest'
         shell: pwsh

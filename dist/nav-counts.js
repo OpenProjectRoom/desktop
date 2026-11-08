@@ -8,6 +8,7 @@
     issues: ['work item', 'work items', () => productWorkItems().length],
     docs: ['documentation file', 'documentation files', () => docEntries.filter(item => item.type === 'file').length],
     runtime: ['configured service', 'configured services', () => projectConfig.components.filter(item => item.kind === 'service').length],
+    applications: ['configured application', 'configured applications', () => projectConfig.components.filter(item => item.kind === 'application').length],
     commands: ['configured CLI tool', 'configured CLI tools', () => projectConfig.components.filter(item => item.kind === 'commandTool').length],
     mcp: ['linked MCP server', 'linked MCP servers', () => projectConfig.workspace?.mcpServers?.length || 0],
     api: ['linked API', 'linked APIs', () => projectConfig.workspace?.apiSources?.length || 0],

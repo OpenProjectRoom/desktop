@@ -160,6 +160,7 @@
     ${navButton('issues', 'list', 'Backlog')}
     ${navButton('docs', 'folder', 'Documentation')}
     <div class="nav-section-label">RUN & VERIFY</div>
+    ${navButton('applications', 'grid', 'Applications')}
     ${navButton('runtime', 'play', 'Services', '<span class="count" id="runningCount">0</span>')}
     ${navButton('commands', 'terminal', 'CLI Explorer')}
     ${navButton('mcp', 'cube', 'MCP Explorer')}
@@ -175,6 +176,7 @@
 
   const modalRoot = document.getElementById('modalRoot');
   const fields = {
+    application: `<label>Platform<select name="platform" id="mapAppPlatform"><option value="web">Web</option><option value="desktop">Desktop</option><option value="mobile">Mobile</option></select></label><label>Executable<input name="executable" required placeholder="npm"></label><label>Arguments <small>one argument per line</small><textarea name="args" rows="3" placeholder="run\ndev"></textarea></label><label>Target <small>optional, e.g. iOS Simulator</small><input name="target" maxlength="120"></label><label data-app-web>Local URL <small>optional, for web apps</small><input name="url" placeholder="http://127.0.0.1:3000"></label><label>Port <small>optional</small><input name="port" type="number" min="1" max="65535" placeholder="3000"></label>`,
     service: `<label>Executable<input name="executable" required placeholder="npm"></label><label>Arguments <small>one argument per line</small><textarea name="args" rows="3" placeholder="run\ndev"></textarea></label><label>Port <small>optional</small><input name="port" type="number" min="1" max="65535" placeholder="3000"></label>`,
     database: `<label>Engine<select name="engine" id="mapDatabaseEngine"><option value="PostgreSQL">PostgreSQL</option><option value="MySQL">MySQL</option><option value="MariaDB">MariaDB</option><option value="SQLite">SQLite</option></select></label><label data-db-config="remote">Connection variable <small>name only; never a secret</small><input name="connectionEnv" pattern="[A-Z][A-Z0-9_]*" placeholder="DATABASE_URL"></label><label data-db-config="sqlite" hidden>Relative database file<input name="path" placeholder="data/app.sqlite"></label>`,
     storage: `<label>Relative path<input name="path" required placeholder="data/uploads"></label>`,
@@ -184,7 +186,7 @@
   };
   function openAdd() {
     const links = runtimeMapComponents().map(component => `<option value="${escapeHtml(component.id)}">${escapeHtml(component.name)}</option>`).join('');
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal map-add-modal" role="dialog" aria-modal="true" aria-label="Add runtime component"><div class="modal-head"><h2>Add runtime component</h2><button type="button" class="icon-btn" data-v9="map:close" aria-label="Close">×</button></div><form id="mapAddForm"><div class="modal-body"><p class="map-add-note">${projectRoot ? 'Saved to .projectroom/project.yaml in this repository.' : 'Interactive demo · saved in this session only.'} The map shows services, databases and storage. Add tests, specifications and CLI tasks in their own views.</p><label>Name<input name="name" required maxlength="100" placeholder="e.g. Analytics database"></label><label>Type<select name="kind" id="mapAddKind"><option value="database">Database</option><option value="service">Service</option><option value="storage">Storage</option></select></label><div id="mapAddFields">${fields.database}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-v9="map:close">Cancel</button><button type="submit" class="btn primary">${projectRoot ? 'Add to repository' : 'Add to demo'}</button></div></form></div></div>`;
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal map-add-modal" role="dialog" aria-modal="true" aria-label="Add runtime component"><div class="modal-head"><h2>Add runtime component</h2><button type="button" class="icon-btn" data-v9="map:close" aria-label="Close">×</button></div><form id="mapAddForm"><div class="modal-body"><p class="map-add-note">${projectRoot ? 'Saved to .projectroom/project.yaml in this repository.' : 'Interactive demo · saved in this session only.'} The map shows applications, services, databases and storage. Add tests and CLI tools in their own views.</p><label>Name<input name="name" required maxlength="100" placeholder="e.g. Web app"></label><label>Type<select name="kind" id="mapAddKind"><option value="application">Application</option><option value="service">Service</option><option value="database">Database</option><option value="storage">Storage</option></select></label><div id="mapAddFields">${fields.application}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-v9="map:close">Cancel</button><button type="submit" class="btn primary">${projectRoot ? 'Add to repository' : 'Add to demo'}</button></div></form></div></div>`;
     const updateDatabaseFields = () => {
       const sqlite = document.getElementById('mapDatabaseEngine')?.value === 'SQLite';
       for (const label of document.querySelectorAll('#mapAddFields [data-db-config]')) {
@@ -194,9 +196,15 @@
         input.required = !label.hidden;
       }
     };
-    document.getElementById('mapAddKind').addEventListener('change', event => { document.getElementById('mapAddFields').innerHTML = fields[event.target.value]; updateDatabaseFields(); });
-    document.getElementById('mapAddFields').addEventListener('change', event => { if (event.target.id === 'mapDatabaseEngine') updateDatabaseFields(); });
+    const updateApplicationFields = () => {
+      const web = document.getElementById('mapAppPlatform')?.value === 'web';
+      const label = document.querySelector('#mapAddFields [data-app-web]');
+      if (label) { label.hidden = !web; label.querySelector('input').disabled = !web; }
+    };
+    document.getElementById('mapAddKind').addEventListener('change', event => { document.getElementById('mapAddFields').innerHTML = fields[event.target.value]; updateDatabaseFields(); updateApplicationFields(); });
+    document.getElementById('mapAddFields').addEventListener('change', event => { if (event.target.id === 'mapDatabaseEngine') updateDatabaseFields(); if (event.target.id === 'mapAppPlatform') updateApplicationFields(); });
     updateDatabaseFields();
+    updateApplicationFields();
     document.getElementById('mapAddForm').addEventListener('submit', async event => {
       event.preventDefault();
       const form = Object.fromEntries(new FormData(event.target));
@@ -211,14 +219,17 @@
           for (let n = 2; projectConfig.components.some(item => item.id === id); n++) id = `${slug}-${n}`;
           const position = [5, 36, 68].flatMap(x => [70, 200, 270, 340, 475, 600].map(y => ({ x, y }))).find(candidate => projectConfig.components.every(item => Math.abs(item.position.x - candidate.x) >= 25 || Math.abs(item.position.y - candidate.y) >= 118));
           if (!position) throw new Error('The map is full. Move existing components in .projectroom/project.yaml before adding another.');
-          const component = { id, name: form.name.trim(), kind: form.kind, icon: { database: 'database', service: 'terminal', storage: 'folder', testSuite: 'flask', specification: 'doc', external: 'cube' }[form.kind], position };
+          const component = { id, name: form.name.trim(), kind: form.kind, icon: { application: 'grid', database: 'database', service: 'terminal', storage: 'folder', testSuite: 'flask', specification: 'doc', external: 'cube' }[form.kind], position };
           if (form.kind === 'database') component.data = { engine: form.engine, ...(form.connectionEnv ? { connectionEnv: form.connectionEnv } : {}), ...(form.path ? { path: form.path } : {}) };
           if (form.kind === 'storage') component.data = { path: form.path };
           if (form.kind === 'specification') component.path = form.path;
           if (form.kind === 'external') component.url = form.url;
-          if (form.kind === 'service' || form.kind === 'testSuite') {
+          if (['application', 'service', 'testSuite'].includes(form.kind)) {
             const command = [form.executable, ...(form.args || '').split('\n').map(x => x.trim()).filter(Boolean)];
-            if (form.kind === 'service') component.runtime = { command, cwd: '.', startup: 'manual', ...(form.port ? { port: Number(form.port) } : {}) };
+            if (['application', 'service'].includes(form.kind)) {
+              component.runtime = { command, cwd: '.', startup: 'manual', ...(form.port ? { port: Number(form.port) } : {}), ...(form.url ? { url: form.url } : {}) };
+              if (form.kind === 'application') component.application = { platform: form.platform, ...(form.target ? { target: form.target } : {}) };
+            }
             else component.tests = { command, cwd: '.' };
           }
           projectConfig.components.push(component);
