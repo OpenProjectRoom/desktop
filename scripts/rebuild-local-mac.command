@@ -48,11 +48,20 @@ if [[ ! -x "$project_room_app/Contents/MacOS/Project Room" ]]; then
 fi
 
 mkdir -p "$project_room_desktop"
-project_room_next="$project_room_desktop/.Project Room.app.next-$$"
-trap 'rm -f "$project_room_next"' EXIT
-ln -s "$project_room_app" "$project_room_next"
-if [[ -L "$project_room_shortcut" ]]; then rm "$project_room_shortcut"; fi
-mv "$project_room_next" "$project_room_shortcut"
+node - "$project_room_app" "$project_room_shortcut" <<'NODE'
+const fs = require('node:fs');
+const target = process.argv[2];
+const shortcut = process.argv[3];
+try {
+  if (!fs.lstatSync(shortcut).isSymbolicLink()) throw new Error('Desktop app is no longer a shortcut.');
+} catch (error) {
+  if (error.code !== 'ENOENT') throw error;
+}
+const next = `${shortcut}.next-${process.pid}`;
+fs.symlinkSync(target, next);
+try { fs.renameSync(next, shortcut); }
+catch (error) { fs.rmSync(next, { force: true }); throw error; }
+NODE
 
 print ''
 print "Done. Open Project Room.app on your Desktop for the new local build ($project_room_revision)."
