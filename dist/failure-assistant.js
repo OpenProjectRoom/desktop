@@ -6,6 +6,9 @@
   let loadedRoot = null;
   let loadingRoot = null;
   let busy = false;
+  let busyAction = null;
+  let busyStartedAt = 0;
+  let busyTimer = null;
   let openId = null;
   let errorText = '';
   let retryText = '';
@@ -64,8 +67,14 @@
     if (!item) { openId = null; document.getElementById('modalRoot').innerHTML = ''; return; }
     const plan = item.plan;
     const steps = plan ? `<section><h3>Proposed cause</h3><p>${safe(plan.cause)}</p><div class="failure-plan-grid"><div><h3>Files to change</h3>${plan.changes.length ? `<ul>${plan.changes.map(step => `<li>${safe(step)}</li>`).join('')}</ul>` : '<p>No file changes proposed.</p>'}</div><div><h3>Commands or installation</h3>${plan.commands.length ? `<ul>${plan.commands.map(step => `<li>${safe(step)}</li>`).join('')}</ul>` : '<p>No commands proposed.</p>'}</div></div><h3>How to verify</h3><p>${safe(plan.verification)}</p><small>Confidence: ${safe(plan.confidence)}. Review every proposed step before approving it. System-wide installs must be done manually.</small></section>` : '';
-    const action = item.fixed ? `<button type="button" class="btn primary" data-failure="retry" ${busy ? 'disabled' : ''}>Run again</button>` : plan?.changes?.length || plan?.commands?.length ? `<button type="button" class="btn primary" data-failure="fix" ${busy ? 'disabled' : ''}>Apply fix</button>` : `<button type="button" class="btn primary" data-failure="diagnose" ${busy ? 'disabled' : ''}>${busy ? 'Investigating…' : plan ? 'Investigate again' : 'Investigate read-only'}</button>`;
-    document.getElementById('modalRoot').innerHTML = `<div class="modal-backdrop failure-backdrop"><div class="modal failure-dialog" role="dialog" aria-modal="true" aria-label="Investigate failed action"><div class="modal-head"><div><span class="failure-eyebrow">FAILED ACTION · ${safe(label(item))}</span><h2>Investigate problem</h2></div><button type="button" class="icon-btn" data-failure="close" aria-label="Close">×</button></div><div class="modal-body failure-body"><p class="failure-intro">Project Room sends the command, folder, exit code and a short redacted log to your selected coding agent. Investigation is read-only. A repair requires your separate approval.</p><dl class="failure-context"><div><dt>Command</dt><dd><code>${safe(item.command || 'Unavailable')}</code></dd></div><div><dt>Working folder</dt><dd><code>${safe(item.cwd)}</code></dd></div><div><dt>Exit code</dt><dd>${safe(item.exitCode ?? 'Unavailable')}</dd></div><div><dt>Error</dt><dd>${safe(item.message)}</dd></div></dl>${item.log ? `<details><summary>Recent output sent to the agent</summary><pre>${safe(item.log)}</pre></details>` : ''}${steps}${item.fixResult ? `<section><h3>Fix attempt</h3><pre>${safe(item.fixResult)}</pre><small>Check the changes before running the same action again.</small></section>` : ''}${retryText ? `<p class="failure-result" role="status">${safe(retryText)}</p>` : ''}${errorText ? `<p class="failure-error" role="alert">${safe(errorText)}</p>` : ''}</div><div class="modal-actions"><button type="button" class="btn" data-failure="close">Close</button>${action}</div></div></div>`;
+    const activity = busy ? ({
+      diagnose: ['Investigating the problem', 'Your coding agent is checking the project and the failure read-only. Its proposal will appear here automatically.'],
+      fix: ['Applying the approved fix', 'Your coding agent is making the approved project changes. The result will appear here automatically.'],
+      retry: ['Running the action again', 'Project Room is repeating the same command and checking its result.'],
+    })[busyAction] : null;
+    const progress = activity ? `<div class="failure-progress" role="status" aria-live="polite"><span class="failure-spinner" aria-hidden="true"></span><div><strong>${activity[0]}</strong><p>${activity[1]}</p><small>Working for <span id="failureElapsed">${Math.floor((Date.now() - busyStartedAt) / 1000)}</span> seconds</small></div></div>` : item.fixed ? '<p class="failure-result" role="status">Fix attempt finished. Review the result below, then run the same action again to verify it.</p>' : '';
+    const action = busy ? `<button type="button" class="btn primary failure-busy-button" disabled><span class="failure-spinner" aria-hidden="true"></span>${{ diagnose: 'Investigating…', fix: 'Applying fix…', retry: 'Running again…' }[busyAction]}</button>` : item.fixed ? '<button type="button" class="btn primary" data-failure="retry">Run again</button>' : plan?.changes?.length || plan?.commands?.length ? '<button type="button" class="btn primary" data-failure="fix">Apply fix</button>' : `<button type="button" class="btn primary" data-failure="diagnose">${plan ? 'Investigate again' : 'Investigate read-only'}</button>`;
+    document.getElementById('modalRoot').innerHTML = `<div class="modal-backdrop failure-backdrop"><div class="modal failure-dialog" role="dialog" aria-modal="true" aria-label="Investigate failed action"><div class="modal-head"><div><span class="failure-eyebrow">FAILED ACTION · ${safe(label(item))}</span><h2>Investigate problem</h2></div><button type="button" class="icon-btn" data-failure="close" aria-label="Close">×</button></div><div class="modal-body failure-body"><p class="failure-intro">Project Room sends the command, folder, exit code and a short redacted log to your selected coding agent. Investigation is read-only. A repair requires your separate approval.</p>${progress}<dl class="failure-context"><div><dt>Command</dt><dd><code>${safe(item.command || 'Unavailable')}</code></dd></div><div><dt>Working folder</dt><dd><code>${safe(item.cwd)}</code></dd></div><div><dt>Exit code</dt><dd>${safe(item.exitCode ?? 'Unavailable')}</dd></div><div><dt>Error</dt><dd>${safe(item.message)}</dd></div></dl>${item.log ? `<details><summary>Recent output sent to the agent</summary><pre>${safe(item.log)}</pre></details>` : ''}${steps}${item.fixResult ? `<section><h3>Fix attempt</h3><pre>${safe(item.fixResult)}</pre><small>Check the changes before running the same action again.</small></section>` : ''}${retryText ? `<p class="failure-result" role="status">${safe(retryText)}</p>` : ''}${errorText ? `<p class="failure-error" role="alert">${safe(errorText)}</p>` : ''}</div><div class="modal-actions"><button type="button" class="btn" data-failure="close">Close</button>${action}</div></div></div>`;
   }
   async function retry(item) {
     // A coding agent may have updated project.yaml. Reopen it before repeating the action.
@@ -94,13 +103,18 @@
   }
   document.addEventListener('click', async event => {
     const button = event.target.closest('[data-failure]');
-    if (!button || busy) return;
+    if (!button) return;
     const action = button.dataset.failure;
-    if (action === 'open') { openId = button.dataset.failureId; errorText = ''; retryText = ''; showDialog(); return; }
     if (action === 'close') { openId = null; document.getElementById('modalRoot').innerHTML = ''; return; }
+    if (busy) return;
+    if (action === 'open') { openId = button.dataset.failureId; errorText = ''; retryText = ''; showDialog(); return; }
     const item = failure(openId);
     if (!item) return;
-    busy = true; errorText = ''; retryText = ''; showDialog();
+    busy = true; busyAction = action; busyStartedAt = Date.now(); errorText = ''; retryText = ''; showDialog();
+    busyTimer = setInterval(() => {
+      const elapsed = document.getElementById('failureElapsed');
+      if (elapsed) elapsed.textContent = String(Math.floor((Date.now() - busyStartedAt) / 1000));
+    }, 1000);
     try {
       let updated;
       if (action === 'diagnose') updated = await pv.diagnoseFailure(item.id);
@@ -108,7 +122,7 @@
       else if (action === 'retry') await retry(item);
       if (updated) { failures = failures.map(entry => entry.id === updated.id ? updated : entry); render(); }
     } catch (cause) { errorText = String(cause?.message || cause).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
-    finally { busy = false; showDialog(); }
+    finally { clearInterval(busyTimer); busyTimer = null; busy = false; busyAction = null; showDialog(); }
   });
   pv.onProcessEvent?.(event => { if (event?.type === 'failure') refresh(); });
   window.addEventListener('projectroom:configuration-reloaded', refresh);

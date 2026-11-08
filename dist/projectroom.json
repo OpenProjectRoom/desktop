@@ -83,7 +83,7 @@
       {
         "id": "investigate-failed-actions",
         "title": "Investigate and repair failed local actions",
-        "summary": "Capture bounded redacted failure context, investigate with the chosen coding agent in read-only mode, show a reviewable repair plan, require separate approval to edit, and offer an explicit retry of the same action.",
+        "summary": "Capture bounded redacted failure context, show clear progress while the chosen coding agent investigates read-only or applies an approved fix, display a reviewable repair plan, and offer an explicit retry of the same action.",
         "status": "done",
         "relatedComponents": [
           "web",
