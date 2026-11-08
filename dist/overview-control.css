@@ -3,9 +3,9 @@
 .overview-control .overview-summary .stat-card{min-height:88px;padding:13px 15px}
 .overview-control .overview-summary .stat-number{font-size:24px;margin:7px 0 2px}
 .overview-control .overview-summary .stat-unit{font-size:13px}
-.overview-primary{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(290px,1fr);gap:12px;align-items:start}
-.overview-secondary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;align-items:start}
-.overview-primary>:only-child,.overview-secondary>:only-child{grid-column:1/-1}
+.overview-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(290px,1fr);gap:12px;align-items:start}
+.overview-layout.single{grid-template-columns:1fr}
+.overview-column{display:flex;flex-direction:column;gap:12px;min-width:0}
 .overview-control .card-head{min-height:53px;padding:12px 15px}
 .overview-control .card-head h2{font-size:13px}
 .overview-control .card-head p{font-size:10px;margin-top:3px}
@@ -33,7 +33,7 @@
 .overview-shortcut strong{font-size:11px}
 .overview-shortcut small{margin-top:3px;color:var(--muted,#8292a0);font-size:9px}
 .overview-shortcut-arrow{color:#7d9bad;font-size:15px}
-.overview-control .overview-secondary .metric-wrap{padding:13px 15px 10px}
+.overview-control .overview-performance-card .metric-wrap{padding:13px 15px 10px}
 .overview-optional{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
 .overview-optional-body{padding:12px 15px;color:var(--muted,#8796a4);font-size:11px;line-height:1.6}
 .overview-optional-body>div+div{border-top:1px solid var(--line);padding-top:6px;margin-top:6px}
@@ -55,6 +55,6 @@ body[data-theme="dark"] .overview-shortcut:hover,body[data-theme="dark"] .overvi
 body[data-theme="dark"] .overview-choice.selected{background:#2d493d;border-color:#5c967a;color:#caead7}
 body[data-theme="dark"] .overview-launch-foot button{color:#b3d2e5}
 body[data-theme="dark"] .overview-launch-error{color:#edab9a}
-@media(max-width:1050px){body.dashboard-page:not(.sidebar-expanded) .overview-control .overview-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.overview-primary{grid-template-columns:minmax(0,1.2fr) minmax(245px,1fr)}.overview-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:760px){.overview-primary,.overview-secondary,.overview-optional{grid-template-columns:1fr}.overview-shortcut-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-editor-grid{grid-template-columns:1fr}.overview-control .overview-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:1050px){body.dashboard-page:not(.sidebar-expanded) .overview-control .overview-summary{grid-template-columns:repeat(3,minmax(0,1fr))}.overview-layout{grid-template-columns:minmax(0,1.2fr) minmax(245px,1fr)}.overview-editor-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){.overview-layout,.overview-optional{display:flex;flex-direction:column}.overview-column{display:contents}.overview-launch-card{order:1}.overview-shortcuts{order:2}.overview-map-card{order:3}.overview-performance-card{order:4}.overview-layout>*{width:100%}.overview-shortcut-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.overview-editor-grid{grid-template-columns:1fr}.overview-control .overview-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:530px){.overview-control .overview-summary{grid-template-columns:1fr}.overview-shortcut-grid{grid-template-columns:1fr}.overview-launch-row{flex-wrap:wrap}.overview-launch-actions{width:100%;justify-content:flex-end;padding-left:40px}}

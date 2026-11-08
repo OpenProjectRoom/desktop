@@ -53,7 +53,7 @@ product:
       relatedComponents: [web, api]
     - id: configurable-overview-controls
       title: Personal Overview controls
-      summary: Keep daily launch, build, status and explorer shortcuts compact; let each user choose Overview sections, quick links and pinned applications or services per local project.
+      summary: Keep daily launch, build, status and explorer shortcuts compact in two independently flowing columns; let each user choose Overview sections, quick links and pinned applications or services per local project.
       status: done
       relatedComponents: [web]
     - id: overview-map-preview
