@@ -152,6 +152,15 @@
         ]
       },
       {
+        "id": "bounded-activity-history",
+        "title": "Bounded local activity history",
+        "summary": "Record meaningful app actions rather than raw file changes, compact older noisy histories, and keep history failures separate from service outcomes.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "local-agent-chat",
         "title": "Local coding agent in Product Chat",
         "summary": "Connect Codex CLI or Claude Code on this Mac, expose the Project Room MCP context, and dictate into chat with on-device speech recognition.",

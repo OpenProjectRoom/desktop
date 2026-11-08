@@ -48,12 +48,10 @@ const processMetrics = new ProcessMetrics({ onSample: notify });
 const updates = createUpdates({ app, updater: autoUpdater, send: value => {
   if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('updates:state', value);
 } });
-let projectWatcher;
 let pendingOnboardingRoot = null;
 let chatChild = null;
 let dictationChild = null;
 let mcpExplorer;
-const changeDebounce = new Map();
 const discoveredTestCases = new Map();
 
 function notify(value) {
@@ -72,7 +70,6 @@ function readSelected(root) {
   const loaded = loadConfig(configPath(root));
   mcpExplorer?.disconnect().catch(() => {});
   if (selectedRoot && selectedRoot !== root) { stopAll(); if (chatChild) stopChild(chatChild); }
-  if (projectWatcher) { projectWatcher.close(); projectWatcher = null; }
   selectedRoot = root;
   for (const timer of detachedTimers.values()) clearInterval(timer);
   detachedTimers.clear();
@@ -82,17 +79,6 @@ function readSelected(root) {
   selectedRaw = loaded.raw;
   ensureHistory(root);
   appendEvent(root, 'workspace.opened', { project: selectedConfig.project.name });
-  try {
-    projectWatcher = fs.watch(root, { recursive: true }, (_kind, filename) => {
-      const changed = String(filename || '');
-      if (!changed || changed === path.basename(root) || /(^|[/\\])(\.git|\.productview|node_modules|dist|build)([/\\]|$)/.test(changed)) return;
-      try { if (fs.statSync(path.join(root, changed)).isDirectory()) return; } catch { /* Deleted files can still be recorded. */ }
-      const now = Date.now();
-      if (now - (changeDebounce.get(changed) || 0) < 1500) return;
-      changeDebounce.set(changed, now);
-      appendEvent(root, 'file.changed', { path: changed });
-    });
-  } catch { /* File watching is optional on unsupported filesystems. */ }
   return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
 }
 function loadInitial() {
@@ -679,5 +665,5 @@ app.whenReady().then(() => {
   registerIpc(); createWindow(); updates.start();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
-app.on('before-quit', () => { updates.stop(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); if (projectWatcher) projectWatcher.close(); });
+app.on('before-quit', () => { updates.stop(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

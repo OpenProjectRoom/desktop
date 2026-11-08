@@ -254,7 +254,7 @@ For an existing folder without a valid YAML, **Open project folder** opens a rea
 
 ## Project history
 
-The desktop app writes `.productview/events.jsonl` and `.productview/logs/` inside the selected project folder. Events include workspace opens, observed file changes, process starts and exits, test runs, chat prompts and replies with provider and mode, MCP agent connections, and MCP tool calls. Logs contain output from project commands. These files can be committed with the project so teammates can inspect past work. Review them for sensitive data before committing; project output and chat text may contain secrets. Project Room does not make Git commits automatically.
+The desktop app writes `.productview/events.jsonl` and `.productview/logs/` inside the selected project folder. Events include workspace opens, process starts and exits, test runs, chat prompts and replies with provider and mode, MCP agent connections, and MCP tool calls. Raw filesystem changes are not activity events: generated runtime files can change thousands of times without a meaningful user action. The event file is compacted when it exceeds 4 MB, keeping up to 5,000 recent actions within 2 MB. Opening an older oversized history also removes legacy `file.changed` noise while preserving recent real actions. Logs contain output from project commands and are separate from the bounded event list. These files are ignored by Git by default; review them for sensitive data before deliberately sharing any evidence. Project Room does not make Git commits automatically.
 
 ## Local service performance
 

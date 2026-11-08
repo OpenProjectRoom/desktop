@@ -51,6 +51,30 @@ test('new project history ignores event and service output by default', t => {
   assert.match(ignored, /logs\//);
 });
 
+test('legacy filesystem noise is removed while real activity survives compaction', t => {
+  const root = fixture(t);
+  ensureHistory(root);
+  const file = path.join(root, '.productview', 'events.jsonl');
+  const first = JSON.stringify({ at: '2026-01-01T00:00:00Z', type: 'service.started', component: 'api' }) + '\n';
+  const noise = JSON.stringify({ at: '2026-01-01T00:00:01Z', type: 'file.changed', path: '.runtime/generated.json' }) + '\n';
+  const last = JSON.stringify({ at: '2026-01-01T00:00:02Z', type: 'test.finished', component: 'tests' }) + '\n';
+  fs.writeFileSync(file, first + noise.repeat(50_000) + last);
+  assert.ok(fs.statSync(file).size > 4_000_000);
+
+  assert.deepEqual(readEvents(root).map(event => event.type), ['test.finished', 'service.started']);
+  assert.ok(fs.statSync(file).size < 4_000_000);
+  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+});
+
+test('new activity stays bounded as events are appended', t => {
+  const root = fixture(t);
+  const payload = 'x'.repeat(3000);
+  for (let index = 0; index < 1500; index++) appendEvent(root, 'test.finished', { index, payload });
+  const file = path.join(root, '.productview', 'events.jsonl');
+  assert.ok(fs.statSync(file).size <= 4_000_000);
+  assert.equal(readEvents(root)[0].index, 1499);
+});
+
 test('oversized project YAML is rejected before parsing', () => {
   assert.throws(() => parseConfig('x'.repeat(5_000_001)), /5 MB limit/);
 });
