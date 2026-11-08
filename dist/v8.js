@@ -158,7 +158,6 @@
   nav.innerHTML = `
     <div class="nav-section-label">PROJECT</div>
     ${navButton('dashboard', 'grid', 'Overview')}
-    ${navButton('overview', 'cube', 'Project Map')}
     ${navButton('files', 'folder', 'Files')}
     ${navButton('onboarding', 'check', 'Onboarding')}
     <div class="nav-section-label">PRODUCT</div>
@@ -186,32 +185,20 @@
   const fields = {
     application: `<label>Platform<select name="platform" id="mapAppPlatform"><option value="web">Web</option><option value="desktop">Desktop</option><option value="mobile">Mobile</option></select></label><label>Executable<input name="executable" required placeholder="npm"></label><label>Arguments <small>one argument per line</small><textarea name="args" rows="3" placeholder="run\ndev"></textarea></label><label>Target <small>optional, e.g. iOS Simulator</small><input name="target" maxlength="120"></label><label data-app-web>Local URL <small>optional, for web apps</small><input name="url" placeholder="http://127.0.0.1:3000"></label><label>Port <small>optional</small><input name="port" type="number" min="1" max="65535" placeholder="3000"></label>`,
     service: `<label>Executable<input name="executable" required placeholder="npm"></label><label>Arguments <small>one argument per line</small><textarea name="args" rows="3" placeholder="run\ndev"></textarea></label><label>Port <small>optional</small><input name="port" type="number" min="1" max="65535" placeholder="3000"></label>`,
-    database: `<label>Engine<select name="engine" id="mapDatabaseEngine"><option value="PostgreSQL">PostgreSQL</option><option value="MySQL">MySQL</option><option value="MariaDB">MariaDB</option><option value="SQLite">SQLite</option></select></label><label data-db-config="remote">Connection variable <small>name only; never a secret</small><input name="connectionEnv" pattern="[A-Z][A-Z0-9_]*" placeholder="DATABASE_URL"></label><label data-db-config="sqlite" hidden>Relative database file<input name="path" placeholder="data/app.sqlite"></label>`,
-    storage: `<label>Relative path<input name="path" required placeholder="data/uploads"></label>`,
-    testSuite: `<label>Executable<input name="executable" required placeholder="npm"></label><label>Arguments <small>one argument per line</small><textarea name="args" rows="3" placeholder="test"></textarea></label>`,
-    specification: `<label>Relative Markdown path<input name="path" required placeholder="specs/feature.md"></label>`,
-    external: `<label>URL<input name="url" required type="url" placeholder="https://example.com"></label>`
   };
-  function openAdd() {
+  function openAdd(kind) {
+    if (!['application', 'service'].includes(kind)) return;
+    const originPage = state.page;
+    const title = kind === 'application' ? 'Add application' : 'Add service';
     const links = runtimeMapComponents().map(component => `<option value="${escapeHtml(component.id)}">${escapeHtml(component.name)}</option>`).join('');
-    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal map-add-modal" role="dialog" aria-modal="true" aria-label="Add runtime component"><div class="modal-head"><h2>Add runtime component</h2><button type="button" class="icon-btn" data-v9="map:close" aria-label="Close">×</button></div><form id="mapAddForm"><div class="modal-body"><p class="map-add-note">${projectRoot ? 'Saved to .projectroom/project.yaml in this repository.' : 'Interactive demo · saved in this session only.'} The map shows applications, services, databases and storage. Add tests and CLI tools in their own views.</p><label>Name<input name="name" required maxlength="100" placeholder="e.g. Web app"></label><label>Type<select name="kind" id="mapAddKind"><option value="application">Application</option><option value="service">Service</option><option value="database">Database</option><option value="storage">Storage</option></select></label><div id="mapAddFields">${fields.application}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-v9="map:close">Cancel</button><button type="submit" class="btn primary">${projectRoot ? 'Add to repository' : 'Add to demo'}</button></div></form></div></div>`;
-    const updateDatabaseFields = () => {
-      const sqlite = document.getElementById('mapDatabaseEngine')?.value === 'SQLite';
-      for (const label of document.querySelectorAll('#mapAddFields [data-db-config]')) {
-        label.hidden = label.dataset.dbConfig === 'sqlite' ? !sqlite : sqlite;
-        const input = label.querySelector('input');
-        input.disabled = label.hidden;
-        input.required = !label.hidden;
-      }
-    };
+    modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal map-add-modal" role="dialog" aria-modal="true" aria-label="${title}"><div class="modal-head"><h2>${title}</h2><button type="button" class="icon-btn" data-v9="map:close" aria-label="Close">×</button></div><form id="mapAddForm"><div class="modal-body"><p class="map-add-note">${projectRoot ? 'Saved to .projectroom/project.yaml in this repository.' : 'Interactive demo · saved in this session only.'} Adding this item does not start it. Its connection will appear on the full Project Map.</p><label>Name<input name="name" required maxlength="100" placeholder="e.g. ${kind === 'application' ? 'Web app' : 'API service'}"></label><input type="hidden" name="kind" value="${kind}"><div id="mapAddFields">${fields[kind]}</div><label>Connect to <small>optional</small><select name="linkedTo"><option value="">No connection yet</option>${links}</select></label></div><div class="modal-actions"><button type="button" class="btn" data-v9="map:close">Cancel</button><button type="submit" class="btn primary">${projectRoot ? 'Add to repository' : 'Add to demo'}</button></div></form></div></div>`;
     const updateApplicationFields = () => {
       const web = document.getElementById('mapAppPlatform')?.value === 'web';
       const label = document.querySelector('#mapAddFields [data-app-web]');
       if (label) { label.hidden = !web; label.querySelector('input').disabled = !web; }
     };
-    document.getElementById('mapAddKind').addEventListener('change', event => { document.getElementById('mapAddFields').innerHTML = fields[event.target.value]; updateDatabaseFields(); updateApplicationFields(); });
-    document.getElementById('mapAddFields').addEventListener('change', event => { if (event.target.id === 'mapDatabaseEngine') updateDatabaseFields(); if (event.target.id === 'mapAppPlatform') updateApplicationFields(); });
-    updateDatabaseFields();
+    document.getElementById('mapAddFields').addEventListener('change', event => { if (event.target.id === 'mapAppPlatform') updateApplicationFields(); });
+    if (kind === 'application') document.getElementById('mapAppPlatform').value = applicationPlatform;
     updateApplicationFields();
     document.getElementById('mapAddForm').addEventListener('submit', async event => {
       event.preventDefault();
@@ -245,7 +232,7 @@
           selectedComponent = id;
         }
         modalRoot.innerHTML = '';
-        state.page = 'overview';
+        state.page = originPage;
         render();
         toast(projectRoot ? 'Component saved in .projectroom/project.yaml.' : 'Component added to this demo session.');
       } catch (error) { toast(error.message); }
@@ -257,7 +244,8 @@
     if (!button) return;
     const action = button.dataset.v9;
     if (action === 'map:close') modalRoot.innerHTML = '';
-    else if (action === 'map:add') openAdd();
+    else if (action === 'map:add:application') openAdd('application');
+    else if (action === 'map:add:service') openAdd('service');
   });
   render();
 })();

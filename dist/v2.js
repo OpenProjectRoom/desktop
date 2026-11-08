@@ -241,7 +241,7 @@ const oldRender = render;
 render = function () { oldRender(); if (state.page === 'overview') requestAnimationFrame(drawConnections); renderPanel(); };
 labels.overview = 'Projektkarte';
 const overviewNav = document.querySelector('#nav button[data-page="overview"]');
-overviewNav.querySelector('span').textContent = 'Projektkarte';
+if (overviewNav) overviewNav.querySelector('span').textContent = 'Projektkarte';
 document.querySelectorAll('.nav button,.sidebar-bottom button').forEach(b => { const label = b.querySelector('span')?.textContent || b.textContent.trim(); if (label) b.title = label; });
 document.querySelector('.top-actions').insertAdjacentHTML('afterbegin', `<span class="desktop-chip">${window.productView ? 'DESKTOP' : 'WEB-DEMO'}</span><button class="chat-toggle" id="chatToggle" title="Chat und Details öffnen">${icon('list')}</button>`);
 document.getElementById('projectPicker').onclick = null;

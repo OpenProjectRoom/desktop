@@ -28,7 +28,12 @@ product:
       relatedComponents: [web, api]
     - id: overview-map-preview
       title: Project Map preview in Overview
-      summary: Show a compact, read-only preview of runtime components and real connections in Overview, with the full map available for inspection and editing.
+      summary: Show a compact, read-only preview of runtime components and real connections in Overview; open the full map there for inspection and arrangement without a separate main-menu entry.
+      status: done
+      relatedComponents: [web]
+    - id: map-as-detail-view
+      title: Keep Project Map as a detail view
+      summary: Remove the full map from the sidebar and Open menu, retain its Overview link, and add applications, services and data sources from their own views.
       status: done
       relatedComponents: [web]
     - id: map-card-positioning
@@ -64,6 +69,11 @@ product:
     - id: onboarding-completion
       title: Finish onboarding and clear navigation
       summary: Let users complete onboarding after all detected sections are configured while clearly showing unverified hands-on checks; remember completion locally per project, hide the navigation item, and offer reopening in Settings.
+      status: done
+      relatedComponents: [web]
+    - id: first-launch-demo
+      title: Show sample data only on the first launch
+      summary: Open the saved local project without a demo flash; show a labeled intro demo once when no project exists, with a direct path to the user's own project and an empty chooser afterward.
       status: done
       relatedComponents: [web]
     - id: source-audited-setup
