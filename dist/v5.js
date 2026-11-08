@@ -65,7 +65,9 @@ async function commandDiscover(force = false) {
     const found = await pv.discoverCliTools();
     if (root === projectRoot) {
       commandCandidates = found;
-      if (commandCandidateId && !found.some(item => item.id === commandCandidateId)) commandCandidateId = null;
+      const selected = found.find(item => item.id === commandCandidateId);
+      if (selected?.linkedId) { commandSelectedId = selected.linkedId; commandCandidateId = null; }
+      else if (commandCandidateId && !selected) commandCandidateId = null;
     }
   } catch (error) { if (root === projectRoot) commandCandidatesError = error.message; }
   finally {

@@ -69,3 +69,19 @@ test('MCP configuration placeholders appear as local Environment variable names'
   const names = referencedNames({ args: ['--token', '${MCP_TOKEN}'], headers: { Authorization: 'Bearer ${MCP_TOKEN}' }, env: { API_KEY: '${MCP_TOKEN}' } });
   assert.deepEqual(names.sort(), ['API_KEY', 'MCP_TOKEN']);
 });
+
+test('MCP client connection already registered in YAML is linked by its target', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-mcp-dedup-'));
+  try {
+    fs.writeFileSync(path.join(root, '.mcp.json'), JSON.stringify({ mcpServers: {
+      local: { command: './blackbox', args: ['mcp'] },
+      other: { command: './blackbox', args: ['mcp', '--other'] }
+    } }));
+    const config = { workspace: { mcpServers: [{ id: 'blackbox', name: 'Blackbox MCP', transport: 'stdio', command: './blackbox', args: ['mcp'], cwd: './' }] } };
+    const explorer = new McpExplorer({ getRoot: () => root, getConfig: () => config, getEnvironment: () => null });
+    const listed = explorer.list();
+    assert.equal(listed.find(item => item.id === '.mcp.json:local').linkedId, 'blackbox');
+    assert.equal(listed.find(item => item.id === '.mcp.json:other').linkedId, null);
+    assert.equal(listed.find(item => item.id === 'yaml:blackbox').linkedId, null);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
