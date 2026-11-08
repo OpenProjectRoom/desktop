@@ -4,6 +4,10 @@
 .cli-explorer-list>input{box-sizing:border-box;width:calc(100% - 10px);margin:0 5px 12px;padding:9px 10px;border:1px solid #dce4eb;border-radius:8px;background:var(--surface,#fff);color:inherit;font-size:11px;outline:none}
 .cli-explorer-list>input:focus{border-color:#6b8aa4}
 .cli-explorer-group{padding:10px 8px 5px;color:#8a98a7;font-size:9px;letter-spacing:.12em;font-weight:700}
+.cli-discovery{border-top:1px solid var(--line,#dce4eb);margin:12px 5px 0;padding-top:10px}
+.cli-discovery-toggle{display:flex;align-items:center;gap:7px;width:100%;border:0;background:transparent;color:inherit;padding:8px 4px;text-align:left;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cli-discovery-toggle span{margin-left:auto;color:#879aab;font-weight:500}
+.cli-discovery-toggle:hover{color:#50718c}
 .cli-explorer-item{min-width:0}
 .cli-explorer-main{min-width:0;overflow:hidden}
 .cli-launch-bar{align-items:flex-start}
@@ -72,3 +76,28 @@ body[data-theme="dark"] .cli-explore-placeholder{border-color:#46586a}
 .cli-explore-reference-details .cli-explore-reference{margin:9px 0 0}
 .cli-trial-note p{margin:8px 0 0;line-height:1.55}
 body[data-theme="dark"] .cli-explore-reference-details>summary,body[data-theme="dark"] .cli-trial-note>summary{color:#bdd5e8}
+.cli-explorer-shell .page-head{margin-bottom:12px}
+.cli-explorer-main,.cli-explorer-list{min-height:0}
+
+/* The selected command is already shown in the tester. Keep its primary actions above it. */
+.cli-explorer-main .mcp-main-head{padding:12px 18px 7px;align-items:center}
+.cli-explorer-main .mcp-main-head .mcp-kicker{display:none}
+.cli-explorer-main .mcp-main-head h2{margin:0;font-size:16px}
+.cli-explorer-main .mcp-main-head p{margin:3px 0 0;font-size:11px;-webkit-line-clamp:1}
+.cli-explorer-main:not(:has([data-v5="tab:config"].active)) .mcp-head-actions [data-cli-manage="remove"]{display:none}
+.cli-explorer-main .mcp-connection{margin:0 18px 8px;padding:0;border:0;background:transparent}
+.cli-explorer-main .cli-launch-bar>div:first-child{display:none}
+.cli-explorer-main .cli-launch-actions{justify-content:flex-start}
+.cli-explorer-main .mcp-tabs{margin-top:0}
+.cli-explorer-main .cli-explore-body{padding:12px 18px 18px;min-height:0}
+.cli-explorer-main .cli-explore-intro{display:none}
+.cli-explorer-main .cli-explore-body:has(textarea:disabled) .cli-explore-intro,
+.cli-explorer-main .cli-explore-body:not(:has(.cli-explore-command)) .cli-explore-intro{display:block}
+.cli-explorer-main .cli-explore-intro .mcp-kicker{display:none}
+.cli-explorer-main .cli-explore-intro h3{margin:0 0 4px}
+.cli-explorer-main .cli-explore-intro p{margin-bottom:10px}
+.cli-explorer-main .cli-explore-command{padding:8px 10px;margin-bottom:10px;gap:2px}
+.cli-explorer-main .cli-explore-body textarea{min-height:66px}
+.cli-explorer-main .cli-explore-placeholder{padding:13px 12px}
+body[data-theme="dark"] .cli-explorer-main .mcp-connection{background:transparent;border:0}
+@media(max-width:650px){.cli-explorer-main .mcp-main-head{align-items:flex-start}}

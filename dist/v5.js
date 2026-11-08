@@ -106,7 +106,7 @@ function commandToolsPage() {
     const status = commandStatus(c);
     const running = status.startsWith('Running');
     const action = c.cli?.mode === 'task' ? 'Run command' : running ? 'Stop server' : 'Start server';
-    detail = `<main class="cli-man-document"><header class="cli-man-toolbar"><div><span class="cli-man-label">${commandText(c.id)} · ${commandText(c.cli?.mode === 'task' ? 'COMMAND' : 'SERVER')}</span><h2>${commandText(c.name)}</h2>${buildIdentityLine(c.id)}</div><div class="cli-man-actions"><span class="cli-man-status ${running ? 'running' : ''}">${commandText(status)}</span>${commandLive() ? `<button class="btn primary" data-v5="${running ? 'stop' : 'start'}:${escapeHtml(c.id)}" ${commandBusy[c.id] ? 'disabled' : ''}>${icon(running ? 'stop' : 'play')} ${commandBusy[c.id] ? 'Working…' : action}</button>${c.runtime?.url ? `<button class="btn" data-v5="open-url:${escapeHtml(c.id)}">${icon('external')} Open endpoint</button>` : ''}<button class="btn" data-cli-manage="remove" data-id="${escapeHtml(c.id)}" ${running || commandBusy[c.id] ? 'disabled title="Stop the tool first"' : ''}>Remove</button>` : '<span class="cli-man-muted">Run controls are available in the desktop app.</span>'}</div></header><nav class="cli-man-tabs" aria-label="Tool views"><button data-v5="tab:guide" class="${commandTab === 'guide' ? 'active' : ''}">Manual</button><button data-v5="tab:output" class="${commandTab === 'output' ? 'active' : ''}">Process output</button><button data-v5="tab:config" class="${commandTab === 'config' ? 'active' : ''}">Definition</button></nav><div class="cli-man-content">${commandTab === 'guide' ? commandGuide(c) : commandTab === 'output' ? commandOutputPage(c) : commandConfigPage(c)}</div></main>`;
+    detail = `<main class="cli-man-document"><header class="cli-man-toolbar"><div><span class="cli-man-label">${commandText(c.id)} · ${commandText(c.cli?.mode === 'task' ? 'COMMAND' : 'SERVER')}</span><h2>${commandText(c.name)}</h2>${buildIdentityLine(c.id)}</div><div class="cli-man-actions"><span class="cli-man-status ${running ? 'running' : ''}">${commandText(status)}</span>${commandLive() ? `${c.runtime?.buildCommand ? `<button class="btn" data-v5="rebuild:${escapeHtml(c.id)}" ${running || commandBusy[c.id] ? 'disabled title="Stop this tool before rebuilding"' : ''}>${commandBusy[c.id] ? 'Building…' : 'Rebuild'}</button>` : ''}<button class="btn primary" data-v5="${running ? 'stop' : 'start'}:${escapeHtml(c.id)}" ${commandBusy[c.id] ? 'disabled' : ''}>${icon(running ? 'stop' : 'play')} ${commandBusy[c.id] ? 'Working…' : action}</button>${c.runtime?.url ? `<button class="btn" data-v5="open-url:${escapeHtml(c.id)}">${icon('external')} Open endpoint</button>` : ''}<button class="btn" data-cli-manage="remove" data-id="${escapeHtml(c.id)}" ${running || commandBusy[c.id] ? 'disabled title="Stop the tool first"' : ''}>Remove</button>` : '<span class="cli-man-muted">Run controls are available in the desktop app.</span>'}</div></header><nav class="cli-man-tabs" aria-label="Tool views"><button data-v5="tab:guide" class="${commandTab === 'guide' ? 'active' : ''}">Manual</button><button data-v5="tab:output" class="${commandTab === 'output' ? 'active' : ''}">Process output</button><button data-v5="tab:config" class="${commandTab === 'config' ? 'active' : ''}">Definition</button></nav><div class="cli-man-content">${commandTab === 'guide' ? commandGuide(c) : commandTab === 'output' ? commandOutputPage(c) : commandConfigPage(c)}</div></main>`;
   } else detail = '<main class="cli-man-document cli-explorer-empty"><h2>No CLI entry point found yet</h2><p>Open a local project to discover package bins and executable CLI files. You can also describe a real commandTool in .projectroom/project.yaml.</p></main>';
   return `<div class="command-workbench">${pageHead('CLI Explorer', 'Discover local command-line entry points, inspect real help, and link verified tools to this project.', `<span class="command-page-count">${tools.length} LINKED · ${commandCandidates.length} DISCOVERED</span><button type="button" class="btn primary" data-cli-manage="add" ${!commandLive() ? 'disabled title="Open a local project to edit .projectroom/project.yaml"' : ''}>Add CLI tool</button>`)}<div class="cli-man-layout">${catalog}${detail}</div><div class="footer-note">${icon('clock')} Discovery is read-only. Help and configured commands run only after an explicit click.</div></div>`;
 }
@@ -170,6 +170,26 @@ document.addEventListener('click', async event => {
       commandTab = 'manual';
     } catch (error) { toast(error.message); }
     finally { commandBusy[id] = false; render(); }
+    return;
+  }
+  if (action === 'rebuild') {
+    if (!commandLive() || !c.runtime?.buildCommand) return;
+    const root = projectRoot;
+    commandBusy[id] = true;
+    commandTab = 'output';
+    commandOutput[id] = { text: 'Building…\n' };
+    render();
+    try {
+      const result = await pv.rebuildComponent(id);
+      if (projectRoot !== root) return;
+      componentBuilds[id] = result.buildIdentity;
+      commandOutput[id].text += '\nBuild completed. Run the tool to use the new artifact.';
+      toast(`${c.name} rebuilt`);
+    } catch (error) {
+      if (projectRoot !== root) return;
+      commandOutput[id].text += `\n${error.message}`;
+      toast(error.message);
+    } finally { commandBusy[id] = false; if (projectRoot === root) render(); }
     return;
   }
   if (action === 'start' || action === 'stop') {

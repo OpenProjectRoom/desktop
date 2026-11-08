@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, StreamableHTTPClientTransport, SSEClientTransport, UnauthorizedError } = require('@modelcontextprotocol/client');
 const { StdioClientTransport } = require('@modelcontextprotocol/client/stdio');
+const { projectPath } = require('./platform-process.cjs');
 const { readBuildIdentity, sourceRevision } = require('./build-identity.cjs');
 const { LoopbackCallback, mcpOAuthProvider } = require('./oauth.cjs');
 
@@ -140,8 +141,9 @@ class McpExplorer {
       const cwd = fs.realpathSync(path.resolve(workspace, item.cwd || '.'));
       if (cwd !== workspace && !cwd.startsWith(workspace + path.sep)) throw new Error('MCP working directory must stay inside the workspace.');
       if (!fs.statSync(cwd).isDirectory()) throw new Error('MCP working directory does not exist.');
+      const effectivePath = projectPath({ ...process.env, ...environment }, cwd);
       transport = new StdioClientTransport({ command: item.command, args: item.args.map(arg => substitute(arg, environment)),
-        cwd, env: environment, stderr: 'pipe' });
+        cwd, env: { ...environment, PATH: effectivePath }, stderr: 'pipe' });
     } else {
       const raw = substitute(item.url || '', environment);
       let url;

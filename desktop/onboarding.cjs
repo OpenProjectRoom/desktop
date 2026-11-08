@@ -3,6 +3,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { randomUUID } = require('node:crypto');
 const { parseEnv } = require('node:util');
+const { resolveProjectExecutable } = require('./platform-process.cjs');
 const { declarations } = require('./environment.cjs');
 const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 const { discoverMcpServers, publicCandidate } = require('./mcp-explorer.cjs');
@@ -101,7 +102,7 @@ function agentPrompt(inventory, contract) {
       `Follow the guide's optional local setup progress protocol with session ID ${contract.progress.id}. Start with {"sessionId":"${contract.progress.id}","phase":"auditing"}; then report findings_ready, configuring and finished at the guide's milestones. If you cannot write this file, continue without it.`
     ] : []),
     '',
-    'Phase 1 — inspect only. Complete every row of the Source audit table in the guide, including product context, Web/Desktop/Mobile applications, backend services, HTTP APIs, MCP servers, CLI tools, tests, data and runtime evidence. Trace scripts and wrappers into their delegated code; do a second source pass before reporting anything absent. HTTP routes need not have OpenAPI; a stdio MCP server may exist only as a CLI subcommand without a client file. Distinguish an MCP server from a client, dependency or documentation mention. For each finding, give source file/function evidence, the proposed Project Room entry, required environment variable NAMES, authentication scope and what still needs a manual check. Mark uncertain or unsupported findings explicitly. Reconcile any existing YAML against the source. For each application and service, identify foreground versus detached behavior and real start, status and stop operations. Distinguish a user-facing app from its backend API or worker. Summarize whether GitHub Spec Kit is present. Ask only decisions that cannot be inferred safely. Wait for my reply before writing files in the project, even if no question is needed.',
+    'Phase 1 — inspect only. Complete every row of the Source audit table in the guide, including product context, Web/Desktop/Mobile applications, backend services, HTTP APIs, MCP servers, CLI tools, tests, data and runtime evidence. Trace scripts and wrappers into their delegated code; do a second source pass before reporting anything absent. For each launchable application, service, local stdio MCP server and CLI tool, determine whether a separate build is needed and identify its exact verified build command and working directory; distinguish a build from install, migration, packaging and deployment. HTTP routes need not have OpenAPI; a stdio MCP server may exist only as a CLI subcommand without a client file. Distinguish an MCP server from a client, dependency or documentation mention. For each finding, give source file/function evidence, the proposed Project Room entry, required environment variable NAMES, authentication scope and what still needs a manual check. Mark uncertain or unsupported findings explicitly. Reconcile any existing YAML against the source. For each application and service, identify foreground versus detached behavior and real start, status and stop operations. Distinguish a user-facing app from its backend API or worker. Summarize whether GitHub Spec Kit is present. Ask only decisions that cannot be inferred safely. Wait for my reply before writing files in the project, even if no question is needed.',
     '',
     'Phase 2 — after my reply, create or improve .projectroom/project.yaml from verified repository evidence. Reuse the existing specs and docs; reconcile every verified capability with its Project Room view and explain any intentional omission. Register verified MCP servers in workspace.mcpServers even when no client config exists; preserve the real stdio command or HTTP endpoint and declare only environment variable names. If the server requires a separate read-only or revocable credential, do not substitute an owner or admin key; explain how the user provisions it locally. Leave uncertain or unsafe candidates unregistered and report them. Never fabricate progress, service state, tests, APIs or environment values. For a detached application or service, configure lifecycle: detached only when start, status and stop commands are all real and safe: status exits 0 when running, 1 when stopped, and 2 or higher on error. Otherwise leave it as a manual CLI task, explain the limitation, and never use a foreground observer as a substitute for stop control. Keep startup manual, secrets outside YAML, and do not run services or tests just to initialize.',
     '',
@@ -145,9 +146,9 @@ function reviewConfig(root) {
       const actualFolder = fs.realpathSync(folder);
       if (actualFolder !== root && !actualFolder.startsWith(root + path.sep)) { warnings.push(label + ': working directory resolves outside the project'); return; }
       const executable = command?.[0];
-      if (executable?.includes('/')) {
+      if (executable?.includes('/') || executable?.includes('\\')) {
         if (!fs.existsSync(path.resolve(folder, executable))) warnings.push(label + ': executable ' + executable + ' does not exist');
-      } else if (executable && !(process.env.PATH || '').split(path.delimiter).some(directory => directory && fs.existsSync(path.join(directory, executable)))) {
+      } else if (executable && !resolveProjectExecutable(executable, folder)) {
         warnings.push(label + ': executable ' + executable + ' is not on Project Room’s PATH');
       }
       const script = command?.[1];
@@ -156,6 +157,7 @@ function reviewConfig(root) {
     for (const item of config.components) {
       if (item.runtime) {
         inspectCommand(item.runtime.command, item.runtime.cwd, item.name + ' start');
+        if (item.runtime.buildCommand) inspectCommand(item.runtime.buildCommand, item.runtime.cwd, item.name + ' build');
         if (item.runtime.lifecycle === 'detached') {
           inspectCommand(item.runtime.statusCommand, item.runtime.cwd, item.name + ' status');
           inspectCommand(item.runtime.stopCommand, item.runtime.cwd, item.name + ' stop');
@@ -165,6 +167,7 @@ function reviewConfig(root) {
       }
       if (item.tests) inspectCommand(item.tests.command, item.tests.cwd, item.name + ' tests');
     }
+    for (const server of config.workspace?.mcpServers || []) if (server.buildCommand) inspectCommand(server.buildCommand, server.cwd, server.name + ' build');
     if (inspectFolder(root).compose.length) for (const item of config.components.filter(entry => entry.kind === 'service' && entry.runtime?.lifecycle !== 'detached')) {
       warnings.push(item.name + ': Compose detected; confirm Stop really stops this service.');
     }

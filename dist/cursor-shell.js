@@ -15,7 +15,6 @@
       <div id="cursorOpenMenu" class="cursor-open-menu" role="menu" aria-label="Open project view" hidden>
         <div class="cursor-open-group">Project</div>
         <button type="button" role="menuitem" data-page="dashboard">${icon('grid')}<span>Overview</span></button>
-        <button type="button" role="menuitem" data-page="overview">${icon('cube')}<span>Project Map</span></button>
         <button type="button" role="menuitem" data-page="files">${icon('folder')}<span>Files</span><kbd>${shortcut}B</kbd></button>
         <button type="button" role="menuitem" data-page="onboarding">${icon('check')}<span>Onboarding</span></button>
         <div class="cursor-open-group">Product</div>

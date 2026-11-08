@@ -25,8 +25,10 @@ test('personal agent settings and MCP invocation stay outside the repository', (
     const claude = chat.invocation({ provider: 'claude', mode: 'edit' }, root, '/path/to/electron', '/path/to/mcp/server.cjs', prompt, base);
     assert.ok(claude.args.includes('acceptEdits'));
     assert.ok(claude.args.some(arg => arg.includes('mcp__product_view__list_components')));
+    assert.match(claude.args[claude.args.indexOf('--allowedTools') + 1], /Edit,Write/);
     const claudeInspect = chat.invocation({ provider: 'claude', mode: 'inspect' }, root, '/path/to/electron', '/path/to/mcp/server.cjs', prompt, base);
     assert.ok(claudeInspect.args.includes('dontAsk'));
+    assert.doesNotMatch(claudeInspect.args[claudeInspect.args.indexOf('--allowedTools') + 1], /Edit|Write|Bash/);
     assert.equal(claude.stdin, prompt);
     assert.equal(claude.args.includes(prompt), false);
     assert.equal(JSON.parse(fs.readFileSync(path.join(base, 'mcp.json'))).mcpServers.product_view.args[1], root);

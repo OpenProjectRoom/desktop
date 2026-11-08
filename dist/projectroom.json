@@ -13,6 +13,34 @@
     "backlogRoot": "backlog",
     "roadmap": [
       {
+        "id": "direct-data-source-inspection",
+        "title": "Open data source catalogs with one click",
+        "summary": "Selecting a database or local file source loads its bounded structure immediately; table rows and file contents remain behind a separate entry click, with Refresh and Retry for follow-up.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
+        "id": "focused-cli-catalog",
+        "title": "Keep runnable CLI tools in focus",
+        "summary": "Show configured commands as the primary CLI list and put available, unregistered source discoveries behind an optional expander; omit unbuilt candidates from interactive results.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
+        "id": "shared-project-command-path",
+        "title": "Reliable project command discovery",
+        "summary": "Use one effective PATH for project launches, builds, tests, CLI tools and local MCP servers, including existing project-local tools and common macOS package-manager locations; review and failure messages use the same search path.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "api"
+        ]
+      },
+      {
         "id": "shared-product-context",
         "title": "Shared product context",
         "summary": "Keep the vision, roadmap and documentation visible beside code and tests.",
@@ -43,9 +71,47 @@
         ]
       },
       {
+        "id": "manual-component-rebuild",
+        "title": "Rebuild launchable components",
+        "summary": "Let agents record verified build commands and offer an explicit Rebuild action for stopped applications, services and CLI tools or disconnected local MCP servers, with build output and identity.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "api"
+        ]
+      },
+      {
+        "id": "investigate-failed-actions",
+        "title": "Investigate and repair failed local actions",
+        "summary": "Capture bounded redacted failure context, show clear progress while the chosen coding agent investigates read-only or applies an approved fix, display a reviewable repair plan, and offer an explicit retry of the same action.",
+        "status": "done",
+        "relatedComponents": [
+          "web",
+          "api"
+        ]
+      },
+      {
+        "id": "configurable-overview-controls",
+        "title": "Personal Overview controls",
+        "summary": "Keep daily launch, build, status and explorer shortcuts compact in two independently flowing columns; let each user choose Overview sections, quick links and pinned applications or services per local project.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "overview-map-preview",
         "title": "Project Map preview in Overview",
-        "summary": "Show a compact, read-only preview of runtime components and real connections in Overview, with the full map available for inspection and editing.",
+        "summary": "Show a compact, read-only preview of runtime components and real connections in Overview; open the full map there for inspection and arrangement without a separate main-menu entry.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
+        "id": "map-as-detail-view",
+        "title": "Keep Project Map as a detail view",
+        "summary": "Remove the full map from the sidebar and Open menu, retain its Overview link, and add applications, services and data sources from their own views.",
         "status": "done",
         "relatedComponents": [
           "web"
@@ -63,7 +129,7 @@
       {
         "id": "overview-dual-metrics",
         "title": "CPU and memory together in Overview",
-        "summary": "Show both session-only process measurements at once in compact, separately scaled charts with distinct colors.",
+        "summary": "Plot session-only CPU and memory samples together on one time axis, with an independently scaled CPU axis on the left and memory axis on the right.",
         "status": "done",
         "relatedComponents": [
           "web"
@@ -72,7 +138,7 @@
       {
         "id": "explorer-workbench-focus",
         "title": "Put explorer workbenches first",
-        "summary": "Show MCP capabilities and the first item directly below compact connection controls, keep CLI trial actions ahead of reference material, and shorten the API source header.",
+        "summary": "Keep Run & Verify pages compact, show the selected tool or source first, use a searchable suite list beside the selected Test Explorer workbench, avoid duplicate CLI command banners, place secondary details in expanders, and open a first data catalog or test suite without running user actions.",
         "status": "done",
         "relatedComponents": [
           "web"
@@ -85,6 +151,15 @@
         "status": "done",
         "relatedComponents": [
           "product-spec",
+          "web"
+        ]
+      },
+      {
+        "id": "compact-window-sidebar",
+        "title": "Collapse navigation in compact windows",
+        "summary": "Start with the sidebar collapsed at 900 px or narrower and collapse it when resizing into that range, while allowing a manual reopening until the next compact launch.",
+        "status": "done",
+        "relatedComponents": [
           "web"
         ]
       },
@@ -110,7 +185,16 @@
       {
         "id": "onboarding-completion",
         "title": "Finish onboarding and clear navigation",
-        "summary": "Let users complete onboarding after all detected sections are configured while clearly showing unverified hands-on checks; remember completion locally per project, hide the navigation item, and offer reopening in Settings.",
+        "summary": "Let users complete onboarding after all detected sections are configured while clearly showing unverified hands-on checks; remember completion locally per project, hide the navigation item from the first render on later launches, and offer reopening in Settings.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
+        "id": "first-launch-demo",
+        "title": "Show sample data only on the first launch",
+        "summary": "Open the saved local project without a demo flash; show a labeled intro demo once when no project exists, with a direct path to the user's own project and an empty chooser afterward.",
         "status": "done",
         "relatedComponents": [
           "web"

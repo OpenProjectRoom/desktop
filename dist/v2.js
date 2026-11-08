@@ -47,6 +47,7 @@ let selectedFileText = '';
 let recentEvents = ['13:42  Tests bestanden · 26/30 Checks', '13:36  Web App bereit · :3000', '12:18  Product Spec aktualisiert'];
 const kindLabels = { service: 'Service', database: 'Datenbank', testSuite: 'Testsammlung', specification: 'Spezifikation', issues: 'Aufgaben', storage: 'Speicher', external: 'Extern' };
 if (window.productView) document.body.classList.add('desktop-app');
+else document.body.classList.remove('project-booting');
 
 function currentComponent(id) { return projectConfig.components.find(c => c.id === id); }
 function getNodeStatus(c) {
@@ -240,7 +241,7 @@ const oldRender = render;
 render = function () { oldRender(); if (state.page === 'overview') requestAnimationFrame(drawConnections); renderPanel(); };
 labels.overview = 'Projektkarte';
 const overviewNav = document.querySelector('#nav button[data-page="overview"]');
-overviewNav.querySelector('span').textContent = 'Projektkarte';
+if (overviewNav) overviewNav.querySelector('span').textContent = 'Projektkarte';
 document.querySelectorAll('.nav button,.sidebar-bottom button').forEach(b => { const label = b.querySelector('span')?.textContent || b.textContent.trim(); if (label) b.title = label; });
 document.querySelector('.top-actions').insertAdjacentHTML('afterbegin', `<span class="desktop-chip">${window.productView ? 'DESKTOP' : 'WEB-DEMO'}</span><button class="chat-toggle" id="chatToggle" title="Chat und Details öffnen">${icon('list')}</button>`);
 document.getElementById('projectPicker').onclick = null;
@@ -306,12 +307,15 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.matches('[data-map-node]')) e.target.click(); });
 window.addEventListener('resize', () => { if (state.page === 'overview') requestAnimationFrame(drawConnections); });
-render();
+if (!window.productView) render();
 (async () => {
   try {
     const data = window.productView ? await window.productView.loadProject() : { config: await fetch('./projectroom.json').then(r => r.json()) };
     setProject(data);
-  } catch (err) { toast('Projektdatei konnte nicht geladen werden: ' + err.message); }
+  } catch (err) {
+    if (window.productView) setProject({ config: { project: { name: 'Project Room' }, workspace: { startPage: 'overview' }, components: [], connections: [] }, empty: true });
+    toast('Project could not be opened: ' + err.message);
+  } finally { document.body.classList.remove('project-booting'); }
 })();
 if (window.productView?.onProcessEvent) window.productView.onProcessEvent(event => {
   if (event.type === 'status') { desktopStatus[event.id] = event.status; if (event.buildIdentity) componentBuilds[event.id] = event.buildIdentity; render(); }

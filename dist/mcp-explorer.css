@@ -63,3 +63,9 @@ body[data-theme="dark"] .mcp-alert{background:#4b302d;border-color:#754943;color
 .mcp-errors p{margin:0 0 8px}
 @media(max-width:650px){.mcp-workbench-head{align-items:flex-start}.mcp-workbench-head .mcp-head-actions{justify-content:flex-start}}
 body[data-theme="dark"] .mcp-meta>summary{color:#bdd5e8}
+.mcp-shell .page-head{margin-bottom:12px}
+.mcp-server-list,.mcp-main{min-height:0}
+.mcp-discovery-note{margin-top:12px;padding:10px 5px}
+.mcp-discovery-note summary{cursor:pointer;font-weight:600;color:var(--accent,#536f88)}
+.mcp-discovery-note p{margin:7px 0 0}
+body[data-theme="dark"] .mcp-discovery-note summary{color:#bdd5e8}

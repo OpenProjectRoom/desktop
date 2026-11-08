@@ -12,6 +12,7 @@
   let busy = false;
   let error = '';
   let authStatus = null;
+  let sourceSearch = '';
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const selected = () => sources.find(item => item.id === selectedId);
   const button = (label, action, primary = false, disabled = false) => `<button type="button" class="btn${primary ? ' primary' : ''}" data-api="${action}"${disabled ? ' disabled' : ''}>${label}</button>`;
@@ -69,7 +70,7 @@
       sources = (await pv.listApiSources()).map(item => remoteSpecs[item.id]?.path === item.specPath && remoteSpecs[item.id]?.baseUrl === item.baseUrl ? { ...item, ...remoteSpecs[item.id].detail } : item);
       if (!sources.some(item => item.id === selectedId)) {
         selectedId = sources[0]?.id || null;
-        selectedOperation = null;
+        selectedOperation = sources[0]?.operations?.length ? 0 : null;
         requestDraft = null;
         result = null;
       }
@@ -84,7 +85,7 @@
   }
 
   function sourceList() {
-    return sources.length ? sources.map(item => `<button type="button" class="api-source${selectedId === item.id ? ' selected' : ''}" data-api="select:${safe(item.id)}"><span class="api-source-icon">⌁</span><span><strong>${safe(item.name)}</strong><small>${safe(item.linked ? item.baseUrl : item.source)} · ${item.specPath && !item.operations?.length ? 'OpenAPI ready to load' : `${item.operations?.length || 0} endpoints`}</small></span>${item.linked ? '<i title="Registered in YAML"></i>' : ''}</button>`).join('') : '<p class="api-empty-list">No API sources found. Add one by URL, or keep an OpenAPI file in the project.</p>';
+    return sources.length ? sources.map(item => `<button type="button" class="api-source${selectedId === item.id ? ' selected' : ''}" data-api="select:${safe(item.id)}" ${sourceSearch && !`${item.name} ${item.baseUrl || item.source}`.toLowerCase().includes(sourceSearch) ? 'hidden' : ''}><span class="api-source-icon">⌁</span><span><strong>${safe(item.name)}</strong><small>${safe(item.linked ? item.baseUrl : item.source)} · ${item.specPath && !item.operations?.length ? 'OpenAPI ready to load' : `${item.operations?.length || 0} endpoints`}</small></span>${item.linked ? '<i title="Registered in YAML"></i>' : ''}</button>`).join('') : '<p class="api-empty-list">No API sources found. Add one by URL, or keep an OpenAPI file in the project.</p>';
   }
 
   function main() {
@@ -95,12 +96,12 @@
     const draft = requestDraft || { method: op?.method || 'GET', path: op?.path || '/', headers: '{}', body: exampleBody(media), contentType: media?.type || '', params: {} };
     const auth = item.auth || (item.authEnv ? { type: 'bearer', env: item.authEnv } : { type: 'none' });
     const authLabel = auth.type === 'apiKey' ? `API key in ${auth.in} from local ${auth.env}` : auth.type === 'bearer' ? `Bearer token from local ${auth.env}` : auth.type === 'oauth2' ? `OAuth · ${authStatus?.signedIn ? 'signed in' : 'sign in required'}` : 'No auth configured';
-    return `<div class="api-main-head"><div><span class="api-kicker">${item.linked ? 'REGISTERED API' : 'DISCOVERED OPENAPI FILE'}</span><h2>${safe(item.name)}</h2><p>${safe(item.description || item.specTitle || item.source)}</p><code>${safe(item.baseUrl || item.source)}</code>${item.specVersion ? `<small>OpenAPI document version ${safe(item.specVersion)}</small>` : ''}</div><div class="api-head-actions">${item.linked && item.specPath ? button(busy ? 'Loading…' : 'Load OpenAPI', 'load-spec', false, busy) : ''}${item.linked && auth.type === 'oauth2' ? `${button(authStatus?.signedIn ? 'Sign in again' : 'Sign in with OAuth', 'sign-in', false, busy)}${authStatus?.signedIn ? button('Forget sign-in', 'sign-out', false, busy) : ''}` : ''}${item.linked ? button('Remove from YAML', 'remove') : button('Add to project YAML', 'link', true)}</div></div>
+    return `<div class="api-main-head"><div><span class="api-kicker">${item.linked ? 'PROJECT API' : 'OPENAPI FILE'}</span><h2>${safe(item.name)}</h2><small>${safe(item.baseUrl || item.source)} · ${safe(authLabel)}</small></div><div class="api-head-actions">${item.linked && item.specPath ? button(busy ? 'Loading…' : 'Load OpenAPI', 'load-spec', false, busy) : ''}${item.linked && auth.type === 'oauth2' && !authStatus?.signedIn ? button('Sign in with OAuth', 'sign-in', false, busy) : ''}${!item.linked ? button('Add to project YAML', 'link', true) : ''}</div></div>
       ${item.error ? `<p class="api-alert">${safe(item.error)}</p>` : ''}
       <div class="api-explorer-body"><div class="api-operations"><div class="api-pane-title"><strong>Endpoints</strong><span>${item.operations?.length || 0}</span></div>${operationList(item)}</div>
       <div class="api-request"><div class="api-pane-title"><strong>Request</strong><span>Runs only when you click</span></div>
       ${item.linked ? `<form id="apiRequestForm"><div class="api-request-line"><select name="method" aria-label="HTTP method">${['GET','POST','PUT','PATCH','DELETE','HEAD','OPTIONS'].map(method => `<option${draft.method === method ? ' selected' : ''}>${method}</option>`).join('')}</select><input name="path" aria-label="Request path" required value="${safe(draft.path)}" placeholder="/users/123"><button class="btn primary" type="submit"${busy || !pv || !projectRoot ? ' disabled' : ''}>${busy ? 'Sending…' : 'Send'}</button></div><p class="api-request-hint">${safe(item.baseUrl)} · ${safe(authLabel)}. Requests run only when you click Send.</p>${operationDetails(op)}${paramFields(op, draft)}${op?.requestBody?.content?.length ? `<label class="api-media-label">Request content type<select name="contentType" id="apiContentType">${op.requestBody.content.map(entry => `<option value="${safe(entry.type)}"${draft.contentType === entry.type ? ' selected' : ''}>${safe(entry.type)}</option>`).join('')}</select></label>` : ''}<div class="api-editor-grid"><label>Headers <small>JSON object; no credentials</small><textarea name="headers" spellcheck="false" placeholder='{"Accept":"application/json"}'>${safe(draft.headers)}</textarea></label><label>Body <small>${op?.requestBody?.description ? safe(op.requestBody.description) : 'optional; OpenAPI example when available'}</small><textarea name="body" spellcheck="false" placeholder='{"name":"Example"}'>${safe(draft.body)}</textarea></label></div></form>` : `${operationDetails(op)}${paramFields(op, draft)}<div class="api-link-hint">Review the file, then register a base URL in the project YAML to send requests.</div>`}
-      ${result ? `<div class="api-response"><div class="api-response-head"><strong>Response</strong><span class="${result.status >= 400 ? 'api-failed' : 'api-success'}">${safe(result.status)} ${safe(result.statusText)}</span><small>${safe(result.durationMs)} ms · ${safe(result.contentType || 'unknown type')}${result.truncated ? ' · preview truncated' : ''}</small></div><pre>${safe(formattedBody(result))}</pre></div>` : '<div class="api-response-empty">Response status, timing and body appear here after a request.</div>'}</div></div>`;
+      ${result ? `<div class="api-response"><div class="api-response-head"><strong>Response</strong><span class="${result.status >= 400 ? 'api-failed' : 'api-success'}">${safe(result.status)} ${safe(result.statusText)}</span><small>${safe(result.durationMs)} ms · ${safe(result.contentType || 'unknown type')}${result.truncated ? ' · preview truncated' : ''}</small></div><pre>${safe(formattedBody(result))}</pre></div>` : '<div class="api-response-empty">Response status, timing and body appear here after a request.</div>'}</div></div><details class="api-meta"><summary>API source and authentication</summary><div class="api-meta-body"><p>${safe(item.description || item.specTitle || 'No description in project configuration.')}</p><code>${safe(item.source)}</code>${item.specVersion ? `<small>OpenAPI document version ${safe(item.specVersion)}</small>` : ''}<div class="api-meta-actions">${item.linked && auth.type === 'oauth2' && authStatus?.signedIn ? `${button('Sign in again', 'sign-in', false, busy)}${button('Forget sign-in', 'sign-out', false, busy)}` : ''}${item.linked ? button('Remove from YAML', 'remove') : ''}</div></div></details>`;
   }
   function formattedBody(value) {
     if (!value.body) return '(empty response)';
@@ -115,7 +116,7 @@
   }
 
   function page() {
-    return `<div class="api-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>API Explorer</h1><p>Browse project HTTP endpoints, compose a request, and inspect the real response.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add API', 'add', true, !pv || !projectRoot)}</div></div><div class="api-layout"><section class="card api-sources"><div class="api-pane-title"><strong>Project APIs</strong><span>${sources.length} found</span></div>${sourceList()}<p class="api-discovery-note">OpenAPI 3.x files are discovered locally. Add a base URL to <code>.projectroom/project.yaml</code> to make requests. Tokens stay in local Environment.</p></section><section class="card api-main">${main()}</section></div>${!projectRoot ? '<p class="api-preview-note">Open a local repository in the desktop app to discover files and send real requests. The browser preview cannot access local APIs.</p>' : ''}${error ? `<div class="api-alert" role="alert">${safe(error)}</div>` : ''}</div>`;
+    return `<div class="api-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>API Explorer</h1><p>Choose an endpoint, send a request, inspect the response.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add API', 'add', true, !pv || !projectRoot)}</div></div><div class="api-layout"><section class="card api-sources"><div class="api-pane-title"><strong>Project APIs</strong><span>${sources.length}</span></div><input class="explorer-search" id="apiSourceSearch" type="search" placeholder="Search APIs" aria-label="Search APIs" value="${safe(sourceSearch)}">${sourceList()}<details class="api-source-help"><summary>About discovery</summary><p>OpenAPI files are found locally. Add a base URL to send requests. Tokens stay in local Environment.</p></details></section><section class="card api-main">${main()}</section></div>${!projectRoot ? '<p class="api-preview-note">Open a local repository in the desktop app to discover files and send real requests. The browser preview cannot access local APIs.</p>' : ''}${error ? `<div class="api-alert" role="alert">${safe(error)}</div>` : ''}</div>`;
   }
 
   const modalRoot = document.getElementById('modalRoot');
@@ -145,7 +146,7 @@
   const previousRender = render;
   render = function () {
     if (state.page !== 'api') return previousRender();
-    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; sources = []; remoteSpecs = {}; selectedId = null; selectedOperation = null; requestDraft = null; result = null; queueMicrotask(reload); }
+    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; sources = []; remoteSpecs = {}; selectedId = null; selectedOperation = null; requestDraft = null; result = null; sourceSearch = ''; queueMicrotask(reload); }
     document.body.classList.add('dashboard-page');
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === 'api'));
     document.querySelector('.breadcrumb').innerHTML = workspaceBreadcrumb('API Explorer');
@@ -167,7 +168,7 @@
     if (state.page !== 'api') return;
     const target = event.target.closest('[data-api]'); if (!target) return;
     const [action, ...rest] = target.dataset.api.split(':'); const value = rest.join(':');
-    if (action === 'select') { selectedId = value; selectedOperation = null; requestDraft = null; result = null; authStatus = null; if (selected()?.auth?.type === 'oauth2' && pv?.apiAuthStatus) pv.apiAuthStatus(selectedId).then(status => { authStatus = status; if (state.page === 'api') render(); }).catch(cause => { error = cause.message; render(); }); render(); }
+    if (action === 'select') { selectedId = value; selectedOperation = selected()?.operations?.length ? 0 : null; requestDraft = null; result = null; authStatus = null; if (selected()?.auth?.type === 'oauth2' && pv?.apiAuthStatus) pv.apiAuthStatus(selectedId).then(status => { authStatus = status; if (state.page === 'api') render(); }).catch(cause => { error = cause.message; render(); }); render(); }
     if (action === 'operation') { selectedOperation = Number(value); requestDraft = null; result = null; render(); }
     if (action === 'refresh') await reload();
     if (action === 'add' && pv && projectRoot) openAdd();
@@ -213,5 +214,10 @@
     requestDraft = captureDraft(form);
     requestDraft.body = exampleBody(operation.requestBody?.content?.find(entry => entry.type === requestDraft.contentType));
     render();
+  });
+  document.addEventListener('input', event => {
+    if (state.page !== 'api' || event.target.id !== 'apiSourceSearch') return;
+    sourceSearch = event.target.value.trim().toLowerCase();
+    document.querySelectorAll('.api-source').forEach(button => { button.hidden = !button.textContent.toLowerCase().includes(sourceSearch); });
   });
 })();

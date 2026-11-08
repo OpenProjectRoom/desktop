@@ -1,22 +1,14 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const { spawnProject } = require('./platform-process.cjs');
+const { spawnProject, projectEnvironment, resolveProjectExecutable } = require('./platform-process.cjs');
 const { configPath } = require('../scripts/config.cjs');
 
 const providers = { codex: 'Codex CLI', claude: 'Claude Code' };
 const maxOutput = 2_000_000;
 
 function executable(name, envPath = process.env.PATH || '') {
-  const directories = [...new Set([...envPath.split(path.delimiter), ...(process.platform === 'win32' ? [] : ['/opt/homebrew/bin', '/usr/local/bin', '/usr/bin'])])];
-  for (const directory of directories) {
-    if (!directory) continue;
-    for (const suffix of process.platform === 'win32' ? ['.exe', '.cmd', '.bat', ''] : ['']) {
-      const candidate = path.join(directory, name + suffix);
-      try { fs.accessSync(candidate, fs.constants.X_OK); return candidate; } catch { /* Try next candidate. */ }
-    }
-  }
-  return null;
+  return resolveProjectExecutable(name, null, { PATH: envPath, PATHEXT: process.env.PATHEXT });
 }
 function settingsPath(userData) { return path.join(userData, 'agent-chat-settings.json'); }
 function readSettings(userData) {
@@ -60,19 +52,24 @@ function invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir) {
   const configFile = path.join(tempDir, 'mcp.json');
   fs.writeFileSync(configFile, JSON.stringify({ mcpServers: { product_view: { command: mcpCommand, args: mcpArgs, env: { ELECTRON_RUN_AS_NODE: '1' } } } }));
   const productTools = ['get_product_view', 'get_product_context', 'list_components', 'read_project_file', 'get_product_history', 'get_spec_kit'].map(name => `mcp__product_view__${name}`);
-  const allowed = [...(settings.mode === 'inspect' ? ['Read', 'Glob', 'Grep'] : []), ...productTools].join(',');
+  const allowed = [...(settings.mode === 'inspect' ? ['Read', 'Glob', 'Grep'] : ['Read', 'Glob', 'Grep', 'Edit', 'Write', 'Bash']), ...productTools].join(',');
   return { command: executable('claude'), args: ['-p', '--output-format', 'json', '--permission-mode', settings.mode === 'edit' ? 'acceptEdits' : 'dontAsk', '--permission-prompts', 'none', '--allowedTools', allowed, '--mcp-config', configFile], stdin: prompt };
 }
-function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild }) {
+function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild, mode, prompt: directPrompt }) {
   const settings = readSettings(userData);
+  if (mode !== undefined) {
+    if (!['inspect', 'edit'].includes(mode)) throw new Error('Unknown agent mode.');
+    settings.mode = mode;
+  }
   if (!providers[settings.provider]) throw new Error('Connect Codex CLI or Claude Code in Settings → AI & Chat.');
   if (!root || !fs.existsSync(configPath(root))) throw new Error('Open a local Project Room workspace first.');
-  const prompt = promptFor(messages, root);
+  const prompt = directPrompt === undefined ? promptFor(messages, root) : typeof directPrompt === 'string' && directPrompt.length <= 20000 && directPrompt.trim() ? directPrompt : null;
+  if (!prompt) throw new Error('Invalid agent request.');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-chat-'));
   const command = invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir);
   if (!command.command) { fs.rmSync(tempDir, { recursive: true, force: true }); throw new Error(`${providers[settings.provider]} is not installed or not on PATH.`); }
   return new Promise((resolve, reject) => {
-    const child = spawnProject(command.command, command.args, { cwd: root, env: { ...process.env, PATH: [...(process.platform === 'win32' ? [] : ['/opt/homebrew/bin', '/usr/local/bin']), process.env.PATH || ''].join(path.delimiter) }, stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
+    const child = spawnProject(command.command, command.args, { cwd: root, env: projectEnvironment(process.env, root), stdio: ['pipe', 'pipe', 'pipe'], detached: process.platform !== 'win32' });
     onChild?.(child);
     let stdout = '', stderr = '';
     child.stdout.on('data', chunk => { stdout = (stdout + chunk).slice(-maxOutput); });

@@ -13,6 +13,7 @@
   let result = null;
   let busy = false;
   let message = '';
+  let serverSearch = '';
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const selected = () => servers.find(item => item.id === selectedId);
   const projectServers = async () => (await pv.listMcpServers()).filter(item => !item.builtIn && !item.linkedId);
@@ -104,7 +105,7 @@
   const button = (label, action, primary = false, disabled = false) => `<button type="button" class="btn${primary ? ' primary' : ''}" data-mcp="${action}"${disabled ? ' disabled' : ''}>${label}</button>`;
   const pill = (label, kind = '') => `<span class="mcp-pill ${kind}">${safe(label)}</span>`;
   const buildLine = (item, active) => {
-    const info = active?.buildIdentity || item?.buildIdentity || {};
+    const info = item?.buildIdentity || active?.buildIdentity || {};
     const when = value => { try { return new Date(value).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'medium' }); } catch { return ''; } };
     const parts = [info.builtAt ? `Built ${when(info.builtAt)}` : 'Build time unavailable'];
     if (info.version) parts.push(`v${info.version}`);
@@ -116,7 +117,7 @@
   };
   const listing = () => {
     if (!servers.length) return '<p class="mcp-muted">No MCP connection configured here. A coding agent can inspect source for servers behind CLI commands, then add verified ones to <code>workspace.mcpServers</code>.</p>';
-    const row = item => `<button type="button" class="mcp-server${selectedId === item.id ? ' selected' : ''}" data-mcp="select:${safe(item.id)}"><span class="mcp-server-mark">${icon('cube')}</span><span class="mcp-server-copy"><strong>${safe(item.name)}</strong><small>${safe(item.source)}${item.linkedId ? ' · Linked in YAML' : ''}</small></span>${item.connected ? '<i class="mcp-online" title="Connected"></i>' : ''}</button>`;
+    const row = item => `<button type="button" class="mcp-server${selectedId === item.id ? ' selected' : ''}" data-mcp="select:${safe(item.id)}" ${serverSearch && !`${item.name} ${item.source}`.toLowerCase().includes(serverSearch) ? 'hidden' : ''}><span class="mcp-server-mark">${icon('cube')}</span><span class="mcp-server-copy"><strong>${safe(item.name)}</strong><small>${safe(item.source)}${item.linkedId ? ' · Linked in YAML' : ''}</small></span>${item.connected ? '<i class="mcp-online" title="Connected"></i>' : ''}</button>`;
     const registered = servers.filter(item => item.origin !== 'client-config');
     const clients = servers.filter(item => item.origin === 'client-config' && !item.linkedId);
     return `${registered.length ? `<div class="mcp-section-head"><strong>Configured connections</strong><span>${registered.length}</span></div>${registered.map(row).join('')}` : ''}${clients.length ? `<div class="mcp-section-head"><strong>Coding-tool settings</strong><span>${clients.length}</span></div><p class="mcp-discovery-note">Client entries may connect to this project or to external tools. Their origin is not verified by file discovery.</p>${clients.map(row).join('')}` : ''}`;
@@ -143,9 +144,9 @@
     const connectedDetail = item && detail?.id === item.id ? detail : null;
     const connectionAction = item?.connected ? button('Disconnect', 'disconnect', false, busy) : button('Connect', 'connect', true, busy);
     const connectionDetails = item ? `<details class="mcp-meta"><summary>Connection and server details</summary><div class="mcp-meta-body"><p>${safe(item.description || 'No description in project configuration.')}</p><div class="mcp-meta-row"><strong>Connection</strong><code>${safe(item.endpoint)}</code></div><small>${item.transport === 'stdio' ? 'Connect starts this local command. Disconnect stops it.' : `Connect contacts this endpoint · ${item.authType === 'oauth2' ? 'OAuth browser sign-in' : item.authType === 'bearer' ? 'Bearer token from Environment' : 'no configured auth'}. HTTPS or local HTTP is required.`}</small>${item.environment.length ? `<div class="mcp-env">${item.environment.map(entry => pill(entry.name + (entry.available ? ' · set' : ' · missing'), entry.available ? '' : 'missing')).join('')}</div>` : ''}${connectedDetail ? `<div class="mcp-server-info">${safe(connectedDetail.serverInfo?.name || item.name)}${connectedDetail.serverInfo?.version ? ' · v' + safe(connectedDetail.serverInfo.version) : ''}${connectedDetail.instructions ? `<p>${safe(connectedDetail.instructions)}</p>` : ''}</div>` : ''}${item.authType === 'oauth2' ? `<div class="mcp-meta-actions">${button('Forget sign-in', 'forget-auth', false, busy)}</div>` : ''}</div></details>` : '';
-    return `<div class="mcp-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>MCP Explorer</h1><p>Inspect connected tools, resources and prompts. A coding agent can find project servers that have no client config.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add MCP server', 'add', true, !pv || !projectRoot || busy)}</div></div>
-      <div class="mcp-layout"><section class="card mcp-server-list">${listing()}<div class="mcp-discovery-note">File discovery does not inspect source or verify that a server belongs to this project.</div></section>
-      <section class="card mcp-main">${item ? `<div class="mcp-main-head mcp-workbench-head"><div><div class="mcp-kicker">${safe(item.transport.toUpperCase())} · ${safe(item.source)}</div><h2>${safe(item.name)}</h2>${buildLine(item, connectedDetail)}</div><div class="mcp-head-actions">${pill(item.connected ? 'Connected' : 'Disconnected', item.connected ? 'connected' : '')}${connectionAction}${editable(item) ? button('Remove', 'remove', false, busy) : !item.builtIn && !item.linkedId ? button('Add to project YAML', 'link', false, busy) : ''}</div></div>${connectedDetail ? `${(connectedDetail.errors || []).length ? `<div class="mcp-errors">${connectedDetail.errors.map(error => `<p class="mcp-error">${safe(error)}</p>`).join('')}</div>` : ''}${catalog()}${connectionDetails}` : `<div class="mcp-start"><h3>Inspect this server</h3><p>Connect to ask the server for its actual capabilities. You can review each item before running a tool or reading a resource.</p></div>${connectionDetails}`}` : `<div class="mcp-start"><h3>${projectRoot ? 'No server selected' : 'Open a local project'}</h3><p>${projectRoot ? 'Add an MCP server to the project configuration and refresh discovery.' : 'The desktop app discovers MCP servers in the selected repository. The browser preview does not connect to local processes.'}</p></div>`}</section></div>${message ? `<div class="mcp-alert" role="alert">${safe(message)}</div>` : ''}</div>`;
+    return `<div class="mcp-shell"><div class="page-head"><div><div class="eyebrow">PROJECT ROOM / RUN & VERIFY</div><h1>MCP Explorer</h1><p>Choose a server, inspect its tools, then try one.</p></div><div class="head-actions">${button('Refresh discovery', 'refresh', false, busy)}${button('Add MCP server', 'add', true, !pv || !projectRoot || busy)}</div></div>
+      <div class="mcp-layout"><section class="card mcp-server-list"><input class="explorer-search" id="mcpServerSearch" type="search" placeholder="Search servers" aria-label="Search MCP servers" value="${safe(serverSearch)}">${listing()}<details class="mcp-discovery-note"><summary>About discovery</summary><p>File discovery does not inspect source or verify that a server belongs to this project.</p></details></section>
+      <section class="card mcp-main">${item ? `<div class="mcp-main-head mcp-workbench-head"><div><div class="mcp-kicker">${safe(item.transport.toUpperCase())} · ${safe(item.source)}</div><h2>${safe(item.name)}</h2>${buildLine(item, connectedDetail)}</div><div class="mcp-head-actions">${pill(item.connected ? 'Connected' : 'Disconnected', item.connected ? 'connected' : '')}${item.canRebuild ? button('Rebuild', 'rebuild', false, busy || item.connected) : ''}${connectionAction}${editable(item) ? button('Remove', 'remove', false, busy) : !item.builtIn && !item.linkedId ? button('Add to project YAML', 'link', false, busy) : ''}</div></div>${connectedDetail ? `${(connectedDetail.errors || []).length ? `<div class="mcp-errors">${connectedDetail.errors.map(error => `<p class="mcp-error">${safe(error)}</p>`).join('')}</div>` : ''}${catalog()}${connectionDetails}` : `<div class="mcp-start"><h3>Inspect this server</h3><p>Connect to ask the server for its actual capabilities. You can review each item before running a tool or reading a resource.</p></div>${connectionDetails}`}` : `<div class="mcp-start"><h3>${projectRoot ? 'No server selected' : 'Open a local project'}</h3><p>${projectRoot ? 'Add an MCP server to the project configuration and refresh discovery.' : 'The desktop app discovers MCP servers in the selected repository. The browser preview does not connect to local processes.'}</p></div>`}</section></div>${message ? `<div class="mcp-alert" role="alert">${safe(message)}</div>` : ''}</div>`;
   }
   const modalRoot = document.getElementById('modalRoot');
   function closeModal() { modalRoot.innerHTML = ''; }
@@ -186,7 +187,7 @@
   const previousRender = render;
   render = function () {
     if (state.page !== 'mcp') return previousRender();
-    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; servers = []; selectedId = null; detail = null; message = ''; queueMicrotask(reload); }
+    if (loadedRoot !== projectRoot) { loadedRoot = projectRoot; servers = []; selectedId = null; detail = null; message = ''; serverSearch = ''; queueMicrotask(reload); }
     document.body.classList.add('dashboard-page');
     document.body.classList.remove('cursor-explorer-open');
     document.querySelectorAll('[data-page]').forEach(button => button.classList.toggle('active', button.dataset.page === 'mcp'));
@@ -197,6 +198,11 @@
   };
   document.addEventListener('input', event => {
     if (state.page !== 'mcp') return;
+    if (event.target.id === 'mcpServerSearch') {
+      serverSearch = event.target.value.trim().toLowerCase();
+      document.querySelectorAll('.mcp-server').forEach(button => { button.hidden = !button.textContent.toLowerCase().includes(serverSearch); });
+      return;
+    }
     if (['mcpArgs', 'mcpUri'].includes(event.target.id)) draft = event.target.value;
     if (event.target.dataset?.mcpField) fieldValues[event.target.dataset.mcpField] = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
     if (event.target.dataset?.mcpPrompt) fieldValues[`prompt:${event.target.dataset.mcpPrompt}`] = event.target.value;
@@ -217,6 +223,7 @@
     if (action === 'remove') { if (pv && projectRoot) openRemove(); return; }
     if (!pv || busy || !selectedId) return;
     busy = true; message = '';
+    if (action === 'rebuild') { render(); toast('Building MCP server…'); }
     try {
       if (action === 'link') {
         const updated = await pv.linkMcpServer(selectedId);
@@ -224,6 +231,7 @@
       }
       if (action === 'connect') { detail = await pv.connectMcpServer(selectedId); servers = await projectServers(); focusFirstCapability(); result = null; }
       if (action === 'disconnect') { await pv.disconnectMcpServer(selectedId); detail = null; servers = await projectServers(); result = null; }
+      if (action === 'rebuild') { await pv.rebuildMcpServer(selectedId); servers = await projectServers(); toast('MCP server rebuilt. Connect to use the new artifact.'); }
       if (action === 'forget-auth') { await pv.forgetMcpAuth(selectedId); detail = null; servers = await projectServers(); result = null; toast('Stored MCP sign-in removed from this Mac.'); }
       if (['run-tool', 'read-resource', 'read-template', 'get-prompt'].includes(action)) {
         let output;

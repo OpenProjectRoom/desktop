@@ -61,6 +61,7 @@ test('setup prompt requires a source audit even when a stdio MCP CLI has no clie
   assert.match(prompt, /second source pass before reporting anything absent/);
   assert.match(prompt, /stdio MCP server may exist only as a CLI subcommand/);
   assert.match(prompt, /HTTP routes need not have OpenAPI/);
+  assert.match(prompt, /determine whether a separate build is needed and identify its exact verified build command/);
   assert.match(prompt, /source audit still required/);
   assert.match(prompt, /Named OpenAPI files: none; inspect HTTP route source/);
   assert.match(prompt, /Register verified MCP servers in workspace\.mcpServers/);

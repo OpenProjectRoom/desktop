@@ -57,6 +57,23 @@ test('runtime prerequisites accept known checks and reject unknown ones', () => 
   assert.throws(() => parseConfig(YAML.stringify(config)), /invalid/);
 });
 
+test('a component build is an explicit argument array, never a shell string', () => {
+  const config = loadConfig(path.join(__dirname, '..', CONFIG_RELATIVE)).config;
+  const service = config.components.find(item => item.kind === 'service');
+  service.runtime.buildCommand = ['npm', 'run', 'build'];
+  assert.deepEqual(parseConfig(YAML.stringify(config)).components.find(item => item.id === service.id).runtime.buildCommand, ['npm', 'run', 'build']);
+  service.runtime.buildCommand = 'npm run build';
+  assert.throws(() => parseConfig(YAML.stringify(config)), /invalid/);
+});
+
+test('a local MCP server can declare a separate build command', () => {
+  const config = loadConfig(path.join(__dirname, '..', CONFIG_RELATIVE)).config;
+  config.workspace.mcpServers = [{ id: 'local-docs', name: 'Local docs', transport: 'stdio', command: 'node', args: ['server.js'], buildCommand: ['npm', 'run', 'build:mcp'] }];
+  assert.deepEqual(parseConfig(YAML.stringify(config)).workspace.mcpServers[0].buildCommand, ['npm', 'run', 'build:mcp']);
+  config.workspace.mcpServers[0].buildCommand = 'npm run build:mcp';
+  assert.throws(() => parseConfig(YAML.stringify(config)), /invalid/);
+});
+
 test('auto setup distinguishes a web app from an unknown development process', t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-app-auto-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
