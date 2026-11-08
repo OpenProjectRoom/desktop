@@ -3,6 +3,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { randomUUID } = require('node:crypto');
 const { parseEnv } = require('node:util');
+const { resolveProjectExecutable } = require('./platform-process.cjs');
 const { declarations } = require('./environment.cjs');
 const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
 const { discoverMcpServers, publicCandidate } = require('./mcp-explorer.cjs');
@@ -145,9 +146,9 @@ function reviewConfig(root) {
       const actualFolder = fs.realpathSync(folder);
       if (actualFolder !== root && !actualFolder.startsWith(root + path.sep)) { warnings.push(label + ': working directory resolves outside the project'); return; }
       const executable = command?.[0];
-      if (executable?.includes('/')) {
+      if (executable?.includes('/') || executable?.includes('\\')) {
         if (!fs.existsSync(path.resolve(folder, executable))) warnings.push(label + ': executable ' + executable + ' does not exist');
-      } else if (executable && !(process.env.PATH || '').split(path.delimiter).some(directory => directory && fs.existsSync(path.join(directory, executable)))) {
+      } else if (executable && !resolveProjectExecutable(executable, folder)) {
         warnings.push(label + ': executable ' + executable + ' is not on Project Room’s PATH');
       }
       const script = command?.[1];

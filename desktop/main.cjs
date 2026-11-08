@@ -1,6 +1,6 @@
 const { app, BrowserWindow, clipboard, dialog, ipcMain, safeStorage, shell, session } = require('electron');
 const { spawn } = require('node:child_process');
-const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
+const { spawnProject, stopProcessTree, projectPath, commandStartError } = require('./platform-process.cjs');
 const { StringDecoder } = require('node:string_decoder');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -312,7 +312,7 @@ function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = fa
     child.stdout.on('data', data => stdout.write(stdoutDecoder.write(data)));
     child.stderr.on('data', data => stderr.write(stderrDecoder.write(data)));
     const flushOutput = () => { stdout.write(stdoutDecoder.end()); stderr.write(stderrDecoder.end()); stdout.end(); stderr.end(); output.end(); };
-    child.once('error', error => { failed = true; flushOutput(); appendEvent(root, `${kind}.error`, { component: id, ...details, message: error.message, log: relativeLog }); reportFailure(root, { action: failureAction(kind), componentId: id, caseId: details.caseId, command, cwd: relativeCwd, message: `Command could not start: ${error.message}`, log: logTail, exitCode: null }, sensitiveValues); if (!settled) { settled = true; reject(new Error(`Command could not start: ${error.message}`)); } if (kind === 'build' && buildProcesses.get(id) === child) buildProcesses.delete(id); else if (processes.get(id) === child) { processes.delete(id); if (['service', 'application'].includes(kind)) processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
+    child.once('error', error => { failed = true; flushOutput(); const message = commandStartError(error, command[0], cwd, localEnv); appendEvent(root, `${kind}.error`, { component: id, ...details, message, log: relativeLog }); reportFailure(root, { action: failureAction(kind), componentId: id, caseId: details.caseId, command, cwd: relativeCwd, message: `Command could not start: ${message}`, log: logTail, exitCode: null }, sensitiveValues); if (!settled) { settled = true; reject(new Error(`Command could not start: ${message}`)); } if (kind === 'build' && buildProcesses.get(id) === child) buildProcesses.delete(id); else if (processes.get(id) === child) { processes.delete(id); if (['service', 'application'].includes(kind)) processMetrics.stop(id); notify({ type: 'status', id, status: 'stopped' }); } });
     child.once('spawn', () => {
       if (kind === 'build') { buildProcesses.set(id, child); return; }
       if (buildIdentity) launchedBuilds.set(id, { ...buildIdentity, startedAt });
@@ -548,7 +548,7 @@ function registerIpc() {
     const failure = failureStore.get(root, id);
     failure.plan = null;
     failure.fixed = false;
-    const answer = await runFailureAgent(root, 'inspect', `${diagnosisPrompt(failure)}\n\nProject Room process PATH (for comparing executable discovery): ${cleanText(process.env.PATH || '', 2000)}`);
+    const answer = await runFailureAgent(root, 'inspect', `${diagnosisPrompt(failure)}\n\nProject Room effective command PATH: ${cleanText(projectPath(process.env, root), 2000)}`);
     const plan = parseDiagnosis(answer.text);
     if (selectedRoot !== root) throw new Error('The open project changed during the investigation.');
     failure.plan = plan;

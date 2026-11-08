@@ -1,6 +1,6 @@
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnProject, stopProcessTree } = require('./platform-process.cjs');
+const { spawnProject, stopProcessTree, commandStartError } = require('./platform-process.cjs');
 const { appendEvent, readEvents } = require('./history.cjs');
 const { redactOutput } = require('./environment.cjs');
 
@@ -42,7 +42,7 @@ function runBoundedCommand(root, id, command, cwd, environment, sensitiveValues,
     child.stdout.on('data', collect);
     child.stderr.on('data', collect);
     const timer = setTimeout(() => { timedOut = true; stop('SIGTERM'); setTimeout(() => { if (child.exitCode === null) stop('SIGKILL'); }, 1000).unref(); }, timeoutMs);
-    child.once('error', error => { clearTimeout(timer); if (settled) return; settled = true; appendEvent(root, `${eventName}-error`, { component: id, message: error.message }); reject(new Error(`Command could not start: ${error.message}`)); });
+    child.once('error', error => { clearTimeout(timer); if (settled) return; settled = true; const message = commandStartError(error, command[0], cwd, environment); appendEvent(root, `${eventName}-error`, { component: id, message }); reject(new Error(`Command could not start: ${message}`)); });
     child.once('close', code => {
       clearTimeout(timer);
       if (settled) return;
