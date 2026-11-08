@@ -73,7 +73,7 @@ product:
       relatedComponents: [product-spec, web]
     - id: onboarding-completion
       title: Finish onboarding and clear navigation
-      summary: Let users complete onboarding after all detected sections are configured while clearly showing unverified hands-on checks; remember completion locally per project, hide the navigation item, and offer reopening in Settings.
+      summary: Let users complete onboarding after all detected sections are configured while clearly showing unverified hands-on checks; remember completion locally per project, hide the navigation item from the first render on later launches, and offer reopening in Settings.
       status: done
       relatedComponents: [web]
     - id: first-launch-demo
