@@ -44,6 +44,25 @@ jobs:
             $actual = (Get-FileHash $file -Algorithm SHA256).Hash.ToLowerInvariant()
             if ($actual -ne $expected) { throw "Electron archive checksum mismatch: $name" }
           }
+      - name: Download verified icon toolset through GitHub API
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod 'https://api.github.com/repos/electron-userland/electron-builder-binaries/releases/tags/icons%401.2.3'
+          $asset = $release.assets | Where-Object { $_.name -eq 'icons-bundle.tar.gz' } | Select-Object -First 1
+          if (-not $asset) { throw 'Icon toolset release asset missing' }
+          $archive = Join-Path $env:RUNNER_TEMP 'icons-bundle.tar.gz'
+          Invoke-WebRequest -Uri $asset.url -Headers @{ Accept = 'application/octet-stream' } -OutFile $archive
+          $actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne '4e5bb546c9d3ab0c2bbacc22857467bf415f742a34c2be9dd138779d2fc066f9') {
+            throw 'Icon toolset checksum mismatch'
+          }
+          $destination = Join-Path $env:RUNNER_TEMP 'icons-toolset'
+          New-Item -ItemType Directory -Force $destination | Out-Null
+          tar -xzf $archive -C $destination
+          $toolset = Join-Path $destination 'icons-bundle'
+          if (-not (Test-Path (Join-Path $toolset 'icon-tool.js'))) { throw 'Icon toolset is incomplete' }
+          "ELECTRON_BUILDER_ICONS_TOOLSET_DIR=$toolset" >> $env:GITHUB_ENV
       - run: npm run validate:config
       - run: node scripts/validate-config.cjs examples/hello-workspace/.projectroom/project.yaml
       - run: npm test
