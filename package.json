@@ -13,7 +13,7 @@
     "package:mac:app": "npm run build:demo && node scripts/build-dictation.cjs && electron-builder --mac dir --arm64 --publish never --config.mac.identity=null --config.mac.forceCodeSigning=false --config.mac.notarize=false --config.electronDist=node_modules/electron/dist",
     "package:win": "npm run package:win:unsigned",
     "package:win:unsigned": "npm run build:demo && electron-builder --win nsis --x64 --arm64 --publish never --config.win.forceCodeSigning=false",
-    "package:win:app": "npm run build:demo && electron-builder --win dir --x64 --publish never --config.win.forceCodeSigning=false --config.electronDist=node_modules/electron/dist"
+    "package:win:app": "npm run build:demo && electron-builder --win dir --x64 --publish never --config.win.forceCodeSigning=false"
   },
   "dependencies": {
     "@modelcontextprotocol/client": "^2.4.0",
