@@ -128,7 +128,7 @@
     }
     if (event.target.closest('[data-onboard-copy]') && guide?.prompt) {
       try {
-        if (pv) await pv.copyOnboardingPrompt(guide.prompt);
+        if (pv) await pv.copyOnboardingPrompt(guide.prompt, 'current');
         else await navigator.clipboard.writeText(guide.prompt);
         toast('Project Room agent prompt copied.');
       } catch (cause) { toast(cause.message); }

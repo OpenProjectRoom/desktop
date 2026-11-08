@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { inspect, change } = require('../desktop/detached-service.cjs');
 const { parseConfig } = require('./config.cjs');
-const { agentPrompt, reviewConfig, inspectFolder } = require('../desktop/onboarding.cjs');
+const { agentPrompt, reviewConfig, inspectFolder, createProgressSession, readOnboardingProgress } = require('../desktop/onboarding.cjs');
 
 test('detached service confirms real state across start and stop', async t => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-detached-'));
@@ -69,4 +69,22 @@ test('setup prompt requires a source audit even when a stdio MCP CLI has no clie
   for (const capability of ['Product and files', 'Applications and topology', 'Backend services', 'HTTP APIs', 'MCP servers', 'CLI tools', 'Tests', 'Data and local settings', 'Runtime evidence']) {
     assert.ok(guide.includes(`| ${capability} |`), `Missing source-audit capability: ${capability}`);
   }
+});
+
+test('agent progress is session-specific and remains separate from YAML verification', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-progress-test-'));
+  const progress = createProgressSession();
+  t.after(() => { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(progress.file, { force: true }); });
+  const prompt = agentPrompt(inspectFolder(root), { skill: '/guide.md', schema: '/schema.json', progress });
+  assert.match(prompt, new RegExp(progress.id));
+  assert.match(prompt, /findings_ready/);
+  assert.equal(readOnboardingProgress(progress), null);
+  fs.writeFileSync(progress.file, JSON.stringify({ sessionId: 'other-session', phase: 'auditing' }));
+  assert.equal(readOnboardingProgress(progress), null);
+  fs.writeFileSync(progress.file, JSON.stringify({ sessionId: progress.id, phase: 'findings_ready', secret: 'do not display' }));
+  assert.deepEqual(Object.keys(readOnboardingProgress(progress)).sort(), ['phase', 'updatedAt']);
+  assert.equal(readOnboardingProgress(progress).phase, 'findings_ready');
+  assert.equal(reviewConfig(root).state, 'waiting');
+  fs.writeFileSync(progress.file, JSON.stringify({ sessionId: progress.id, phase: 'unknown' }));
+  assert.equal(readOnboardingProgress(progress), null);
 });

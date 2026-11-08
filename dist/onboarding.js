@@ -5,15 +5,34 @@
   const root = document.getElementById('modalRoot');
   const list = (items, fallback) => items.length ? items.map(item => '<span class="onboarding-chip">' + escapeHtml(item) + '</span>').join('') : '<span class="onboarding-muted">' + fallback + '</span>';
 
+  function renderSignal(review) {
+    if (review.state === 'ready') return '';
+    const phases = {
+      auditing: ['Agent reports: source audit started', 'The agent is inspecting this project. Project Room has not verified its findings yet.'],
+      findings_ready: ['Agent reports: findings ready', 'Review the findings and reply in your coding agent before it writes the project configuration.'],
+      configuring: ['Agent reports: configuring the project', 'Project Room is waiting to check the finished YAML.'],
+      finished: ['Agent reports: configuration finished', 'Project Room is checking for the YAML in this folder.']
+    };
+    const phase = phases[review.progress?.phase];
+    if (phase) {
+      const time = new Date(review.progress.updatedAt);
+      const last = Number.isNaN(time.getTime()) ? '' : ' · Last signal ' + escapeHtml(time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      return '<div class="onboarding-signal"><strong>' + phase[0] + '</strong><small>' + last + '</small><p>' + phase[1] + '</p></div>';
+    }
+    if (review.copiedAt) return '<div class="onboarding-signal"><strong>Prompt copied · Waiting for agent signal</strong><p>Paste it into the coding agent working in this folder. Its first progress update will appear here when it starts.</p></div>';
+    return '';
+  }
+
   function renderReview(review) {
     const target = document.getElementById('onboardingReview');
     if (!target) return;
     const open = document.getElementById('onboardingOpen');
     open.disabled = review.state !== 'ready';
+    const signal = renderSignal(review);
     if (review.state === 'waiting') {
-      target.innerHTML = '<strong>Waiting for .projectroom/project.yaml</strong><p>Paste the prompt into the coding agent working in this folder. Project Room checks the same folder while this dialog is open.</p>';
+      target.innerHTML = signal + '<strong>Waiting for .projectroom/project.yaml</strong><p>Project Room checks the same folder every few seconds. The YAML is verified separately from the agent’s progress reports.</p>';
     } else if (review.state === 'invalid') {
-      target.innerHTML = '<strong>Configuration needs a fix</strong><pre>' + escapeHtml(review.message) + '</pre>';
+      target.innerHTML = signal + '<strong>Configuration needs a fix</strong><pre>' + escapeHtml(review.message) + '</pre>';
     } else {
       target.innerHTML = '<strong>Valid YAML · ' + review.components.length + ' components · ' + review.connections + ' connections</strong>' +
         '<p>' + escapeHtml(review.name) + ' is ready to open. Project Room checked ' + (review.checked?.paths || 0) + ' paths, ' + (review.checked?.commands || 0) + ' commands and ' + (review.checked?.environment || 0) + ' environment names without running them. Check real behavior in Onboarding.</p>' +
@@ -64,6 +83,7 @@
       else if (button.dataset.onboard === 'copy') {
         await window.productView.copyOnboardingPrompt(active.prompt);
         button.textContent = 'Copied';
+        await refreshReview();
         setTimeout(() => { if (button.isConnected) button.textContent = 'Copy agent prompt'; }, 2000);
       } else if (button.dataset.onboard === 'check') await refreshReview();
       else if (button.dataset.onboard === 'open') {

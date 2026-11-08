@@ -1,5 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
+const os = require('node:os');
+const { randomUUID } = require('node:crypto');
 const { parseEnv } = require('node:util');
 const { declarations } = require('./environment.cjs');
 const { loadConfig, configPath, hasConfig, CONFIG_RELATIVE } = require('../scripts/config.cjs');
@@ -73,12 +75,33 @@ function exportContract(appPath, userData) {
   return { skill, schema };
 }
 
+function createProgressSession() {
+  const id = randomUUID();
+  return { id, file: path.join(os.tmpdir(), `project-room-onboarding-${id}.json`), copiedAt: null };
+}
+
+function readOnboardingProgress(session) {
+  if (!session) return null;
+  try {
+    const stat = fs.lstatSync(session.file);
+    if (!stat.isFile() || stat.size > 4096) return null;
+    const value = JSON.parse(fs.readFileSync(session.file, 'utf8'));
+    if (value.sessionId !== session.id || !['auditing', 'findings_ready', 'configuring', 'finished'].includes(value.phase)) return null;
+    return { phase: value.phase, updatedAt: stat.mtime.toISOString() };
+  } catch { return null; }
+}
+
 function agentPrompt(inventory, contract) {
   return [
     `Set up this existing repository for Project Room: ${inventory.root}`,
     `Read the Project Room guide at ${contract.skill} and validate against ${contract.schema}. Audit the repository source, not just its manifests or Project Room configuration. Follow actual entry points and call paths before deciding what belongs in the map.`,
+    ...(contract.progress ? [
+      '',
+      `Local progress signal for Project Room: ${contract.progress.file}`,
+      `Follow the guide's optional local setup progress protocol with session ID ${contract.progress.id}. Start with {"sessionId":"${contract.progress.id}","phase":"auditing"}; then report findings_ready, configuring and finished at the guide's milestones. If you cannot write this file, continue without it.`
+    ] : []),
     '',
-    'Phase 1 — inspect only. Complete every row of the Source audit table in the guide, including product context, Web/Desktop/Mobile applications, backend services, HTTP APIs, MCP servers, CLI tools, tests, data and runtime evidence. Trace scripts and wrappers into their delegated code; do a second source pass before reporting anything absent. HTTP routes need not have OpenAPI; a stdio MCP server may exist only as a CLI subcommand without a client file. Distinguish an MCP server from a client, dependency or documentation mention. For each finding, give source file/function evidence, the proposed Project Room entry, required environment variable NAMES, authentication scope and what still needs a manual check. Mark uncertain or unsupported findings explicitly. Reconcile any existing YAML against the source. For each application and service, identify foreground versus detached behavior and real start, status and stop operations. Distinguish a user-facing app from its backend API or worker. Summarize whether GitHub Spec Kit is present. Ask only decisions that cannot be inferred safely. Wait for my reply before writing files, even if no question is needed.',
+    'Phase 1 — inspect only. Complete every row of the Source audit table in the guide, including product context, Web/Desktop/Mobile applications, backend services, HTTP APIs, MCP servers, CLI tools, tests, data and runtime evidence. Trace scripts and wrappers into their delegated code; do a second source pass before reporting anything absent. HTTP routes need not have OpenAPI; a stdio MCP server may exist only as a CLI subcommand without a client file. Distinguish an MCP server from a client, dependency or documentation mention. For each finding, give source file/function evidence, the proposed Project Room entry, required environment variable NAMES, authentication scope and what still needs a manual check. Mark uncertain or unsupported findings explicitly. Reconcile any existing YAML against the source. For each application and service, identify foreground versus detached behavior and real start, status and stop operations. Distinguish a user-facing app from its backend API or worker. Summarize whether GitHub Spec Kit is present. Ask only decisions that cannot be inferred safely. Wait for my reply before writing files in the project, even if no question is needed.',
     '',
     'Phase 2 — after my reply, create or improve .projectroom/project.yaml from verified repository evidence. Reuse the existing specs and docs; reconcile every verified capability with its Project Room view and explain any intentional omission. Register verified MCP servers in workspace.mcpServers even when no client config exists; preserve the real stdio command or HTTP endpoint and declare only environment variable names. If the server requires a separate read-only or revocable credential, do not substitute an owner or admin key; explain how the user provisions it locally. Leave uncertain or unsafe candidates unregistered and report them. Never fabricate progress, service state, tests, APIs or environment values. For a detached application or service, configure lifecycle: detached only when start, status and stop commands are all real and safe: status exits 0 when running, 1 when stopped, and 2 or higher on error. Otherwise leave it as a manual CLI task, explain the limitation, and never use a foreground observer as a substitute for stop control. Keep startup manual, secrets outside YAML, and do not run services or tests just to initialize.',
     '',
@@ -161,4 +184,4 @@ function reviewConfig(root) {
   } catch (error) { return { state: 'invalid', message: String(error.message).slice(0, 3000) }; }
 }
 
-module.exports = { inspectFolder, exportContract, agentPrompt, reviewConfig };
+module.exports = { inspectFolder, exportContract, agentPrompt, reviewConfig, createProgressSession, readOnboardingProgress };

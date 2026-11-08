@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('productView', {
   currentOnboarding: () => ipcRenderer.invoke('onboarding:current'),
   reviewCurrentOnboarding: () => ipcRenderer.invoke('onboarding:review-current'),
   reviewOnboarding: () => ipcRenderer.invoke('onboarding:review'),
-  copyOnboardingPrompt: prompt => ipcRenderer.invoke('onboarding:copy', String(prompt)),
+  copyOnboardingPrompt: (prompt, scope = 'pending') => ipcRenderer.invoke('onboarding:copy', String(prompt), scope),
   openOnboardedProject: () => ipcRenderer.invoke('onboarding:open'),
   listProjects: () => ipcRenderer.invoke('project:list'),
   openProject: root => ipcRenderer.invoke('project:open', String(root)),

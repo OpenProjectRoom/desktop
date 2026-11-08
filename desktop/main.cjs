@@ -19,7 +19,7 @@ const { addMapComponent } = require('./map-components.cjs');
 const { addCliTool, removeComponent } = require('./component-management.cjs');
 const { setAdditionalView } = require('./additional-views.cjs');
 const { declarations, listEnvironment, readEnvironment, saveEnvironment, deleteEnvironment, runtimeEnvironment, redactOutput } = require('./environment.cjs');
-const { inspectFolder, exportContract, agentPrompt, reviewConfig } = require('./onboarding.cjs');
+const { inspectFolder, exportContract, agentPrompt, reviewConfig, createProgressSession, readOnboardingProgress } = require('./onboarding.cjs');
 const { McpExplorer, referencedNames } = require('./mcp-explorer.cjs');
 const { addMcpServer, linkMcpServer, removeMcpServer } = require('./mcp-management.cjs');
 const { listApiSources, loadApiSpec, addApiSource, removeApiSource, sendApiRequest } = require('./api-explorer.cjs');
@@ -49,6 +49,7 @@ const updates = createUpdates({ app, updater: autoUpdater, distribution: require
   if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('updates:state', value);
 } });
 let pendingOnboardingRoot = null;
+const onboardingSessions = new Map();
 let chatChild = null;
 let dictationChild = null;
 let mcpExplorer;
@@ -215,7 +216,16 @@ function prepareOnboarding(root) {
   const inventory = inspectFolder(root);
   pendingOnboardingRoot = inventory.root;
   const contract = exportContract(app.getAppPath(), app.getPath('userData'));
-  return { onboarding: true, inventory, prompt: agentPrompt(inventory, contract), review: reviewConfig(inventory.root) };
+  const progress = onboardingSession(inventory.root);
+  return { onboarding: true, inventory, prompt: agentPrompt(inventory, { ...contract, progress }), review: onboardingReview(inventory.root) };
+}
+function onboardingSession(root) {
+  if (!onboardingSessions.has(root)) onboardingSessions.set(root, createProgressSession());
+  return onboardingSessions.get(root);
+}
+function onboardingReview(root) {
+  const session = onboardingSession(root);
+  return { ...reviewConfig(root), progress: readOnboardingProgress(session), copiedAt: session.copiedAt };
 }
 function runCommand(id, command, relativeCwd, kind = 'service', waitForExit = false, keepStdin = false, details = {}) {
   if (!Array.isArray(command) || !command.length || command.some(arg => typeof arg !== 'string' || !arg)) throw new Error('Invalid command in .projectroom/project.yaml.');
@@ -350,22 +360,25 @@ function registerIpc() {
     if (!selectedRoot) throw new Error('Open a local project first.');
     const inventory = inspectFolder(selectedRoot);
     const contract = exportContract(app.getAppPath(), app.getPath('userData'));
-    return { inventory, prompt: agentPrompt(inventory, contract), review: reviewConfig(selectedRoot) };
+    const progress = onboardingSession(selectedRoot);
+    return { inventory, prompt: agentPrompt(inventory, { ...contract, progress }), review: onboardingReview(selectedRoot) };
   });
   ipcMain.handle('onboarding:review-current', event => {
     assertSender(event);
     if (!selectedRoot) throw new Error('Open a local project first.');
-    return reviewConfig(selectedRoot);
+    return onboardingReview(selectedRoot);
   });
   ipcMain.handle('onboarding:review', event => {
     assertSender(event);
     if (!pendingOnboardingRoot) throw new Error('Choose a project folder first.');
-    return reviewConfig(pendingOnboardingRoot);
+    return onboardingReview(pendingOnboardingRoot);
   });
-  ipcMain.handle('onboarding:copy', (event, prompt) => {
+  ipcMain.handle('onboarding:copy', (event, prompt, scope) => {
     assertSender(event);
-    if ((!pendingOnboardingRoot && !selectedRoot) || typeof prompt !== 'string') throw new Error('Choose a project folder first.');
+    const root = scope === 'current' ? selectedRoot : pendingOnboardingRoot;
+    if (!root || typeof prompt !== 'string') throw new Error('Choose a project folder first.');
     clipboard.writeText(prompt);
+    onboardingSession(root).copiedAt = new Date().toISOString();
     return true;
   });
   ipcMain.handle('onboarding:open', event => {
