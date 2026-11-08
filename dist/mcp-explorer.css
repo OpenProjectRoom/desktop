@@ -58,6 +58,7 @@ body[data-theme="dark"] .mcp-alert{background:#4b302d;border-color:#754943;color
 .mcp-meta-row code{overflow-wrap:anywhere}
 .mcp-meta-body small{display:block;color:var(--muted,#8290a0)}
 .mcp-meta .mcp-server-info{padding:12px 0 0;margin-top:12px}
+.mcp-meta-actions{margin-top:12px}
 .mcp-errors{padding:0 20px}
 .mcp-errors p{margin:0 0 8px}
 @media(max-width:650px){.mcp-workbench-head{align-items:flex-start}.mcp-workbench-head .mcp-head-actions{justify-content:flex-start}}
