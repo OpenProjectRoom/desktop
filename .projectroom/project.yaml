@@ -78,7 +78,7 @@ product:
       relatedComponents: [web]
     - id: explorer-workbench-focus
       title: Put explorer workbenches first
-      summary: Keep Run & Verify pages compact, show the selected tool or source first, avoid duplicate CLI command banners, place secondary connection and discovery information in expandable details, and open a first data catalog or test suite without running user actions.
+      summary: Keep Run & Verify pages compact, show the selected tool or source first, use a searchable suite list beside the selected Test Explorer workbench, avoid duplicate CLI command banners, place secondary details in expanders, and open a first data catalog or test suite without running user actions.
       status: done
       relatedComponents: [web]
     - id: sidebar-entry-counts
