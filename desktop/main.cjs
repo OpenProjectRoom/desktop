@@ -10,6 +10,7 @@ const { listSpecifications } = require('../scripts/specifications.cjs');
 const { listDocumentation } = require('../scripts/documentation.cjs');
 const { appendEvent, ensureHistory, logPath, readEvents } = require('./history.cjs');
 const { addWorkspace, createWorkspace, discover, readRegistry } = require('./workspace.cjs');
+const { startupDestination } = require('./startup.cjs');
 const { readProduct, setupProduct, upsertRoadmap, upsertNorthStar, recordNorthStar, createDocument, saveDocument } = require('./product.cjs');
 const { readCommandHelp, readCommandLog, runCliTrial } = require('./command-tools.cjs');
 const { discoverCliTools, inspectCliHelp, linkCliTool } = require('./cli-explorer.cjs');
@@ -106,19 +107,23 @@ function readSelected(root) {
   return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
 }
 function loadInitial() {
-  const pref = path.join(app.getPath('userData'), 'last-project-v1.json');
-  if (fs.existsSync(pref)) {
-    try {
-      const root = JSON.parse(fs.readFileSync(pref, 'utf8')).root;
-      if (typeof root === 'string' && fs.existsSync(configPath(root))) return readSelected(root);
-    } catch (error) { /* Fall back to packaged demo. */ }
-  }
+  const userData = app.getPath('userData');
+  const destination = startupDestination(userData, readRegistry(userData), root => fs.existsSync(configPath(root)));
+  if (destination.mode === 'project') return readSelected(destination.root);
+  if (destination.mode === 'empty') return emptyProject();
   const demo = loadConfig(configPath(app.getAppPath()));
   watchSelectedProject(null);
   selectedRoot = null;
   selectedConfig = demo.config;
   selectedRaw = demo.raw;
-  return { config: selectedConfig, raw: selectedRaw, root: null, configFile: CONFIG_RELATIVE, status: {}, buildIdentities: {} };
+  return { config: selectedConfig, raw: selectedRaw, root: null, configFile: CONFIG_RELATIVE, status: {}, buildIdentities: {}, introDemo: true };
+}
+function emptyProject() {
+  watchSelectedProject(null);
+  selectedRoot = null;
+  selectedConfig = { project: { name: 'Project Room' }, workspace: { startPage: 'overview' }, components: [], connections: [] };
+  selectedRaw = null;
+  return { config: selectedConfig, root: null, status: {}, buildIdentities: {}, empty: true };
 }
 function component(id, kind) {
   if (!selectedRoot) throw new Error('Open a repository with .projectroom/project.yaml first.');
@@ -348,6 +353,7 @@ function registerIpc() {
     } catch (error) { throw new Error(String(error?.message || error).slice(0, 500)); }
   });
   ipcMain.handle('project:load', event => { assertSender(event); return loadInitial(); });
+  ipcMain.handle('project:leave-demo', event => { assertSender(event); return emptyProject(); });
   ipcMain.handle('project:example', event => {
     assertSender(event);
     const source = path.join(app.getAppPath(), 'examples', 'hello-workspace');

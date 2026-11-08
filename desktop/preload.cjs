@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('productView', {
     return () => ipcRenderer.removeListener('updates:state', listener);
   },
   loadProject: () => ipcRenderer.invoke('project:load'),
+  leaveIntroDemo: () => ipcRenderer.invoke('project:leave-demo'),
   chooseProject: () => ipcRenderer.invoke('project:choose'),
   openExampleProject: () => ipcRenderer.invoke('project:example'),
   prepareOnboarding: () => ipcRenderer.invoke('onboarding:prepare'),

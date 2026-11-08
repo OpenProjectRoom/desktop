@@ -2,6 +2,8 @@
 
 Choose one starting point:
 
+On the first desktop launch with no project, Project Room shows a labeled interactive demo with sample data. Choose **Open my project** to select your repository folder, or **Done exploring** to return to an empty project chooser. The demo is shown automatically only once. Later launches open your last available project directly without briefly displaying sample results. You can still open **Try working example** manually from the Projects menu.
+
 - **New app:** In the project folder, give your coding agent the new-project prompt on [openprojectroom.com](https://openprojectroom.com/#get-started). It asks for the first useful release, initializes Git and the official GitHub Spec Kit workflow, and creates `.projectroom/project.yaml` alongside real code and commands.
 - **Existing repository:** In the repository folder, give your current coding agent the existing-project prompt from the same page. It reads source entry points and follows wrappers to find services, HTTP APIs, MCP servers, tools, tests and data sources even when no client configuration lists them. It reports file-backed findings and uncertainties and waits for your reply, then creates or updates `.projectroom/project.yaml` without moving the specifications. You can also open the folder in Project Room first and use the project-specific prompt in its setup dialog.
 
