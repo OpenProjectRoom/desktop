@@ -43,7 +43,7 @@ product:
       relatedComponents: [web]
     - id: overview-dual-metrics
       title: CPU and memory together in Overview
-      summary: Show both session-only process measurements at once in compact, separately scaled charts with distinct colors.
+      summary: Plot session-only CPU and memory samples together on one time axis, with an independently scaled CPU axis on the left and memory axis on the right.
       status: done
       relatedComponents: [web]
     - id: explorer-workbench-focus

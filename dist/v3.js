@@ -91,18 +91,18 @@ function overviewMetricCharts(samples, sampleData = false) {
   const series = sampleData ? demoValues.map(([cpu, mb]) => ({ cpu, memoryBytes: mb * 1048576 })) : (samples || []);
   const stride = Math.max(1, Math.ceil(series.length / 300));
   const display = series.filter((_, index) => index % stride === 0 || index === series.length - 1);
-  const chart = (type, label) => {
-    const values = display.map(point => Math.max(0, Number(metricValue(point, type)) || 0));
-    const peak = Math.max(0, ...values);
-    const ceiling = type === 'cpu' ? Math.max(10, Math.ceil(peak * 1.15 / 10) * 10) : Math.max(64, Math.ceil(peak * 1.15 / 64) * 64);
-    const points = values.map((value, index) => `${Math.round(index * 300 / Math.max(1, values.length - 1))},${Math.round(82 - value / ceiling * 72)}`).join(' ');
-    const current = display.length ? metricLabel(metricValue(display.at(-1), type), type) : '—';
-    const top = type === 'cpu' ? `${ceiling}%` : `${ceiling} MB`;
-    const start = sampleData ? '4h ago' : display.length ? new Date(display[0].at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    const end = sampleData ? 'Now' : display.length ? new Date(display.at(-1).at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-    return `<div class="overview-metric-panel ${type}"><div class="overview-metric-head"><span><i aria-hidden="true"></i>${label}</span><strong>${current}</strong></div><div class="overview-metric-plot"><div class="overview-metric-scale"><span>${top}</span><span>0</span></div><div class="overview-metric-graph">${display.length ? `<svg viewBox="0 0 300 90" preserveAspectRatio="none" role="img" aria-label="${sampleData ? 'Sample ' : ''}${label} trend, latest ${current}"><path d="M0 10H300 M0 46H300 M0 82H300" class="overview-metric-grid"/><polyline points="${points}" class="overview-metric-line"/>${values.length === 1 ? `<circle cx="0" cy="${Math.round(82 - values[0] / ceiling * 72)}" r="4" fill="currentColor"/>` : ''}</svg>` : '<span class="overview-metric-empty">No samples yet</span>'}</div></div><div class="overview-metric-times"><span>${escapeHtml(start)}</span><span>${escapeHtml(end)}</span></div></div>`;
-  };
-  return `<div class="overview-metric-charts">${chart('cpu', 'CPU')}${chart('memory', 'Memory')}</div><div class="overview-metric-note">${sampleData ? 'Sample measurements · interactive demo' : series.length ? `${series.length} samples · 5-second interval · local session` : 'Start an application or service in Project Room to record CPU and memory. Only processes started here are measured.'}</div>`;
+  const values = type => display.map(point => Math.max(0, Number(metricValue(point, type)) || 0));
+  const cpu = values('cpu');
+  const memory = values('memory');
+  const ceiling = (data, step, minimum) => Math.max(minimum, Math.ceil(Math.max(0, ...data) * 1.15 / step) * step);
+  const cpuMax = ceiling(cpu, 10, 10);
+  const memoryMax = ceiling(memory, 64, 64);
+  const points = (data, max) => data.map((value, index) => `${Math.round(index * 600 / Math.max(1, data.length - 1))},${Math.round(94 - value / max * 82)}`).join(' ');
+  const last = display.at(-1);
+  const start = sampleData ? '4h ago' : last ? new Date(display[0].at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const end = sampleData ? 'Now' : last ? new Date(last.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const plot = last ? `<svg viewBox="0 0 600 100" preserveAspectRatio="none" role="img" aria-label="${sampleData ? 'Sample ' : ''}CPU and memory trends; latest CPU ${metricLabel(last.cpu, 'cpu')}, memory ${metricLabel(metricValue(last, 'memory'), 'memory')}"><path d="M0 12H600 M0 53H600 M0 94H600" class="overview-metric-grid"/><polyline points="${points(cpu, cpuMax)}" class="overview-metric-line cpu"/><polyline points="${points(memory, memoryMax)}" class="overview-metric-line memory"/>${display.length === 1 ? `<circle class="overview-metric-point cpu" cx="0" cy="${Math.round(94 - cpu[0] / cpuMax * 82)}" r="4"/><circle class="overview-metric-point memory" cx="0" cy="${Math.round(94 - memory[0] / memoryMax * 82)}" r="4"/>` : ''}</svg>` : '<span class="overview-metric-empty">No samples yet</span>';
+  return `<div class="overview-metric-combined"><div class="overview-metric-legend"><span class="cpu"><i aria-hidden="true"></i>CPU <strong>${last ? metricLabel(last.cpu, 'cpu') : '—'}</strong></span><span class="memory"><i aria-hidden="true"></i>Memory <strong>${last ? metricLabel(metricValue(last, 'memory'), 'memory') : '—'}</strong></span></div><div class="overview-metric-plot"><div class="overview-metric-scale cpu"><span>${cpuMax}%</span><span>0</span></div><div class="overview-metric-graph">${plot}</div><div class="overview-metric-scale memory"><span>${memoryMax} MB</span><span>0</span></div></div><div class="overview-metric-times"><span>${escapeHtml(start)}</span><span>${escapeHtml(end)}</span></div></div><div class="overview-metric-note">${sampleData ? 'Sample measurements · interactive demo' : series.length ? `${series.length} samples · 5-second interval · local session` : 'Start an application or service in Project Room to record CPU and memory. Only processes started here are measured.'}</div>`;
 }
 function metricTabs(type, action) {
   return `<div class="metric-tabs"><button class="${type === 'cpu' ? 'active' : ''}" data-v3="${action}:cpu">CPU</button><button class="${type === 'memory' ? 'active' : ''}" data-v3="${action}:memory">Memory</button></div>`;
