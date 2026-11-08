@@ -73,6 +73,32 @@ jobs:
           tar -xzf "$archive" -C "$RUNNER_TEMP/icons-toolset"
           test -f "$RUNNER_TEMP/icons-toolset/icons-bundle/icon-tool.js"
           echo "ELECTRON_BUILDER_ICONS_TOOLSET_DIR=$RUNNER_TEMP/icons-toolset/icons-bundle" >> "$GITHUB_ENV"
+      - name: Download verified DMG and ZIP tools through GitHub API
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          download_toolset() {
+            local tag="$1" name="$2" checksum="$3" destination="$4"
+            local asset_id archive
+            asset_id="$(gh api "repos/electron-userland/electron-builder-binaries/releases/tags/${tag}" --jq ".assets[] | select(.name == \"${name}\") | .id")"
+            test -n "$asset_id" || { echo "Build toolset missing: $name"; return 1; }
+            archive="$RUNNER_TEMP/$name"
+            curl --fail --location --silent --show-error --retry 3 --retry-all-errors \
+              --header 'Accept: application/octet-stream' \
+              --header "Authorization: Bearer $GH_TOKEN" \
+              "https://api.github.com/repos/electron-userland/electron-builder-binaries/releases/assets/$asset_id" \
+              --output "$archive"
+            printf '%s  %s\n' "$checksum" "$archive" | shasum -a 256 -c -
+            mkdir -p "$destination"
+            tar -xzf "$archive" -C "$destination"
+          }
+          download_toolset 'dmg-builder%401.2.5' 'dmgbuild-bundle-arm64-75c8a6c.tar.gz' \
+            '793404d0c96687e27d5ee40a668d498c92e36a64d6c2906df511031adb33cbeb' "$RUNNER_TEMP/dmgbuild-toolset"
+          download_toolset '7zip%401.0.0' '7zip-darwin-arm64.tar.gz' \
+            '496a341abe210aae1a25bc202ee97f6de6c76a3dc80f91d96616be05502d72c1' "$RUNNER_TEMP/7zip-toolset"
+          chmod +x "$RUNNER_TEMP/dmgbuild-toolset/dmgbuild" "$RUNNER_TEMP/7zip-toolset/7zip/bin/7za"
+          echo "CUSTOM_DMGBUILD_PATH=$RUNNER_TEMP/dmgbuild-toolset/dmgbuild" >> "$GITHUB_ENV"
+          echo "ELECTRON_BUILDER_7ZIP_PATH=$RUNNER_TEMP/7zip-toolset/7zip/bin/7za" >> "$GITHUB_ENV"
       - name: Prepare notarization key for electron-builder 26
         env:
           APPLE_API_KEY_P8_BASE64: ${{ secrets.APPLE_API_KEY_P8_BASE64 }}
