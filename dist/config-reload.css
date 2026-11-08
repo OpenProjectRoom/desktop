@@ -1,0 +1,17 @@
+.config-banner{position:fixed;z-index:81;top:14px;left:50%;transform:translateX(-50%);width:min(620px,calc(100vw - 32px));display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid #c5d7d4;border-radius:12px;background:#eff7f5;color:#203b43;box-shadow:0 12px 36px #172d3240;font-size:12px}
+.config-banner[hidden]{display:none}
+.config-banner.invalid{border-color:#e3c3b6;background:#fbf1ec;color:#4a2b20}
+.config-banner-copy{flex:1;min-width:0}.config-banner-copy strong,.config-banner-copy span{display:block}.config-banner-copy span{color:#5d7580;margin-top:2px;overflow-wrap:anywhere}
+.config-banner.invalid .config-banner-copy span{color:#7a5446}
+.config-banner button{background:#315c67;color:#fff;border:0;border-radius:8px;padding:8px 11px;font-size:12px;font-weight:700;white-space:nowrap}
+.config-banner button.ghost{background:transparent;color:inherit;border:1px solid currentColor;opacity:.75}
+.config-banner button[hidden]{display:none}
+.config-banner button:disabled{opacity:.5}
+.config-banner button:focus-visible{outline:3px solid #77bbc0;outline-offset:2px}
+body[data-theme="dark"] .config-banner{background:#263945;border-color:#47616a;color:#e6f2f3;box-shadow:0 14px 42px #07121b80}
+body[data-theme="dark"] .config-banner.invalid{background:#3d2a25;border-color:#6b4a3f;color:#f6e6e0}
+body[data-theme="dark"] .config-banner-copy span{color:#b7cbd0}
+body[data-theme="dark"] .config-banner.invalid .config-banner-copy span{color:#e2c3b8}
+body[data-theme="dark"] .config-banner button{background:#8cbdc7;color:#12242c}
+body[data-theme="dark"] .config-banner button.ghost{background:transparent;color:inherit}
+@media(max-width:520px){.config-banner{align-items:flex-start;flex-wrap:wrap}.config-banner-copy{flex-basis:100%}}

@@ -103,6 +103,12 @@ contextBridge.exposeInMainWorld('productView', {
   listFiles: () => ipcRenderer.invoke('files:list'),
   readFile: relativePath => ipcRenderer.invoke('files:read', String(relativePath)),
   openLocalUrl: url => ipcRenderer.invoke('preview:open', String(url)),
+  onProjectFilesChanged: callback => {
+    if (typeof callback !== 'function') return () => {};
+    const listener = (_event, value) => callback(value);
+    ipcRenderer.on('project:files-changed', listener);
+    return () => ipcRenderer.removeListener('project:files-changed', listener);
+  },
   onProcessEvent: callback => {
     if (typeof callback !== 'function') return () => {};
     const listener = (_event, value) => callback(value);

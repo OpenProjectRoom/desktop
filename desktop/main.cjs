@@ -33,6 +33,7 @@ const detachedService = require('./detached-service.cjs');
 const { checkPrerequisites } = require('./prerequisites.cjs');
 const { autoUpdater } = require('electron-updater');
 const { createUpdates } = require('./updates.cjs');
+const { watchProjectFiles, describeConfigChange } = require('./config-watch.cjs');
 
 let windowRef;
 let selectedRoot = null;
@@ -54,7 +55,28 @@ let chatChild = null;
 let dictationChild = null;
 let mcpExplorer;
 const discoveredTestCases = new Map();
+let projectWatcher = null;
 
+function sendProjectFiles(value) {
+  if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('project:files-changed', value);
+}
+// Reports edits made outside Project Room. In-app edits update selectedRaw first, so they match the disk
+// and are not reported back.
+function watchSelectedProject(root) {
+  projectWatcher?.close();
+  projectWatcher = null;
+  if (!root) return;
+  const file = configPath(root);
+  projectWatcher = watchProjectFiles(root, {
+    configFile: file,
+    onConfig: () => {
+      if (selectedRoot !== root) return;
+      const change = describeConfigChange(file, selectedRaw, loadConfig);
+      if (change) sendProjectFiles({ root, kind: 'config', ...change });
+    },
+    onEnv: () => { if (selectedRoot === root) sendProjectFiles({ root, kind: 'env' }); },
+  });
+}
 function notify(value) {
   if (windowRef && !windowRef.isDestroyed()) windowRef.webContents.send('process:event', value);
 }
@@ -79,6 +101,7 @@ function readSelected(root) {
   selectedConfig = loaded.config;
   selectedRaw = loaded.raw;
   ensureHistory(root);
+  watchSelectedProject(root);
   appendEvent(root, 'workspace.opened', { project: selectedConfig.project.name });
   return { config: selectedConfig, raw: selectedRaw, root: selectedRoot, configFile: path.relative(root, loaded.file), status: status(), buildIdentities: listBuildIdentities(root, selectedConfig.components, launchedBuilds) };
 }
@@ -91,6 +114,7 @@ function loadInitial() {
     } catch (error) { /* Fall back to packaged demo. */ }
   }
   const demo = loadConfig(configPath(app.getAppPath()));
+  watchSelectedProject(null);
   selectedRoot = null;
   selectedConfig = demo.config;
   selectedRaw = demo.raw;
@@ -686,5 +710,5 @@ app.whenReady().then(() => {
   registerIpc(); createWindow(); updates.start();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
-app.on('before-quit', () => { updates.stop(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); });
+app.on('before-quit', () => { updates.stop(); projectWatcher?.close(); stopAll(); mcpExplorer?.disconnect().catch(() => {}); if (chatChild) stopChild(chatChild); if (dictationChild) stopChild(dictationChild); });
 app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });

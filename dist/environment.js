@@ -44,6 +44,8 @@
     });
   }
   function refresh() { snapshot = null; load(); }
+  // .env edited outside Project Room (terminal, editor, agent): show current values without a manual Refresh.
+  window.addEventListener('projectroom:env-changed', () => { if (state.page === 'environment') refresh(); else snapshot = null; });
   window.environmentPage = () => {
     const root = projectRoot || 'demo';
     if (loadedRoot !== root) { loadedRoot = root; snapshot = null; error = ''; loading = false; }
