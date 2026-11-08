@@ -1,5 +1,7 @@
 const { build, devDependencies } = require('./package.json');
 const checksums = require('electron/checksums.json');
+const { Arch } = require('builder-util');
+const path = require('node:path');
 
 for (const artifact of [
   `electron-v${devDependencies.electron}-darwin-arm64.zip`,
@@ -14,4 +16,8 @@ for (const artifact of [
 module.exports = {
   ...build,
   electronDownload: { checksums },
+  electronDist: ({ arch, platformName }) =>
+    platformName === process.platform && Arch[arch] === process.arch
+      ? path.join(__dirname, 'node_modules/electron/dist')
+      : null,
 };
