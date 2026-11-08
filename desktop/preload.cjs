@@ -79,6 +79,11 @@ contextBridge.exposeInMainWorld('productView', {
   saveChatSettings: input => ipcRenderer.invoke('chat:settings', input),
   sendAgentChat: messages => ipcRenderer.invoke('chat:send', messages),
   cancelAgentChat: () => ipcRenderer.invoke('chat:cancel'),
+  listFailures: () => ipcRenderer.invoke('failure:list'),
+  diagnoseFailure: id => ipcRenderer.invoke('failure:diagnose', String(id)),
+  applyFailureFix: id => ipcRenderer.invoke('failure:fix', String(id)),
+  resolveFailure: id => ipcRenderer.invoke('failure:resolve', String(id)),
+  retryFailedCli: id => ipcRenderer.invoke('failure:retry-cli', String(id)),
   startDictation: () => ipcRenderer.invoke('dictation:start'),
   stopDictation: () => ipcRenderer.invoke('dictation:stop'),
   onDictation: callback => {

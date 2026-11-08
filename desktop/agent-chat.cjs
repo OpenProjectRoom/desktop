@@ -60,14 +60,19 @@ function invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir) {
   const configFile = path.join(tempDir, 'mcp.json');
   fs.writeFileSync(configFile, JSON.stringify({ mcpServers: { product_view: { command: mcpCommand, args: mcpArgs, env: { ELECTRON_RUN_AS_NODE: '1' } } } }));
   const productTools = ['get_product_view', 'get_product_context', 'list_components', 'read_project_file', 'get_product_history', 'get_spec_kit'].map(name => `mcp__product_view__${name}`);
-  const allowed = [...(settings.mode === 'inspect' ? ['Read', 'Glob', 'Grep'] : []), ...productTools].join(',');
+  const allowed = [...(settings.mode === 'inspect' ? ['Read', 'Glob', 'Grep'] : ['Read', 'Glob', 'Grep', 'Edit', 'Write', 'Bash']), ...productTools].join(',');
   return { command: executable('claude'), args: ['-p', '--output-format', 'json', '--permission-mode', settings.mode === 'edit' ? 'acceptEdits' : 'dontAsk', '--permission-prompts', 'none', '--allowedTools', allowed, '--mcp-config', configFile], stdin: prompt };
 }
-function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild }) {
+function runChat({ userData, root, messages, mcpCommand, mcpScript, onChild, mode, prompt: directPrompt }) {
   const settings = readSettings(userData);
+  if (mode !== undefined) {
+    if (!['inspect', 'edit'].includes(mode)) throw new Error('Unknown agent mode.');
+    settings.mode = mode;
+  }
   if (!providers[settings.provider]) throw new Error('Connect Codex CLI or Claude Code in Settings → AI & Chat.');
   if (!root || !fs.existsSync(configPath(root))) throw new Error('Open a local Project Room workspace first.');
-  const prompt = promptFor(messages, root);
+  const prompt = directPrompt === undefined ? promptFor(messages, root) : typeof directPrompt === 'string' && directPrompt.length <= 20000 && directPrompt.trim() ? directPrompt : null;
+  if (!prompt) throw new Error('Invalid agent request.');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'product-view-chat-'));
   const command = invocation(settings, root, mcpCommand, mcpScript, prompt, tempDir);
   if (!command.command) { fs.rmSync(tempDir, { recursive: true, force: true }); throw new Error(`${providers[settings.provider]} is not installed or not on PATH.`); }
