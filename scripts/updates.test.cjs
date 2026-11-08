@@ -60,3 +60,21 @@ test('packaged Windows uses the same explicit update flow', async () => {
   assert.equal(installs, 1);
   updates.stop();
 });
+
+test('manual checks report progress and reuse an in-flight check', async () => {
+  const updater = new EventEmitter();
+  let finish;
+  let checks = 0;
+  updater.checkForUpdates = () => { checks++; return new Promise(resolve => { finish = resolve; }); };
+  const updates = createUpdates({ app: { isPackaged: true }, updater, platform: 'darwin', send: () => {} });
+  const first = updates.check();
+  const second = updates.check();
+  assert.equal(checks, 1);
+  assert.equal(updates.snapshot().phase, 'checking');
+  updater.emit('update-not-available');
+  finish();
+  await Promise.all([first, second]);
+  assert.equal(updates.snapshot().phase, 'idle');
+  assert.ok(updates.snapshot().lastCheckedAt);
+  assert.equal(updates.snapshot().message, null);
+});

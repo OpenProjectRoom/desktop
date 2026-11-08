@@ -162,6 +162,15 @@
         ]
       },
       {
+        "id": "bounded-activity-history",
+        "title": "Bounded local activity history",
+        "summary": "Record meaningful app actions rather than raw file changes, compact older noisy histories, and keep history failures separate from service outcomes.",
+        "status": "done",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
         "id": "local-agent-chat",
         "title": "Local coding agent in Product Chat",
         "summary": "Connect Codex CLI or Claude Code on this Mac, expose the Project Room MCP context, and dictate into chat with on-device speech recognition.",
@@ -337,6 +346,15 @@
         "title": "Signed in-app Mac updates",
         "summary": "Check GitHub Releases for new versions, download them in the background and offer a restart from the desktop app. Signed and notarized release automation is prepared; Apple credentials and an end-to-end release test are still required.",
         "status": "in-progress",
+        "relatedComponents": [
+          "web"
+        ]
+      },
+      {
+        "id": "manual-update-check",
+        "title": "Manual update check in Settings",
+        "summary": "Show the installed version, check GitHub Releases immediately on request, and restart to install a downloaded update while retaining automatic checks.",
+        "status": "done",
         "relatedComponents": [
           "web"
         ]
