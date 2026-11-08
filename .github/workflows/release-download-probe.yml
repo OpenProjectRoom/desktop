@@ -1,0 +1,25 @@
+name: Probe release downloads
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch public release assets
+        shell: bash
+        run: |
+          set -u
+          for item in \
+            'v0.9.84/latest-mac.yml' \
+            'v0.9.84/download-probe-v0.9.84.yml' \
+            'v0.9.80/latest-mac.yml' \
+            'v0.9.78-windows-preview.1/Project-Room-Desktop-windows.exe'; do
+            url="https://github.com/OpenProjectRoom/desktop/releases/download/$item"
+            status="$(curl -L -I --max-time 25 -sS -o /dev/null -w '%{http_code}' "$url")"
+            echo "$item HTTP $status"
+          done
