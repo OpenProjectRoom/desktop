@@ -48,6 +48,12 @@ test('discovers real OpenAPI operations and manages multiple YAML sources', t =>
   assert.equal(discoverSpecs(root).length, 1);
 });
 
+test('a configured OpenAPI file is not listed again when its path has a dot prefix', t => {
+  const root = fixture(t);
+  const config = { workspace: { apiSources: [{ id: 'orders', name: 'Orders', baseUrl: 'https://example.com', spec: './specs/001-orders/contracts/openapi.yaml' }] } };
+  assert.deepEqual(listApiSources(root, config).map(item => item.id), ['yaml:orders']);
+});
+
 test('loads a live OpenAPI document only on request and only from the configured API origin', async t => {
   const root = fixture(t);
   const saved = addApiSource(root, { name: 'Live API', baseUrl: 'http://127.0.0.1:43179/rest', specPath: '/open-api/core' });

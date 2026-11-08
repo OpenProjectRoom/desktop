@@ -36,6 +36,11 @@ product:
       summary: Show the number of configured services, tools, servers, APIs, suites, data sources and declared variable names, plus product content counts, in the expanded navigation.
       status: done
       relatedComponents: [product-spec, web]
+    - id: explorer-deduplication
+      title: Show each explorer integration once
+      summary: Merge linked CLI and MCP discoveries into their registered entries, and normalize OpenAPI spec paths before showing additional local files.
+      status: done
+      relatedComponents: [web]
     - id: evidence-based-onboarding
       title: Evidence-based onboarding progress
       summary: Count only detected sections, keep configured entries separate from hands-on verification, review paths, commands and environment names, and make the agent inspect before writing.
