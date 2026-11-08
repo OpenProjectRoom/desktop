@@ -56,6 +56,11 @@ product:
       summary: Show the number of configured services, tools, servers, APIs, suites, data sources and declared variable names, plus product content counts, in the expanded navigation.
       status: done
       relatedComponents: [product-spec, web]
+    - id: compact-window-sidebar
+      title: Collapse navigation in compact windows
+      summary: Start with the sidebar collapsed at 900 px or narrower and collapse it when resizing into that range, while allowing a manual reopening until the next compact launch.
+      status: done
+      relatedComponents: [web]
     - id: explorer-deduplication
       title: Show each explorer integration once
       summary: Merge linked CLI and MCP discoveries into their registered entries, and normalize OpenAPI spec paths before showing additional local files.
