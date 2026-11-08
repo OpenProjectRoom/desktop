@@ -4,6 +4,10 @@
 .cli-explorer-list>input{box-sizing:border-box;width:calc(100% - 10px);margin:0 5px 12px;padding:9px 10px;border:1px solid #dce4eb;border-radius:8px;background:var(--surface,#fff);color:inherit;font-size:11px;outline:none}
 .cli-explorer-list>input:focus{border-color:#6b8aa4}
 .cli-explorer-group{padding:10px 8px 5px;color:#8a98a7;font-size:9px;letter-spacing:.12em;font-weight:700}
+.cli-discovery{border-top:1px solid var(--line,#dce4eb);margin:12px 5px 0;padding-top:10px}
+.cli-discovery-toggle{display:flex;align-items:center;gap:7px;width:100%;border:0;background:transparent;color:inherit;padding:8px 4px;text-align:left;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.cli-discovery-toggle span{margin-left:auto;color:#879aab;font-weight:500}
+.cli-discovery-toggle:hover{color:#50718c}
 .cli-explorer-item{min-width:0}
 .cli-explorer-main{min-width:0;overflow:hidden}
 .cli-launch-bar{align-items:flex-start}

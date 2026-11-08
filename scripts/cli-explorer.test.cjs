@@ -21,10 +21,32 @@ test('CLI catalog lists a linked discovery only under its registered tool', () =
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/cli-explorer-ui.js'), 'utf8'), context);
   const html = context.commandToolsPage();
-  assert.match(html, /Project tools<\/strong><span>1 found/);
-  assert.match(html, /DISCOVERED LOCALLY · 0/);
+  assert.match(html, /Project tools<\/strong><span>1 configured/);
+  assert.doesNotMatch(html, /Find more CLIs/);
   assert.match(html, /Blackbox Host CLI/);
   assert.doesNotMatch(html, /data-cli="select"/);
+});
+
+test('CLI catalog keeps discoveries optional and hides unbuilt commands', () => {
+  const listeners = {};
+  const tool = { id: 'build', kind: 'commandTool', name: 'Build project', runtime: { command: ['node', 'build.js'] }, cli: { mode: 'task' } };
+  const context = {
+    document: { addEventListener(name, callback) { (listeners[name] ||= []).push(callback); } }, escapeHtml: String, icon: () => '', pageHead: () => '', render() {},
+    projectRoot: null, pv: null, state: { page: 'commands' }, commandToolsPage: null,
+    commandTools: () => [tool], commandSelected: () => tool, commandStatus: () => 'Ready', commandLive: () => false,
+    commandCandidates: [
+      { id: 'ready', name: 'Ready tool', path: 'bin/ready', source: 'executable', command: ['./bin/ready'], available: true },
+      { id: 'unbuilt', name: 'Unbuilt tool', path: 'dist/unbuilt', source: 'bin', command: ['node', 'dist/unbuilt'], available: false }
+    ], commandCandidateId: null, commandCandidatesRoot: null, commandCandidatesLoading: false,
+    commandCandidatesError: '', commandSearch: '', commandTab: 'explore', commandBusy: {}, commandHelp: {}, commandOutput: {}, commandCandidateHelp: {}, commandHelpArgs: {}
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/cli-explorer-ui.js'), 'utf8'), context);
+  assert.match(context.commandToolsPage(), /Find more CLIs <span>1<\/span>/);
+  assert.doesNotMatch(context.commandToolsPage(), /Ready tool/);
+  listeners.click[0]({ target: { closest(selector) { return selector.includes('cli-discovery') ? {} : null; } } });
+  const expanded = context.commandToolsPage();
+  assert.match(expanded, /Ready tool/);
+  assert.doesNotMatch(expanded, /Unbuilt tool/);
 });
 
 test('recognizes paired flags, value options and subcommands in common help output', () => {

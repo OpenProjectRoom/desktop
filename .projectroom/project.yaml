@@ -11,6 +11,11 @@ product:
   docsRoot: docs/product
   backlogRoot: backlog
   roadmap:
+    - id: focused-cli-catalog
+      title: Keep runnable CLI tools in focus
+      summary: Show configured commands as the primary CLI list and put available, unregistered source discoveries behind an optional expander; omit unbuilt candidates from interactive results.
+      status: done
+      relatedComponents: [web]
     - id: shared-project-command-path
       title: Reliable project command discovery
       summary: Use one effective PATH for project launches, builds, tests, CLI tools and local MCP servers, including existing project-local tools and common macOS package-manager locations; review and failure messages use the same search path.
