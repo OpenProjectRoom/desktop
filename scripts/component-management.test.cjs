@@ -5,7 +5,7 @@ const os = require('node:os');
 const path = require('node:path');
 const YAML = require('yaml');
 const { addCliTool, removeComponent } = require('../desktop/component-management.cjs');
-const { addMapComponent } = require('../desktop/map-components.cjs');
+const { addMapComponent, moveMapComponent } = require('../desktop/map-components.cjs');
 const { loadConfig } = require('./config.cjs');
 
 test('manual CLI and data sources persist in YAML and removal clears references only', () => {
@@ -63,4 +63,24 @@ test('map adds a launchable mobile application with an explicit target', t => {
   assert.deepEqual(app.application, { platform: 'mobile', target: 'iOS Simulator' });
   assert.deepEqual(app.runtime.command, ['npm', 'run', 'ios']);
   assert.ok(added.config.connections.some(edge => edge.from === added.id && edge.to === 'api'));
+});
+
+test('moving an overlapping map card persists its position without changing other components', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'project-room-map-move-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const file = path.join(root, '.projectroom/project.yaml');
+  fs.mkdirSync(path.dirname(file));
+  fs.copyFileSync(path.join(__dirname, '..', '.projectroom/project.yaml'), file);
+  const before = loadConfig(file).config;
+  const id = before.components[0].id;
+  const moved = moveMapComponent(root, id, { x: 41.27, y: 281.7 }).config;
+  assert.deepEqual(moved.components.find(item => item.id === id).position, { x: 41.3, y: 282 });
+  assert.deepEqual(moved.components.filter(item => item.id !== id), before.components.filter(item => item.id !== id));
+  assert.deepEqual(moved.connections, before.connections);
+  assert.deepEqual(loadConfig(file).config, moved);
+  const raw = fs.readFileSync(file, 'utf8');
+  assert.throws(() => moveMapComponent(root, 'unknown', { x: 10, y: 20 }), /no longer exists/);
+  assert.throws(() => moveMapComponent(root, id, { x: 90, y: 20 }), /outside the canvas/);
+  assert.throws(() => moveMapComponent(root, id, { x: '10', y: 20 }), /numeric coordinates/);
+  assert.equal(fs.readFileSync(file, 'utf8'), raw);
 });

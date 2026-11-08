@@ -90,4 +90,31 @@ function addMapComponent(root, input) {
   return { ...loadConfig(file), id };
 }
 
-module.exports = { addMapComponent };
+function moveMapComponent(root, id, position) {
+  if (typeof id !== 'string' || !id || !position || typeof position !== 'object') throw new Error('Choose a component and position.');
+  const { x, y } = position;
+  if (typeof x !== 'number' || typeof y !== 'number') throw new Error('Map position needs numeric coordinates.');
+  if (!Number.isFinite(x) || x < 0 || x > 72 || !Number.isFinite(y) || y < 0 || y > 10000) throw new Error('Map position is outside the canvas.');
+  const base = fs.realpathSync(root);
+  const file = configPath(base);
+  if (fs.lstatSync(file).isSymbolicLink()) throw new Error('Project Room cannot edit a linked configuration file.');
+  const current = loadConfig(file);
+  if (!current.config.components.some(component => component.id === id)) throw new Error('Component no longer exists in this project.');
+  const document = YAML.parseDocument(current.raw, { uniqueKeys: true });
+  if (document.errors.length) throw new Error(document.errors[0].message);
+  const component = document.get('components', true).items.find(item => item.get('id') === id);
+  component.setIn(['position', 'x'], Math.round(x * 10) / 10);
+  component.setIn(['position', 'y'], Math.round(y));
+  const raw = String(document);
+  parseConfig(raw);
+  const temporary = path.join(base, `.productview-map-${process.pid}-${Date.now()}.tmp`);
+  try {
+    fs.writeFileSync(temporary, raw, { flag: 'wx' });
+    fs.renameSync(temporary, file);
+  } finally {
+    try { fs.unlinkSync(temporary); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  return loadConfig(file);
+}
+
+module.exports = { addMapComponent, moveMapComponent };

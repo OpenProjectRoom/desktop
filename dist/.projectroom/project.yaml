@@ -31,6 +31,11 @@ product:
       summary: Show a compact, read-only preview of runtime components and real connections in Overview, with the full map available for inspection and editing.
       status: done
       relatedComponents: [web]
+    - id: map-card-positioning
+      title: Rearrange overlapping Project Map cards
+      summary: Let users drag runtime cards on the full Project Map and save their positions in the repository's project YAML.
+      status: done
+      relatedComponents: [web]
     - id: overview-dual-metrics
       title: CPU and memory together in Overview
       summary: Show both session-only process measurements at once in compact, separately scaled charts with distinct colors.

@@ -71,6 +71,7 @@ contextBridge.exposeInMainWorld('productView', {
   listBacklog: () => ipcRenderer.invoke('backlog:list'),
   saveBacklogIssue: input => ipcRenderer.invoke('backlog:save', input),
   addMapComponent: input => ipcRenderer.invoke('map:add-component', input),
+  moveMapComponent: (id, position) => ipcRenderer.invoke('map:move-component', id, position),
   recordChat: (prompt, reply) => ipcRenderer.invoke('chat:record', String(prompt), String(reply)),
   chatStatus: () => ipcRenderer.invoke('chat:status'),
   saveChatSettings: input => ipcRenderer.invoke('chat:settings', input),

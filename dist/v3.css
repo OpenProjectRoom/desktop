@@ -80,6 +80,10 @@ body[data-theme="dark"] .live-metric-current strong{color:#e7f0f6}
 .overview-map-svg{display:block;width:100%;min-width:0;height:auto}
 .overview-map-edge{fill:none;stroke:#94afbf;stroke-width:1.8;stroke-linecap:round}
 .overview-map-node rect{fill:#fff;stroke:#cfdee7;stroke-width:1.3}
+.map-frame:not(.map-list-mode):not(.map-source-mode) .map-node{cursor:grab;touch-action:none;user-select:none}
+.map-frame .map-node.dragging,.map-frame .map-node.dragging:hover{z-index:4;cursor:grabbing;transform:none;box-shadow:0 16px 35px #223b3050}
+.map-drag-hint{font-size:10px;color:var(--muted,#8a96a4);white-space:nowrap}
+@media(max-width:900px){.map-drag-hint{display:none}}
 .overview-map-node text{fill:#294557;stroke:none;font-size:14px;font-weight:600}
 .overview-map-node .overview-map-kind{fill:#7b91a0;font-size:11px;font-weight:500}
 .overview-map-card .card-head .link{white-space:nowrap}

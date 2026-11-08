@@ -111,6 +111,63 @@ let mapDisplay = 'map';
 let mapSourceText = null;
 let mapSourceError = null;
 let mapSourceRequest = 0;
+let mapDrag = null;
+let suppressMapClick = false;
+document.addEventListener('click', event => {
+  if (!suppressMapClick || !event.target.closest('[data-map-node]')) return;
+  suppressMapClick = false;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+}, true);
+document.addEventListener('pointerdown', event => {
+  if (state.page !== 'overview' || mapDisplay !== 'map' || event.button !== 0 || event.target.closest('button, a, input')) return;
+  const node = event.target.closest('.map-node');
+  const content = node?.closest('#mapContent');
+  if (!content) return;
+  mapDrag = { node, content, id: node.dataset.mapNode, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, left: node.offsetLeft, top: node.offsetTop, moved: false };
+  node.setPointerCapture(event.pointerId);
+});
+document.addEventListener('pointermove', event => {
+  const drag = mapDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  const dx = (event.clientX - drag.startX) / mapZoom;
+  const dy = (event.clientY - drag.startY) / mapZoom;
+  if (!drag.moved && Math.hypot(dx, dy) < 4) return;
+  drag.moved = true;
+  drag.node.classList.add('dragging');
+  const width = drag.content.clientWidth;
+  const canvas = drag.content.parentElement;
+  const x = Math.max(0, Math.min(width * .72, width - drag.node.offsetWidth, drag.left + dx));
+  const y = Math.max(0, Math.min(canvas.clientHeight - drag.node.offsetHeight, drag.top + dy));
+  drag.node.style.left = `${x / width * 100}%`;
+  drag.node.style.top = `${y}px`;
+  drawConnections();
+});
+document.addEventListener('pointerup', async event => {
+  const drag = mapDrag;
+  if (!drag || drag.pointerId !== event.pointerId) return;
+  mapDrag = null;
+  if (!drag.moved) return;
+  suppressMapClick = true;
+  setTimeout(() => { suppressMapClick = false; }, 250);
+  const position = { x: drag.node.offsetLeft / drag.content.clientWidth * 100, y: drag.node.offsetTop };
+  try {
+    if (pv && projectRoot) {
+      const updated = await pv.moveMapComponent(drag.id, position);
+      projectConfig = updated.config;
+      if (updated.raw) files[activeConfigPath] = updated.raw;
+    } else {
+      const component = currentComponent(drag.id);
+      if (component) component.position = position;
+    }
+    render();
+  } catch (cause) { render(); toast(`Could not move component: ${cause.message}`); }
+});
+document.addEventListener('pointercancel', event => {
+  if (mapDrag?.pointerId !== event.pointerId) return;
+  mapDrag = null;
+  render();
+});
 state.page = 'dashboard';
 const pageHead = (title, subtitle, actions = '') => `<div class="page-head"><div><div class="eyebrow">PROJECT ROOM / ${projectRoot ? 'LOCAL PROJECT' : 'INTERACTIVE DEMO'}</div><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p></div><div class="head-actions">${actions}</div></div>`;
 const v3Button = (label, action, primary = false) => `<button class="btn ${primary ? 'primary' : ''}" data-v3="${action}">${label}</button>`;
@@ -146,7 +203,7 @@ function projectMap() {
   const source = mapSourceError ? `<div class="map-source-message" role="alert">${escapeHtml(mapSourceError)}</div>` : mapSourceText === null ? '<div class="map-source-message" role="status">Loading ${escapeHtml(activeConfigPath)}…</div>' : `<pre><code>${escapeHtml(mapSourceText)}</code></pre>`;
   return `<div class="workspace-head"><div><div class="eyebrow">PROJECT ROOM / ${projectRoot ? 'LOCAL PROJECT' : 'INTERACTIVE DEMO'}</div><h1>${escapeHtml(projectConfig.project?.name || 'Project Map')}</h1><p>Applications, services, databases and storage in this project. Tests and CLI tools have their own views.</p></div><div class="workspace-head-actions">${v3Button(icon('folder') + ' Projects', 'workspace')}<button type="button" class="btn primary" data-v9="map:add">${icon('plus')} Add component</button></div></div>
   <div class="map-meta"><span class="dot"></span><strong>${projectRoot ? 'Local project' : 'Demo project'}</strong><span>·</span><span>${count} runtime components</span><span>·</span><span>${mapConnections.length} dependencies</span><span>·</span><span>${mapComponents.filter(x => x.kind === 'application').length} apps</span><span>·</span><span>${mapComponents.filter(x => x.kind === 'service').length} services</span><span>·</span><span>Statuses do not include Docker Compose</span></div>
-  <section class="map-frame ${mapDisplay === 'list' ? 'map-list-mode' : mapDisplay === 'source' ? 'map-source-mode' : ''}"><div class="map-toolbar"><div class="map-toolbar-left"><span class="map-toolbar-title">Project Map</span><span class="toolbar-pill">${icon('git')} ${escapeHtml(projectConfig.project?.version || 'local')}</span><span class="toolbar-pill">${escapeHtml(activeConfigPath)}</span></div><div class="map-toolbar-right"><div class="map-view-switch" role="group" aria-label="Project map view"><button class="${mapDisplay === 'map' ? 'active' : ''}" data-v3="map-view:map" aria-pressed="${mapDisplay === 'map'}">Map</button><button class="${mapDisplay === 'list' ? 'active' : ''}" data-v3="map-view:list" aria-pressed="${mapDisplay === 'list'}">List</button><button class="${mapDisplay === 'source' ? 'active' : ''}" data-v3="map-view:source" aria-pressed="${mapDisplay === 'source'}">Source</button></div><button class="tool-button" data-v9="map:add" title="Add component">${icon('plus')}</button>${mapDisplay === 'map' ? '<button class="tool-button" data-v3="fit" title="Fit map">⌗</button>' : ''}</div></div><div class="map-canvas" style="height:${Math.max(520, ...mapComponents.map(c => (Number(c.position?.y) || 0) + 150))}px"><div class="map-content" id="mapContent" style="transform:scale(${mapZoom})"><svg class="map-links" id="mapLinks" aria-hidden="true"></svg>${mapComponents.map(mapNode).join('')}</div><div class="map-float-controls"><button data-v3="zoom-in" title="Zoom in">+</button><button data-v3="zoom-out" title="Zoom out">−</button><button data-v3="fit" title="Fit map">⌗</button></div><div class="map-legend"><span><i></i> Running</span><span><i></i> Ready</span><span><i></i> Attention</span></div></div><div class="map-component-list">${componentList}</div><div class="map-source-view"><div class="map-source-heading"><strong>${escapeHtml(activeConfigPath)}</strong><span>${projectRoot ? 'Repository file · read only' : 'Packaged demo file · read only'}</span></div>${source}</div></section>
+  <section class="map-frame ${mapDisplay === 'list' ? 'map-list-mode' : mapDisplay === 'source' ? 'map-source-mode' : ''}"><div class="map-toolbar"><div class="map-toolbar-left"><span class="map-toolbar-title">Project Map</span><span class="toolbar-pill">${icon('git')} ${escapeHtml(projectConfig.project?.version || 'local')}</span><span class="toolbar-pill">${escapeHtml(activeConfigPath)}</span>${mapDisplay === 'map' ? '<span class="map-drag-hint">Drag cards to arrange</span>' : ''}</div><div class="map-toolbar-right"><div class="map-view-switch" role="group" aria-label="Project map view"><button class="${mapDisplay === 'map' ? 'active' : ''}" data-v3="map-view:map" aria-pressed="${mapDisplay === 'map'}">Map</button><button class="${mapDisplay === 'list' ? 'active' : ''}" data-v3="map-view:list" aria-pressed="${mapDisplay === 'list'}">List</button><button class="${mapDisplay === 'source' ? 'active' : ''}" data-v3="map-view:source" aria-pressed="${mapDisplay === 'source'}">Source</button></div><button class="tool-button" data-v9="map:add" title="Add component">${icon('plus')}</button>${mapDisplay === 'map' ? '<button class="tool-button" data-v3="fit" title="Fit map">⌗</button>' : ''}</div></div><div class="map-canvas" style="height:${Math.max(520, ...mapComponents.map(c => (Number(c.position?.y) || 0) + 150))}px"><div class="map-content" id="mapContent" style="transform:scale(${mapZoom})"><svg class="map-links" id="mapLinks" aria-hidden="true"></svg>${mapComponents.map(mapNode).join('')}</div><div class="map-float-controls"><button data-v3="zoom-in" title="Zoom in">+</button><button data-v3="zoom-out" title="Zoom out">−</button><button data-v3="fit" title="Fit map">⌗</button></div><div class="map-legend"><span><i></i> Running</span><span><i></i> Ready</span><span><i></i> Attention</span></div></div><div class="map-component-list">${componentList}</div><div class="map-source-view"><div class="map-source-heading"><strong>${escapeHtml(activeConfigPath)}</strong><span>${projectRoot ? 'Repository file · read only' : 'Packaged demo file · read only'}</span></div>${source}</div></section>
   `;
 }
 function dashboardProjectMapPreview() {

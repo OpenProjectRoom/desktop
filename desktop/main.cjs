@@ -15,7 +15,7 @@ const { readCommandHelp, readCommandLog, runCliTrial } = require('./command-tool
 const { discoverCliTools, inspectCliHelp, linkCliTool } = require('./cli-explorer.cjs');
 const { upsertIssueSource } = require('./issue-sources.cjs');
 const { listIssues, saveIssue } = require('./backlog.cjs');
-const { addMapComponent } = require('./map-components.cjs');
+const { addMapComponent, moveMapComponent } = require('./map-components.cjs');
 const { addCliTool, removeComponent } = require('./component-management.cjs');
 const { setAdditionalView } = require('./additional-views.cjs');
 const { declarations, listEnvironment, readEnvironment, saveEnvironment, deleteEnvironment, runtimeEnvironment, redactOutput } = require('./environment.cjs');
@@ -435,6 +435,7 @@ function registerIpc() {
   ipcMain.handle('backlog:list', event => { assertSender(event); return listIssues(requireProject()); });
   ipcMain.handle('backlog:save', (event, input) => { assertSender(event); const issue = saveIssue(requireProject(), input); appendEvent(selectedRoot, input?.id ? 'backlog.updated' : 'backlog.created', { issue: issue.id, path: issue.path, status: issue.status }); return issue; });
   ipcMain.handle('map:add-component', (event, input) => { assertSender(event); const added = addMapComponent(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'component.created', { component: added.id, kind: input.kind }); return { ...updated, addedId: added.id }; });
+  ipcMain.handle('map:move-component', (event, id, position) => { assertSender(event); const moved = moveMapComponent(requireProject(), id, position); const updated = updatedProject(moved); appendEvent(selectedRoot, 'component.moved', { component: id, position: moved.config.components.find(item => item.id === id)?.position }); return updated; });
   ipcMain.handle('cli:add-manual', (event, input) => { assertSender(event); const added = addCliTool(requireProject(), input); const updated = updatedProject(added); appendEvent(selectedRoot, 'component.created', { component: added.id, kind: 'commandTool' }); return { ...updated, addedId: added.id }; });
   ipcMain.handle('component:remove', (event, id) => { assertSender(event); const key = String(id); if (processes.has(key)) throw new Error('Stop this tool before removing it.'); const removed = removeComponent(requireProject(), key); const updated = updatedProject(removed); appendEvent(selectedRoot, 'component.removed', { component: key, kind: removed.removed.kind }); return { ...updated, removedId: key }; });
   ipcMain.handle('chat:record', (event, prompt, reply) => { assertSender(event); return appendEvent(selectedRoot, 'chat.prompt', { prompt: String(prompt), reply: String(reply), provider: 'local-demo' }); });
