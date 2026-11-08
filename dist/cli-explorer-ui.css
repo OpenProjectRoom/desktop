@@ -76,3 +76,5 @@ body[data-theme="dark"] .cli-explore-placeholder{border-color:#46586a}
 .cli-explore-reference-details .cli-explore-reference{margin:9px 0 0}
 .cli-trial-note p{margin:8px 0 0;line-height:1.55}
 body[data-theme="dark"] .cli-explore-reference-details>summary,body[data-theme="dark"] .cli-trial-note>summary{color:#bdd5e8}
+.cli-explorer-shell .page-head{margin-bottom:12px}
+.cli-explorer-main,.cli-explorer-list{min-height:0}

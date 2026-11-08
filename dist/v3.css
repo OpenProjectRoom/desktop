@@ -290,3 +290,17 @@ body[data-theme="dark"] .application-tabs button{background:#263747;color:#b6c7d
 body[data-theme="dark"] .application-tabs button.active{background:#38576a;color:#f0f8fb;border-color:#65899d}
 body[data-theme="dark"] .overview-runtime-group{color:#a3bdcb}
 body[data-theme="dark"] .overview-runtime-group button{color:#a5cfde}
+.runtime-workbench{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(290px,1fr);gap:14px;align-items:start}
+.runtime-workbench>.card{min-width:0}
+.runtime-workbench .service-metric-card{margin:0}
+.runtime-workbench .env-row{gap:9px}
+.runtime-workbench .service-sub{overflow-wrap:anywhere}
+@media(max-width:1180px){.runtime-workbench{grid-template-columns:1fr}}
+.runtime-help{padding:12px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:11px;line-height:1.5}
+.runtime-help summary{cursor:pointer;color:var(--accent,#536f88);font-weight:600}
+.runtime-help p{margin:8px 0 0}
+body[data-theme="dark"] .runtime-help summary{color:#bdd5e8}
+.explorer-search{box-sizing:border-box;width:calc(100% - 16px);margin:4px 8px 9px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--white,#fff);color:var(--ink);font-size:11px}
+.explorer-search:focus{outline:2px solid var(--accent,#6d8da5);outline-offset:1px}
+.mcp-server[hidden],.api-source[hidden],.data-source-row[hidden],.test-suite[hidden]{display:none!important}
+.test-suite-search{width:min(360px,100%);margin:0 0 2px}

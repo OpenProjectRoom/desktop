@@ -8,7 +8,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { engine, inspect, preview } = require('../desktop/data-viewer.cjs');
 const { inspectFolder } = require('../desktop/onboarding.cjs');
 
-test('selecting a data source loads its catalog without reading a table or file', async () => {
+test('opening Data Explorer lists the first source without reading a table or file', async () => {
   const clicks = [];
   const calls = [];
   const config = { components: [{ id: 'evidence', kind: 'storage', name: 'Acceptance evidence', data: { path: 'reports/evidence' } }] };
@@ -23,7 +23,7 @@ test('selecting a data source loads its catalog without reading a table or file'
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/data-viewer.js'), 'utf8'), context);
   assert.match(context.dataPage(), /Select a source to inspect it/);
-  await clicks.at(-1)({ target: { closest(selector) { return selector === '[data-data-viewer]' ? { dataset: { dataViewer: 'source:evidence' } } : null; } } });
+  await new Promise(resolve => setImmediate(resolve));
   assert.deepEqual(calls, ['inspect:evidence']);
   assert.match(context.dataPage(), /check\.json/);
   assert.doesNotMatch(context.dataPage(), /passed/);

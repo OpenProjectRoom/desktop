@@ -138,7 +138,7 @@
       {
         "id": "explorer-workbench-focus",
         "title": "Put explorer workbenches first",
-        "summary": "Show MCP capabilities and the first item directly below compact connection controls, keep CLI trial actions ahead of reference material, and shorten the API source header.",
+        "summary": "Keep Run & Verify pages compact, show the selected tool or source first, place secondary connection and discovery information in expandable details, and open a first data catalog or test suite without running user actions.",
         "status": "done",
         "relatedComponents": [
           "web"

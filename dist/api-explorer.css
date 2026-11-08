@@ -12,3 +12,20 @@ body[data-theme="dark"] .api-source:hover,body[data-theme="dark"] .api-source.se
 .api-main-head p{margin-bottom:4px;line-height:1.4}
 .api-main-head p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .api-main-head small{margin-top:3px}
+.api-shell .page-head{margin-bottom:12px}
+.api-main-head{padding:13px 18px;align-items:center}
+.api-main-head h2{font-size:17px;margin:3px 0}
+.api-main-head small{margin-top:3px}
+.api-sources,.api-main{min-height:0}
+.api-explorer-body{min-height:390px}
+.api-source-help{border-top:1px solid var(--line);margin:12px 5px 0;padding:10px 5px;color:var(--muted);font-size:10px;line-height:1.5}
+.api-source-help summary,.api-meta summary{cursor:pointer;color:var(--accent,#536f88);font-weight:600}
+.api-source-help p{margin:8px 0 0}
+.api-meta{border-top:1px solid var(--line);color:var(--muted);font-size:11px}
+.api-meta summary{padding:12px 18px}
+.api-meta-body{padding:0 18px 16px;display:grid;gap:7px}
+.api-meta-body p{margin:0}
+.api-meta-body code{overflow-wrap:anywhere}
+.api-meta-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px}
+body[data-theme="dark"] .api-meta summary,
+body[data-theme="dark"] .api-source-help summary{color:#bdd5e8}

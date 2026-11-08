@@ -8,13 +8,14 @@
   let busy = false;
   let error = '';
   let requestVersion = 0;
+  let sourceSearch = '';
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const sources = () => projectConfig.components.filter(item => ['database', 'storage', 'external'].includes(item.kind));
   const selected = () => sources().find(item => item.id === selectedId);
   const typeLabel = item => item.kind === 'storage' ? 'Local files' : item.kind === 'external' ? 'External source' : item.data?.engine || 'Database';
   const button = (label, action, disabled = false) => `<button type="button" class="btn small" data-data-viewer="${safe(action)}"${disabled ? ' disabled' : ''}>${label}</button>`;
   function sourceList() {
-    return sources().map(item => `<button type="button" class="data-source-row ${selectedId === item.id ? 'active' : ''}" data-data-viewer="source:${safe(item.id)}"><span class="data-source-icon">${icon(item.kind === 'storage' ? 'folder' : 'database')}</span><span><strong>${safe(item.name)}</strong><small>${safe(typeLabel(item))}</small></span></button>`).join('') || '<p class="data-viewer-empty">No data sources configured in .projectroom/project.yaml.</p>';
+    return sources().map(item => `<button type="button" class="data-source-row ${selectedId === item.id ? 'active' : ''}" data-data-viewer="source:${safe(item.id)}" ${sourceSearch && !`${item.name} ${typeLabel(item)}`.toLowerCase().includes(sourceSearch) ? 'hidden' : ''}><span class="data-source-icon">${icon(item.kind === 'storage' ? 'folder' : 'database')}</span><span><strong>${safe(item.name)}</strong><small>${safe(typeLabel(item))}</small></span></button>`).join('') || '<p class="data-viewer-empty">No data sources configured in .projectroom/project.yaml.</p>';
   }
   function table() {
     if (!preview) return '<div class="data-preview-empty">Choose a table or file to see its structure and a small preview.</div>';
@@ -31,13 +32,13 @@
     const location = item.kind === 'storage' || /sqlite/i.test(item.data?.engine || '') ? item.data?.path : item.data?.connectionEnv;
     const header = `<div class="data-viewer-head"><div><span class="data-viewer-kicker">${safe(typeLabel(item))}</span><h2>${safe(item.name)}</h2><p>${safe(location || (item.kind === 'external' ? item.url : 'No connection configured'))}</p></div><div class="data-viewer-actions">${item.kind === 'external' || (!catalog && !error) ? '' : button(catalog ? 'Refresh' : 'Retry', 'inspect', busy)}${button('Remove', 'remove', !pv || !projectRoot || busy)}</div></div>`;
     if (item.kind === 'external') return `${header}<div class="data-preview-empty">This external source has no built-in data viewer. Open its configured URL from Project Map.</div>`;
-    if (!catalog) return `${header}<div class="data-preview-empty"><strong>${busy ? 'Loading source…' : error ? 'Source could not be loaded' : 'Select a source'}</strong><p>${projectRoot ? 'Tables and files appear here. Select an entry to load its limited preview.' : 'Open a local project in the desktop app to inspect real data.'}</p>${item.data?.connectionEnv ? `<p>Connection variable: <code>${safe(item.data.connectionEnv)}</code> · <button type="button" data-page="environment">Open Environment</button></p>` : ''}</div>`;
+    if (!catalog) return `${header}<div class="data-preview-empty"><strong>${busy ? 'Loading source…' : error ? 'Source could not be loaded' : projectRoot ? 'Preparing source' : 'Local preview unavailable'}</strong><p>${projectRoot ? 'Tables and files appear here. Select an entry to load its limited preview.' : 'Open a local project in the desktop app to inspect real data.'}</p>${item.data?.connectionEnv ? `<p>Connection variable: <code>${safe(item.data.connectionEnv)}</code> · <button type="button" data-page="environment">Open Environment</button></p>` : ''}</div>`;
     if (catalog.engine === 'unsupported') return `${header}<div class="data-preview-empty">${safe(catalog.message)}</div>`;
     return `${header}<div class="data-viewer-meta"><span>${catalog.tables.length} ${catalog.engine === 'files' ? 'files and folders' : 'tables and views'}${catalog.truncated ? ' · first 250' : ''}</span><span>Contents load only when selected</span></div>${catalog.message ? `<p class="data-viewer-empty">${safe(catalog.message)}</p>` : ''}<div class="data-viewer-browser"><div class="data-entry-list">${catalog.tables.length ? catalog.tables.map(entry => `<button type="button" class="data-entry ${selectedEntry?.id === entry.id ? 'active' : ''}" data-data-viewer="entry:${safe(encodeURIComponent(entry.id))}" ${entry.type === 'folder' ? 'disabled' : ''}><strong>${safe(entry.name)}</strong><small>${safe(entry.type)}${entry.bytes != null ? ' · ' + Math.round(entry.bytes / 1024) + ' KB' : ''}</small></button>`).join('') : '<p class="data-viewer-empty">No entries found.</p>'}</div><div class="data-entry-preview">${table()}</div></div>`;
   }
   dataPage = function () {
-    if (loadedConfig !== projectConfig) { loadedConfig = projectConfig; ++requestVersion; selectedId = null; catalog = null; selectedEntry = null; preview = null; error = ''; busy = false; }
-    return `${pageHead('Data Explorer', 'Inspect database structures and a small, read-only data preview.', `<button type="button" class="btn primary" data-data-viewer="add" ${!pv || !projectRoot ? 'disabled title="Open a local project to edit .projectroom/project.yaml"' : ''}>Add data source</button>`)}<div class="data-viewer-shell">${error ? `<div class="data-viewer-error" role="alert">${safe(error)}</div>` : ''}<div class="data-viewer-layout"><section class="card data-source-list"><div class="data-source-title"><strong>Project sources</strong><span>${sources().length}</span></div>${sourceList()}<p class="data-source-note">PostgreSQL · MySQL/MariaDB · SQLite · local files. Connections come from local Environment values.</p></section><section class="card data-viewer-main">${workspace()}</section></div></div>`;
+    if (loadedConfig !== projectConfig) { loadedConfig = projectConfig; ++requestVersion; selectedId = null; catalog = null; selectedEntry = null; preview = null; error = ''; busy = false; sourceSearch = ''; if (pv && projectRoot) Promise.resolve().then(() => globalThis.projectRoomFocusFirstDataSource()); }
+    return `${pageHead('Data Explorer', 'Choose a source, then inspect a table or file.', `<button type="button" class="btn primary" data-data-viewer="add" ${!pv || !projectRoot ? 'disabled title="Open a local project to edit .projectroom/project.yaml"' : ''}>Add data source</button>`)}<div class="data-viewer-shell">${error ? `<div class="data-viewer-error" role="alert">${safe(error)}</div>` : ''}<div class="data-viewer-layout"><section class="card data-source-list"><div class="data-source-title"><strong>Project sources</strong><span>${sources().length}</span></div><input class="explorer-search" id="dataSourceSearch" type="search" placeholder="Search sources" aria-label="Search data sources" value="${safe(sourceSearch)}">${sourceList()}<details class="data-source-note"><summary>About sources</summary><p>Connections use local Environment values. Table and file contents load only when you select them.</p></details></section><section class="card data-viewer-main">${workspace()}</section></div></div>`;
   };
   const modalRoot = document.getElementById('modalRoot');
   async function inspectSource(id) {
@@ -50,6 +51,10 @@
     catch (cause) { if (request === requestVersion) error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
     finally { if (request === requestVersion) { busy = false; render(); } }
   }
+  globalThis.projectRoomFocusFirstDataSource = () => {
+    const first = sources()[0];
+    if (first && selectedId !== first.id) void inspectSource(first.id);
+  };
   const fields = {
     database: `<label>Engine<select name="engine" id="dataAddEngine"><option>PostgreSQL</option><option>MySQL</option><option>MariaDB</option><option>SQLite</option></select></label><label data-data-config="remote">Connection variable <small>name only; set its value in Environment</small><input name="connectionEnv" required pattern="[A-Z][A-Z0-9_]*" placeholder="DATABASE_URL"></label><label data-data-config="sqlite" hidden>Relative database file<input name="path" placeholder="data/app.sqlite"></label>`,
     storage: `<label>Relative folder<input name="path" required placeholder="data/uploads"></label>`,
@@ -123,5 +128,10 @@
       }
     } catch (cause) { if (request === requestVersion) error = String(cause.message).replace(/^Error invoking remote method '[^']+': Error: /, ''); }
     finally { if (request === requestVersion) { busy = false; render(); } }
+  });
+  document.addEventListener('input', event => {
+    if (state.page !== 'data' || event.target.id !== 'dataSourceSearch') return;
+    sourceSearch = event.target.value.trim().toLowerCase();
+    document.querySelectorAll('.data-source-row').forEach(button => { button.hidden = !button.textContent.toLowerCase().includes(sourceSearch); });
   });
 })();
