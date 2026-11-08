@@ -70,6 +70,17 @@ function substitute(value, environment) {
   return String(value).replace(/\$\{([A-Z][A-Z0-9_]*)\}/g, (_match, name) => environment[name] || '');
 }
 
+function serverTarget(root, item) {
+  if (item.builtIn) return null;
+  if (item.transport === 'stdio') {
+    if (!item.command) return null;
+    return JSON.stringify(['stdio', path.resolve(root, item.cwd || '.'), item.command, item.args || []]);
+  }
+  if (!item.url) return null;
+  try { return JSON.stringify([item.transport, new URL(item.url).href]); }
+  catch { return null; }
+}
+
 class McpExplorer {
   constructor(options) { this.options = options; this.active = new Map(); }
   discover() {
@@ -81,8 +92,16 @@ class McpExplorer {
   list() {
     const linked = new Map((this.options.getConfig()?.workspace?.mcpServers || []).filter(item => item.linkedFrom).map(item => [item.linkedFrom, item.id]));
     const root = this.options.getRoot();
+    const candidates = this.discover();
+    const registered = new Map(candidates.filter(item => item.source === '.projectroom/project.yaml')
+      .map(item => [serverTarget(root, item), item.id.slice(5)]).filter(([target]) => target));
+    for (const item of candidates) {
+      if (item.builtIn || item.source === '.projectroom/project.yaml' || linked.has(item.id)) continue;
+      const match = registered.get(serverTarget(root, item));
+      if (match) linked.set(item.id, match);
+    }
     const revision = root ? sourceRevision(root) : null;
-    return this.discover().map(item => ({ ...publicCandidate(item, name => !!this.options.getEnvironment(name)),
+    return candidates.map(item => ({ ...publicCandidate(item, name => !!this.options.getEnvironment(name)),
       connected: this.active.has(item.id), linkedId: linked.get(item.id) || null,
       buildIdentity: this.active.get(item.id)?.buildIdentity || (item.transport === 'stdio' && !item.builtIn && item.build?.file ? readBuildIdentity(root, item, revision) : null) }));
   }

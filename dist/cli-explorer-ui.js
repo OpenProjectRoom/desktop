@@ -7,7 +7,8 @@
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const parts = value => String(value || '').split(/\r?\n/).map(part => part.trim()).filter(Boolean);
   const shown = command => (command || []).map(part => /\s/.test(part) ? JSON.stringify(part) : part).join(' ');
-  const selectedCandidate = () => commandCandidates.find(item => item.id === commandCandidateId) || (!commandTools().length ? commandCandidates[0] : null);
+  const unlinkedCandidates = () => commandCandidates.filter(item => !item.linkedId);
+  const selectedCandidate = () => unlinkedCandidates().find(item => item.id === commandCandidateId) || (!commandTools().length ? unlinkedCandidates()[0] : null);
   const current = () => selectedCandidate() || commandSelected();
   const toolId = () => current()?.id;
   const tabButton = (id, label) => `<button type="button" data-v5="tab:${id}" class="${commandTab === id ? 'active' : ''}">${label}</button>`;
@@ -69,8 +70,9 @@
     const tools = commandTools();
     const term = commandSearch.trim().toLowerCase();
     const configured = tools.filter(item => !term || `${item.name} ${item.cli?.summary || ''}`.toLowerCase().includes(term));
-    const discovered = commandCandidates.filter(item => !term || `${item.name} ${item.path} ${item.source}`.toLowerCase().includes(term));
-    const catalog = `<section class="card mcp-server-list cli-explorer-list"><div class="mcp-section-head"><strong>Project tools</strong><span>${tools.length + commandCandidates.length} found</span></div><input type="search" id="cliExplorerSearch" placeholder="Search tools and files" value="${safe(commandSearch)}" aria-label="Search CLI tools"><div class="cli-explorer-group">IN .PROJECTROOM/PROJECT.YAML · ${tools.length}</div>${configured.map(item => catalogItem(item, false)).join('') || '<p class="mcp-muted">No registered tools.</p>'}<div class="cli-explorer-group">DISCOVERED LOCALLY · ${commandCandidates.length}</div>${discovered.map(item => catalogItem(item, true)).join('') || `<p class="mcp-muted">${safe(commandCandidatesLoading ? 'Scanning project files…' : commandCandidatesError || 'No entry points found.')}</p>`}<div class="mcp-discovery-note">Discovery reads project files only. Test commands and help run after an explicit click.</div></section>`;
+    const candidates = unlinkedCandidates();
+    const discovered = candidates.filter(item => !term || `${item.name} ${item.path} ${item.source}`.toLowerCase().includes(term));
+    const catalog = `<section class="card mcp-server-list cli-explorer-list"><div class="mcp-section-head"><strong>Project tools</strong><span>${tools.length + candidates.length} found</span></div><input type="search" id="cliExplorerSearch" placeholder="Search tools and files" value="${safe(commandSearch)}" aria-label="Search CLI tools"><div class="cli-explorer-group">IN .PROJECTROOM/PROJECT.YAML · ${tools.length}</div>${configured.map(item => catalogItem(item, false)).join('') || '<p class="mcp-muted">No registered tools.</p>'}<div class="cli-explorer-group">DISCOVERED LOCALLY · ${candidates.length}</div>${discovered.map(item => catalogItem(item, true)).join('') || `<p class="mcp-muted">${safe(commandCandidatesLoading ? 'Scanning project files…' : commandCandidatesError || 'No unlinked entry points found.')}</p>`}<div class="mcp-discovery-note">Discovery reads project files only. Test commands and help run after an explicit click.</div></section>`;
     const candidate = selectedCandidate();
     const configuredItem = commandSelected();
     const detail = candidate ? discoveredDetail(candidate) : configuredItem ? configuredDetail(configuredItem) : '<section class="card mcp-main cli-explorer-main"><div class="mcp-start"><h3>No CLI tool selected</h3><p>Open a local project to find command-line entry points, or add one to .projectroom/project.yaml.</p></div></section>';

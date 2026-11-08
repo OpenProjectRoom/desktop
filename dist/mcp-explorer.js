@@ -15,7 +15,7 @@
   let message = '';
   const safe = value => escapeHtml(value == null ? '' : String(value));
   const selected = () => servers.find(item => item.id === selectedId);
-  const projectServers = async () => (await pv.listMcpServers()).filter(item => !item.builtIn);
+  const projectServers = async () => (await pv.listMcpServers()).filter(item => !item.builtIn && !item.linkedId);
   const editable = item => !!item && item.id.startsWith('yaml:');
   const activeItems = () => detail ? ({ tools: detail.tools, resources: detail.resources, templates: detail.resourceTemplates, prompts: detail.prompts })[selectedKind] || [] : [];
   const activeItem = () => activeItems().find(item => (item.name || item.uri || item.uriTemplate) === selectedName);

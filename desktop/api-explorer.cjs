@@ -174,8 +174,8 @@ function listApiSources(root, config) {
     if (item.spec) try { spec = readSpec(root, item.spec); } catch (cause) { error = cause.message; }
     return { ...item, id: `yaml:${item.id}`, source: '.projectroom/project.yaml', linked: true, operations: spec?.operations || [], specTitle: spec?.title || '', specVersion: spec?.version || '', error };
   });
-  const linkedPaths = new Set((config.workspace?.apiSources || []).map(item => item.spec).filter(Boolean));
-  return [...configured, ...discoverSpecs(root).filter(item => !linkedPaths.has(item.spec)).map(item => ({ ...item, linked: false, baseUrl: '' }))];
+  const linkedPaths = new Set((config.workspace?.apiSources || []).map(item => item.spec).filter(Boolean).map(spec => path.resolve(root, spec)));
+  return [...configured, ...discoverSpecs(root).filter(item => !linkedPaths.has(path.resolve(root, item.spec))).map(item => ({ ...item, linked: false, baseUrl: '' }))];
 }
 function editDocument(root) {
   const base = fs.realpathSync(root);

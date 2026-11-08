@@ -39,8 +39,14 @@ The source audit improves setup completeness but is not a universal protocol imp
 
 ## API Explorer
 
+A project OpenAPI file already named in `workspace.apiSources` appears only as the registered API, including when the relative path uses a `./` prefix.
+
 Project-local OpenAPI 3.x files are scanned read-only and listed beside HTTP APIs declared in `workspace.apiSources`. The file remains the source of truth for endpoint paths and summaries; the repository YAML stores only its relative path, clean base URL and public authentication metadata. Alternatively, `specPath` identifies a dynamically served OpenAPI document on the registered API. The user must click **Load OpenAPI**; the main process fetches from that API's origin without redirects or authentication headers, with a timeout and 2 MB limit. An API can be registered without a spec and tested with a manually entered relative path. The main process performs a request only after the user clicks Send, checks that the target stays on the selected origin, blocks redirects, applies a timeout and bounds the response preview. It resolves Bearer and API-key values from the local project `.env`. Public-client OAuth uses PKCE and a loopback callback; access and refresh tokens are encrypted outside the repository with macOS secure storage. Activity records only request metadata, without headers, query values, body or response content. The included Hello Workspace has a matching OpenAPI document for its real health and notes endpoints.
 
 ## MCP Explorer
 
 The desktop main process uses the official MCP client SDK to connect to explicitly selected project servers over stdio, Streamable HTTP or legacy SSE. It keeps one client session per connected server, so several can remain connected while the user switches between them. Read-only discovery scans project-local MCP configuration and shared `workspace.mcpServers`; it does not launch anything. Add, link and remove actions update the YAML array atomically after schema validation; linked entries record the discovered source ID. The renderer gets safe server metadata, capabilities, schemas and user-requested results over IPC. Connect, disconnect and invocation metadata goes to `.productview/events.jsonl`; arguments and responses remain in memory. YAML declares only static variable names or public OAuth client metadata. Static values come from the ignored project `.env`; SDK-managed OAuth credentials are encrypted locally and scoped to the workspace and endpoint. The built-in Project Room MCP server serves coding agents and is hidden from the project MCP Explorer.
+
+### Linked MCP entries
+
+The catalog shows a client setting only when it is not already linked to a YAML registration. Matching uses transport plus the complete command or URL; different arguments and endpoints remain separate.

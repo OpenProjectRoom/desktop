@@ -3,9 +3,29 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const vm = require('node:vm');
 const { discoverCliTools, inspectCliHelp, linkCliTool } = require('../desktop/cli-explorer.cjs');
 const { runCliTrial } = require('../desktop/command-tools.cjs');
 const { commandParsedHelp } = require('../dist/cli-help.js');
+
+test('CLI catalog lists a linked discovery only under its registered tool', () => {
+  const tool = { id: 'blackbox-host', kind: 'commandTool', name: 'Blackbox Host CLI', runtime: { command: ['./blackbox', '--help'] }, cli: { mode: 'task' } };
+  const candidate = { id: 'file:blackbox', name: 'blackbox', path: 'blackbox', source: 'executable', command: ['./blackbox'], linkedId: tool.id };
+  const context = {
+    document: { addEventListener() {} }, escapeHtml: String, icon: () => '', pageHead: () => '',
+    projectRoot: null, pv: null, state: { page: 'commands' }, commandToolsPage: null,
+    commandTools: () => [tool], commandSelected: () => tool, commandStatus: () => 'Stopped', commandLive: () => false,
+    commandCandidates: [candidate], commandCandidateId: candidate.id, commandCandidatesRoot: null,
+    commandCandidatesLoading: false, commandCandidatesError: '', commandSearch: '', commandTab: 'explore',
+    commandBusy: {}, commandHelp: {}, commandOutput: {}, commandCandidateHelp: {}, commandHelpArgs: {}
+  };
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../dist/cli-explorer-ui.js'), 'utf8'), context);
+  const html = context.commandToolsPage();
+  assert.match(html, /Project tools<\/strong><span>1 found/);
+  assert.match(html, /DISCOVERED LOCALLY · 0/);
+  assert.match(html, /Blackbox Host CLI/);
+  assert.doesNotMatch(html, /data-cli="select"/);
+});
 
 test('recognizes paired flags, value options and subcommands in common help output', () => {
   const help = commandParsedHelp('Usage: desk <COMMAND> [OPTIONS]\n\nCommands:\n  serve    Start the server\n  status   Show status\n\nOptions:\n  -h, --help          Print help\n      --format <TYPE>  Output format\n  -v, --verbose       Verbose output');
