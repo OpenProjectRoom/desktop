@@ -133,6 +133,7 @@
       "runtime": { "type": "object", "required": ["command", "startup"], "properties": {
         "command": { "$ref": "#/$defs/command" }, "cwd": { "$ref": "#/$defs/relativePath" },
         "environment": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z][A-Z0-9_]*$" }, "uniqueItems": true },
+        "requires": { "type": "array", "items": { "enum": ["docker"] }, "uniqueItems": true },
         "port": { "type": "integer", "minimum": 1, "maximum": 65535 }, "url": { "type": "string" },
         "health": { "type": "string" }, "startup": { "const": "manual" },
         "lifecycle": { "enum": ["foreground", "detached"] },

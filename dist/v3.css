@@ -48,6 +48,9 @@ body.dashboard-page .content{max-width:1500px;padding:31px 38px 65px}
 .live-metric-current span{color:#8796a5;font-size:10px;text-align:right}
 .service-metric-card{margin-top:18px}
 .service-metric-inline{font-size:10px;color:#65849a;margin-top:5px}
+.service-start-error{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 16px 12px;padding:11px 13px;border:1px solid #e5b7aa;border-radius:9px;background:#fff3ef;color:#933c2d;font-size:12px;line-height:1.5}
+.service-start-error button{flex:none;border:1px solid currentColor;border-radius:6px;background:transparent;color:inherit;padding:5px 10px;font:inherit;cursor:pointer}
+body[data-theme="dark"] .service-start-error{background:#392a2a;border-color:#865448;color:#f4c5b9}
 body[data-theme="dark"] .live-metric-chart{color:#8db8d2}
 body[data-theme="dark"] .live-metric-current strong{color:#e7f0f6}
 .dashboard-empty-test{min-height:120px;display:grid;place-items:center;text-align:center;padding:20px;color:#929daa;font-size:12px}

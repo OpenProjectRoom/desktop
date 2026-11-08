@@ -82,6 +82,16 @@
         ]
       },
       {
+        "id": "docker-start-prerequisite",
+        "title": "Docker prerequisite before starting local services",
+        "summary": "Let the source-auditing agent declare verified Docker requirements and check the Engine before manual service or command-tool launch, with an actionable retry message.",
+        "status": "done",
+        "relatedComponents": [
+          "product-spec",
+          "web"
+        ]
+      },
+      {
         "id": "two-entry-setup",
         "title": "Clear setup paths for new and existing projects",
         "summary": "Offer short website prompts for both starting points, align the agent handoff with the desktop setup dialog, and lead users to verify the same repository in Project Room.",
